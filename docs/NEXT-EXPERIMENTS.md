@@ -41,7 +41,19 @@ consequence of that.
 
 ## The experiments, ranked
 
-### 1. Teacher-free PRISM init — THE priority (cheap, high-payoff)
+### 1. Teacher-free PRISM init — MEASURED (Runs O/P, 2026-07-25)
+
+**Status: run.** `--cross_teacher` landed in `prism_eval.py` and the probe is
+committed ([RESULTS §10](../RESULTS.md), artifacts `recipe_20260725T164604Z` /
+`…T164640Z`, runner `prism_modal_teacherfree.py`). Verdict: the strong form
+(cross ≈ control) is refuted at Sherlock-distance — a Sherlock-only teacher's
+fingerprint keeps **4.6× of the control's 9.9×** (~46% of the speedup, ~81% of
+the quality gain, no overfitting). Teacher-free init *works*; it isn't *free*.
+Open follow-ups, in value order: (a) a teacher-corpus-**size** control (the cross
+teacher had 499K vs 803K tokens — is the missing half just data volume?); (b) a
+second far corpus + direction to map score-vs-distance; (c) Σ\*-style *averaged*
+fingerprints from several corpora — does averaging recover the matched-teacher
+half? Original hypothesis below, kept for context.
 
 **Hypothesis (from [project_prism_sigma_star] / the Hutter side-quest):** the spectrum
 Σ\* is a *modality* constant, not corpus-specific. If so, you can PRISM-init a fresh

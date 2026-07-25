@@ -1,6 +1,6 @@
-# Prism × nanoGPT — Results (v0.2)
+# PRISM — Results
 
-Seven committed runs, three seeds each, on an NVIDIA L4. Every number below is
+Committed runs, three seeds each, on an NVIDIA L4. Every number below is
 reproducible from an artifact in [`results/`](results/). Earlier writeups:
 [`archive/v0.1/RESULTS.md`](archive/v0.1/RESULTS.md) (the attribution pass),
 [`archive/v0.0/RESULTS.md`](archive/v0.0/RESULTS.md) (before attribution).
@@ -24,6 +24,8 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | K | Finetune-retention core pair (§7): plain vs. raw-0.01 anchor, 3 seeds — the 5.73× headline | [`finetune_20260721T201955Z.json`](results/finetune_20260721T201955Z.json) |
 | — | Finetune go/no-go probe (1 seed) — confirms plain finetuning forgets | [`finetune_20260721T200415Z.json`](results/finetune_20260721T200415Z.json) |
 | — | Finetune attribution probe (1 seed) — superseded by J | [`finetune_20260721T212408Z.json`](results/finetune_20260721T212408Z.json) |
+| O | **Teacher-free init (§10)**: Sherlock-*only* teacher → Shakespeare student, matched LR, dense eval | [`recipe_20260725T164604Z.json`](results/recipe_20260725T164604Z.json) |
+| P | **Teacher-free control (§10)**: identical rig, same-corpus teacher | [`recipe_20260725T164640Z.json`](results/recipe_20260725T164640Z.json) |
 
 ## 1. Speed: ~12×, resolved (Run C)
 
@@ -246,6 +248,43 @@ beats PRISM alone *and* reaches a better loss. The literal 1000× (reach baselin
 init*) is a knife-edge here — context-3 tops out *at* baseline, and a logit-gate meant to
 enable it backfired ([`…T013656Z`](results/prior_20260725T013656Z.json)); a clean version
 needs a context-4+ prior. Full study: [`docs/PRIOR-FUSED-PRISM.md`](docs/PRIOR-FUSED-PRISM.md).
+
+## 10. Teacher-free init: half the speedup survives a teacher that never saw the corpus (Runs O, P)
+
+The explicit test of the "the fingerprint is a modality constant" hypothesis
+(experiment #1 in [NEXT-EXPERIMENTS](docs/NEXT-EXPERIMENTS.md)), run as two
+identical rigs where the ONLY difference is the teacher's training data
+(`--cross_teacher`): 3 seeds, matched schedules (`schedule_matched: true`),
+2,000-step teachers (the saturation point from Runs F/I), 1,500-step students,
+eval every 10 (all scores resolved, none left-censored).
+
+- **Control (Run P):** teacher trained on the student's own Shakespeare split.
+- **Cross (Run O):** teacher trained *exclusively* on Sherlock (`data/far.txt`,
+  499K tokens, token-JS 0.028 from the student's data) — it never saw a single
+  character of Shakespeare. Student trained and scored on the standard
+  Shakespeare benchmark either way.
+
+| arm (medians of 3) | baseline best | recipe best | Δbest | score |
+|---|---|---|---|---|
+| control — same-corpus teacher | 1.7694 | 1.6799 | 0.0895 | **9.9×** (9.6–10.4×) |
+| **cross — Sherlock-only teacher** | 1.7603 | **1.6880** | 0.0723 | **4.6×** (3.9–7.6×) |
+
+**Two readings, both honest.** The strong form of the hypothesis — cross ≈
+control — is **refuted at this distance**: the foreign fingerprint keeps ~46% of
+the matched teacher's speedup (per-seed 0.38–0.79), with more seed variance. But
+the weak form lands cleanly: a ~128-byte fingerprint from a teacher that **never
+saw the target corpus** still trains it **4.6× faster**, reaches a best loss the
+baseline never touches (~81% of the matched teacher's quality gain), and does not
+overfit where the baseline does. Teacher-free PRISM init works as a drop-in — it
+just leaves the other half of the speedup on the table.
+
+Read together with Run E (Shakespeare teacher → Sherlock student, where the
+*early-window* advantage did not shrink at all), this bounds where the geometry
+stops being free: the step-100 head start is fully portable; the *speed to
+baseline-best quality* over a 1,500-step horizon is what pays a cross-corpus
+price. Bounds: one corpus pair, one direction, one distance (token-JS 0.028), and
+the cross teacher trained on a ~40% smaller corpus (499K vs 803K tokens) — a
+teacher-corpus-size control would isolate that confound.
 
 ## What this does NOT establish
 
