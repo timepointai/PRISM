@@ -1,5 +1,11 @@
 # PRISM — handoff to the next agent
 
+> **Status update (2026-07-25):** the migration + rebrand below is **done**
+> (selftest 30/30; Pages re-enabled; runners repointed at PRISM/main). The
+> teacher-free init experiment (§6's biggest lead) has been **run** — see
+> [RESULTS §10](RESULTS.md) and `docs/NEXT-EXPERIMENTS.md` #1 for the verdict
+> (~half the speedup survives, quality fully survives) and the ranked follow-ups.
+
 You are picking up **PRISM** in its new home, `timepointai/PRISM`. This document is your
 full orientation — read it first. It explains what exists, where it is, what to do, and
 the rules that are non-negotiable.
