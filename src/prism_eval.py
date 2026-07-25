@@ -173,7 +173,8 @@ def _encode_corpus(path, meta_pkl):
     return np.array(toks, dtype=np.uint16)
 
 
-def setup(workdir=SRC_DIR, overlap=None, far_corpus=None, far_val=False):
+def setup(workdir=SRC_DIR, overlap=None, far_corpus=None, far_val=False,
+          cross_teacher=None):
     """Prepare dataset partitions. Returns (n_student_tokens, n_test_tokens, dist).
 
     overlap=None (default): teacher and student share the same 80% split —
@@ -207,7 +208,25 @@ def setup(workdir=SRC_DIR, overlap=None, far_corpus=None, far_val=False):
     val_mix = None
     dist = None
 
-    if overlap is None:
+    if cross_teacher is not None:
+        # Teacher-free init test: the teacher trains ONLY on a different corpus
+        # (no Shakespeare at all), and its fingerprint seeds a student trained
+        # and scored on the standard Shakespeare benchmark. If the head start
+        # matches a same-corpus teacher's, the fingerprint is a modality
+        # constant, not corpus knowledge — a drop-in universal init.
+        far = _encode_corpus(cross_teacher, 'data/shakespeare_char/meta.pkl')
+        n_res = min(len(far) // 10, len(test_data))
+        teacher_val = far[-n_res:].astype(np.uint16)
+        teacher_train = far[:-n_res].astype(np.uint16)
+        split = int(len(pool) * 0.80)
+        student_train = pool[:split].astype(np.uint16)
+        dist = {'cross_teacher': os.path.basename(cross_teacher),
+                'teacher_tokens': int(len(teacher_train)),
+                'token_js': _token_js(teacher_train, student_train)}
+        log(f'cross-teacher: teacher trains ONLY on '
+            f'{os.path.basename(cross_teacher)} ({len(teacher_train):,} tok) · '
+            f'student on Shakespeare · token-JS {dist["token_js"]:.4f}', 2)
+    elif overlap is None:
         split = int(len(pool) * 0.80)
         teacher_train = pool[:split].astype(np.uint16)
         student_train = pool[:split].astype(np.uint16)
@@ -738,6 +757,14 @@ def main():
     # — the real structure-vs-content test. Report advantage against token-JS.
     p.add_argument('--far_corpus', type=str, default=None,
                    help="path to a .txt corpus for the far (large-distance) student arm")
+    # Teacher-FREE init: the teacher never sees the student's corpus. It trains
+    # exclusively on the given text; the student trains and is scored on the
+    # standard Shakespeare benchmark. Compare against an identical run without
+    # this flag (the same-corpus control): if the scores match, the fingerprint
+    # is a modality constant — no matched teacher needed.
+    p.add_argument('--cross_teacher', type=str, default=None,
+                   help="path to a .txt corpus the teacher trains on EXCLUSIVELY "
+                        "(student stays on Shakespeare) — the teacher-free-init test")
     p.add_argument('--far_val', action='store_true',
                    help="score the student on a val mixture mirroring its own train "
                         "mixture (held-out far text for the fresh fraction) instead "
@@ -813,6 +840,13 @@ def main():
         method_knobs['n_dct'] = args.n_dct
     if args.far_corpus:
         method_knobs['far_corpus'] = os.path.basename(args.far_corpus)
+    if args.cross_teacher:
+        # A different teacher corpus is a different experiment — its own run key,
+        # its own teacher cache; it must never resume onto a same-corpus run.
+        if overlaps is not None or teacher_sweep is not None or args.far_corpus:
+            raise SystemExit('--cross_teacher cannot be combined with --overlap, '
+                             '--teacher_sweep, or --far_corpus.')
+        method_knobs['cross_teacher'] = os.path.basename(args.cross_teacher)
     if args.far_val:
         # Changes what BOTH arms are scored on — a far_val run must never resume
         # onto (or be compared against) a Shakespeare-val run.
@@ -830,7 +864,9 @@ def main():
         'overlap_distances': {},
         'teacher_sweep': teacher_sweep,
         'batch_size': args.batch_size,
-        'teacher_data_equals_student_data': overlaps is None,
+        'teacher_data_equals_student_data': (overlaps is None
+                                             and not args.cross_teacher),
+        'cross_teacher': args.cross_teacher,
         'method_lr': args.method_lr,
         'method_warmup': args.method_warmup,
         'baseline_lr': args.baseline_lr,
@@ -971,10 +1007,15 @@ def main():
         sweep = overlaps if overlaps is not None else [None]
         for overlap in sweep:
             n_train, n_test, dist = setup(overlap=overlap, far_corpus=args.far_corpus,
-                                          far_val=args.far_val)
+                                          far_val=args.far_val,
+                                          cross_teacher=args.cross_teacher)
             if dist is not None:
-                config['overlap_distances'][f'{overlap:g}'] = dist
-            tag = 'eval' if overlap is None else 'rsweep'
+                if overlap is None:
+                    config['cross_teacher_dist'] = dist
+                else:
+                    config['overlap_distances'][f'{overlap:g}'] = dist
+            tag = (('xteach' if args.cross_teacher else 'eval')
+                   if overlap is None else 'rsweep')
             osfx = '' if overlap is None else f'_o{overlap:g}'
             bs = args.batch_size
             print('-' * 64)
@@ -1077,8 +1118,14 @@ def print_report(a):
         print(f'          lower bounds — resolution floor is {c["eval_every"]} steps.')
     print('    The score is a ratio: read it against baseline_best. A weaker')
     print('    baseline raises the score without improving the method.')
-    print(f'    Teacher and student share training data — this is same-data')
-    print('    transfer and does not rule out content leakage.')
+    if c.get('cross_teacher'):
+        print(f'    CROSS-TEACHER RUN: the teacher trained ONLY on '
+              f'{os.path.basename(c["cross_teacher"])} —')
+        print('    the teacher never saw the student\'s corpus. Compare the score')
+        print('    against the identical same-corpus control.')
+    else:
+        print(f'    Teacher and student share training data — this is same-data')
+        print('    transfer and does not rule out content leakage.')
     print()
 
 
