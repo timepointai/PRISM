@@ -39,6 +39,25 @@ consequence of that.
 - Ritual before any GPU: `cd src && python prism_selftest.py` (offline, ~1 min) then a
   tiny `--device=cpu` smoke of your driver → a conforming artifact. Then Modal.
 
+## Status update (2026-07-27): the modern-web probe ran — read it first
+
+[RESULTS §11](../RESULTS.md): byte-level FineWeb-Edu bench (`data/modernweb/`,
+vocab 256 — **the far-modality vocab gotcha in #2 below is solved**), four
+decomposition arms. Verdicts that re-rank this list: **dirs_only wins outright
+on modern text** (3.3× to baseline-best, converges 0.11 nats below it, 3/3
+seeds) — the Mod Wheel is an *overfitting brake* (endpoint-valuable only on
+small data); **spectral_only is below baseline everywhere** — the spectrum is
+not the from-scratch lever; and **GPT-2's fingerprint ≈ a native teacher's
+spectrum** at parity across size/tokenizer/corpus (`fingerprints/gpt2-124M/`,
+eval knobs `--corpus` / `--fingerprint`, runner `prism_modal_modernweb.py`).
+New top follow-ups: (a) **dirs_only on Shakespeare** — the missing 2×2 cell
+isolating the wheel-as-brake claim; (b) **wheel decay retune / adaptive wheel**
+on adequate data (0.01/0.9999 still pulls ~86% at step 1,500 — does a fast
+decay recover dirs_only's endpoint?); (c) **cross-size directional projection**
+— with the spectrum refuted as the lever, the universal init that could work is
+directional (GPT-2's U/Vᵀ projected down); (d) the truly-far modality (#2) is
+now unblocked — point `--corpus` at a code corpus.
+
 ## The experiments, ranked
 
 ### 1. Teacher-free PRISM init — MEASURED (Runs O/P, 2026-07-25)

@@ -174,7 +174,7 @@ def _encode_corpus(path, meta_pkl):
 
 
 def setup(workdir=SRC_DIR, overlap=None, far_corpus=None, far_val=False,
-          cross_teacher=None):
+          cross_teacher=None, corpus=None):
     """Prepare dataset partitions. Returns (n_student_tokens, n_test_tokens, dist).
 
     overlap=None (default): teacher and student share the same 80% split —
@@ -195,14 +195,19 @@ def setup(workdir=SRC_DIR, overlap=None, far_corpus=None, far_val=False,
     token-JS distance between the two arms' data."""
     os.chdir(workdir)
 
-    if not os.path.exists('data/shakespeare_char/train.bin'):
-        log('Preparing Shakespeare char dataset (first run only)…', 2)
-        subprocess.run([sys.executable, 'data/shakespeare_char/prepare.py'],
+    # The bench corpus. Default is the original Shakespeare char bench; --corpus
+    # points at another data/<name>/ dir with the same bin format (e.g.
+    # modernweb, byte-level). The working dirs written below keep their
+    # original names — they are just the eval's train/val slots.
+    base = f'data/{corpus}' if corpus else 'data/shakespeare_char'
+    if not os.path.exists(f'{base}/train.bin'):
+        log(f'Preparing {base} dataset (first run only)…', 2)
+        subprocess.run([sys.executable, f'{base}/prepare.py'],
                        capture_output=True, check=True)
 
-    pool = np.array(np.memmap('data/shakespeare_char/train.bin',
+    pool = np.array(np.memmap(f'{base}/train.bin',
                               dtype=np.uint16, mode='r'))
-    test_data = np.array(np.memmap('data/shakespeare_char/val.bin',
+    test_data = np.array(np.memmap(f'{base}/val.bin',
                                     dtype=np.uint16, mode='r'))
     student_val = test_data
     val_mix = None
@@ -214,7 +219,7 @@ def setup(workdir=SRC_DIR, overlap=None, far_corpus=None, far_val=False,
         # and scored on the standard Shakespeare benchmark. If the head start
         # matches a same-corpus teacher's, the fingerprint is a modality
         # constant, not corpus knowledge — a drop-in universal init.
-        far = _encode_corpus(cross_teacher, 'data/shakespeare_char/meta.pkl')
+        far = _encode_corpus(cross_teacher, f'{base}/meta.pkl')
         n_res = min(len(far) // 10, len(test_data))
         teacher_val = far[-n_res:].astype(np.uint16)
         teacher_train = far[:-n_res].astype(np.uint16)
@@ -247,7 +252,7 @@ def setup(workdir=SRC_DIR, overlap=None, far_corpus=None, far_val=False,
             # student's data is distributionally far from the teacher's — the real
             # structure-vs-content test (large token-JS), not just disjoint blocks
             # of the same Shakespeare.
-            far = _encode_corpus(far_corpus, 'data/shakespeare_char/meta.pkl')
+            far = _encode_corpus(far_corpus, f'{base}/meta.pkl')
             far_val_toks = None
             if far_val:
                 # Reserve a held-out tail of the far corpus BEFORE any tiling, so
@@ -297,8 +302,7 @@ def setup(workdir=SRC_DIR, overlap=None, far_corpus=None, far_val=False,
         os.makedirs(d, exist_ok=True)
         train.astype(np.uint16).tofile(os.path.join(d, 'train.bin'))
         val.astype(np.uint16).tofile(os.path.join(d, 'val.bin'))
-        shutil.copy('data/shakespeare_char/meta.pkl',
-                     os.path.join(d, 'meta.pkl'))
+        shutil.copy(f'{base}/meta.pkl', os.path.join(d, 'meta.pkl'))
 
     return len(student_train), len(student_val), dist
 
@@ -765,6 +769,18 @@ def main():
     p.add_argument('--cross_teacher', type=str, default=None,
                    help="path to a .txt corpus the teacher trains on EXCLUSIVELY "
                         "(student stays on Shakespeare) — the teacher-free-init test")
+    # A different bench corpus entirely (same bin format under data/<name>/) —
+    # e.g. --corpus=modernweb, the byte-level FineWeb-Edu slice.
+    p.add_argument('--corpus', type=str, default=None,
+                   help="bench on data/<name>/ instead of shakespeare_char "
+                        "(e.g. modernweb — byte-level modern web text)")
+    # Universal-init test: a pre-extracted spectra.json stands in for the whole
+    # teacher stage. No teacher is trained; only the spectrum (+ Mod Wheel) is
+    # transplanted, so this composes with fingerprints from ANY model — e.g.
+    # fingerprints/gpt2-124M, read off OpenAI's public GPT-2 weights.
+    p.add_argument('--fingerprint', type=str, default=None,
+                   help="dir containing a pre-extracted spectra.json; skips teacher "
+                        "training entirely (requires --method=spectral_only)")
     p.add_argument('--far_val', action='store_true',
                    help="score the student on a val mixture mirroring its own train "
                         "mixture (held-out far text for the fresh fraction) instead "
@@ -847,6 +863,28 @@ def main():
             raise SystemExit('--cross_teacher cannot be combined with --overlap, '
                              '--teacher_sweep, or --far_corpus.')
         method_knobs['cross_teacher'] = os.path.basename(args.cross_teacher)
+    if args.corpus:
+        # A different bench corpus is a different experiment — own run key. Only
+        # the plain same-data protocol is wired up for alternate corpora so far.
+        if overlaps is not None or teacher_sweep is not None or args.far_corpus \
+                or args.cross_teacher:
+            raise SystemExit('--corpus currently supports only the plain protocol '
+                             '(no --overlap/--teacher_sweep/--far_corpus/'
+                             '--cross_teacher).')
+        method_knobs['corpus'] = args.corpus
+    if args.fingerprint:
+        if args.method != 'spectral_only':
+            raise SystemExit('--fingerprint requires --method=spectral_only: a '
+                             'pre-extracted spectra.json carries no directions, so '
+                             'EigenTransfer methods would silently degrade — '
+                             'refusing instead.')
+        if teacher_sweep is not None or args.cross_teacher:
+            raise SystemExit('--fingerprint replaces the teacher — it cannot be '
+                             'combined with --teacher_sweep or --cross_teacher.')
+        if not os.path.exists(os.path.join(args.fingerprint, 'spectra.json')):
+            raise SystemExit(f'--fingerprint: no spectra.json in {args.fingerprint}')
+        method_knobs['fingerprint'] = os.path.basename(
+            os.path.normpath(args.fingerprint))
     if args.far_val:
         # Changes what BOTH arms are scored on — a far_val run must never resume
         # onto (or be compared against) a Shakespeare-val run.
@@ -865,8 +903,11 @@ def main():
         'teacher_sweep': teacher_sweep,
         'batch_size': args.batch_size,
         'teacher_data_equals_student_data': (overlaps is None
-                                             and not args.cross_teacher),
+                                             and not args.cross_teacher
+                                             and not args.fingerprint),
         'cross_teacher': args.cross_teacher,
+        'corpus': args.corpus,
+        'fingerprint': args.fingerprint,
         'method_lr': args.method_lr,
         'method_warmup': args.method_warmup,
         'baseline_lr': args.baseline_lr,
@@ -1008,14 +1049,21 @@ def main():
         for overlap in sweep:
             n_train, n_test, dist = setup(overlap=overlap, far_corpus=args.far_corpus,
                                           far_val=args.far_val,
-                                          cross_teacher=args.cross_teacher)
+                                          cross_teacher=args.cross_teacher,
+                                          corpus=args.corpus)
             if dist is not None:
                 if overlap is None:
                     config['cross_teacher_dist'] = dist
                 else:
                     config['overlap_distances'][f'{overlap:g}'] = dist
-            tag = (('xteach' if args.cross_teacher else 'eval')
-                   if overlap is None else 'rsweep')
+            if overlap is not None:
+                tag = 'rsweep'
+            elif args.cross_teacher:
+                tag = 'xteach'
+            elif args.corpus:
+                tag = f'ev-{args.corpus[:8]}'   # corpus teachers get their own cache
+            else:
+                tag = 'eval'
             osfx = '' if overlap is None else f'_o{overlap:g}'
             bs = args.batch_size
             print('-' * 64)
@@ -1028,10 +1076,15 @@ def main():
                 lbl = f's{seed}{osfx}'
 
                 stage[0] += 1
-                log(f'[stage {stage[0]}/{total_stages}] teacher (seed {seed})', 2)
-                cache = train_teacher(args.teacher_steps, seed, args.eval_iters,
-                                      device, lbl, cache_tag=tag, batch_size=bs,
-                                      n_dct=n_dct, per_layer=args.per_layer)
+                if args.fingerprint:
+                    log(f'[stage {stage[0]}/{total_stages}] teacher SKIPPED — using '
+                        f'pre-extracted fingerprint {args.fingerprint}', 2)
+                    cache = args.fingerprint
+                else:
+                    log(f'[stage {stage[0]}/{total_stages}] teacher (seed {seed})', 2)
+                    cache = train_teacher(args.teacher_steps, seed, args.eval_iters,
+                                          device, lbl, cache_tag=tag, batch_size=bs,
+                                          n_dct=n_dct, per_layer=args.per_layer)
 
                 baseline_extra = ['--prism_init=False']
                 if args.baseline_lr:
@@ -1118,7 +1171,11 @@ def print_report(a):
         print(f'          lower bounds — resolution floor is {c["eval_every"]} steps.')
     print('    The score is a ratio: read it against baseline_best. A weaker')
     print('    baseline raises the score without improving the method.')
-    if c.get('cross_teacher'):
+    if c.get('fingerprint'):
+        print(f'    FINGERPRINT RUN: no teacher was trained. The spectra came from')
+        print(f'    {c["fingerprint"]} (spectrum imprint + mod wheel only).')
+        print('    Compare against the identical rig with a native teacher.')
+    elif c.get('cross_teacher'):
         print(f'    CROSS-TEACHER RUN: the teacher trained ONLY on '
               f'{os.path.basename(c["cross_teacher"])} —')
         print('    the teacher never saw the student\'s corpus. Compare the score')
