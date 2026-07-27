@@ -36,7 +36,7 @@ FLAGS = ("--old_corpus=modernweb --far_corpus=data/facts/facts_train.txt "
          "--base_steps=2000 --ft_steps=1000 --eval_every=25 --eval_iters=100 "
          "--seeds=1337,1338,1339 --batch_size=32 --block_size=256 "
          "--learning_rate=3e-4 --min_lr=3e-5 "
-         "--arms=base,plain,raw_mid,raw_hi,lowlr_b --tag=facts1")
+         "--arms=base,plain,lowlr_b,raw_weak,raw_exffn,raw_exattn --tag=facts2")
 
 
 @app.function(image=image, gpu="L4", volumes={WORK: vol}, timeout=24 * 3600)

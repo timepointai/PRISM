@@ -77,6 +77,10 @@ prism_unfold = 0 # re-extract spectral targets every N steps (0 = fixed targets)
 #              spectral pressure, wrong spectrum-to-direction assignment)
 prism_anchor_mode = 'raw'
 prism_anchor_refresh = 25 # spectral/shuffled: rebuild the target every N steps
+# Selective anchor: comma-separated name substrings to leave UN-anchored (free).
+# e.g. 'mlp.' pins attention+embeddings but frees every FFN — the fact-storage
+# substrate — so retention and injection can coexist instead of trading off.
+prism_anchor_exclude = ''
 # prism direction-transfer knobs (opt-in; defaults reproduce the recipe exactly)
 prism_align_spec = '' # per-group alignment, e.g. 'attention:0.9,ffn_down:0.5'
 prism_align_mode = 'linear' # 'linear' | 'grassmann' | 'subspace'
@@ -280,10 +284,15 @@ if prism_init and init_from == 'scratch':
 # prevents catastrophic forgetting during finetuning. Use prism_mod_decay=1.0 for
 # a constant pull (the scratch decay anneals a reshape that isn't happening here).
 elif prism_mod > 0 and init_from == 'resume':
+    _anchor_excl = [x for x in prism_anchor_exclude.split(',') if x.strip()]
+
+    def _anchored(name):
+        return not any(x in name for x in _anchor_excl)
+
     if prism_anchor_mode == 'raw':
         prism_targets = {name: param.data.clone().cpu()
                          for name, param in model.named_parameters()
-                         if param.dim() >= 2}
+                         if param.dim() >= 2 and _anchored(name)}
     else:
         # spectral / shuffled: store the base spectrum per weight; the initial target
         # imposes it on the base's OWN directions (== base weight for 'spectral'; a
@@ -292,7 +301,7 @@ elif prism_mod > 0 and init_from == 'resume':
         prism_targets = {}
         _g = torch.Generator().manual_seed(seed)
         for name, param in model.named_parameters():
-            if param.dim() < 2:
+            if param.dim() < 2 or not _anchored(name):
                 continue
             U, s, Vt = torch.linalg.svd(param.data.float(), full_matrices=False)
             sv0 = s.clone()
@@ -302,7 +311,8 @@ elif prism_mod > 0 and init_from == 'resume':
             prism_targets[name] = ((U * sv0) @ Vt).to(param.dtype).cpu()
     print(f"[prism] Self-anchored {len(prism_targets)} targets from resumed ckpt "
           f"(mode={prism_anchor_mode}, strength={prism_mod}, decay={prism_mod_decay}"
-          + (f", refresh={prism_anchor_refresh}" if prism_anchor_mode != 'raw' else '') + ')')
+          + (f", refresh={prism_anchor_refresh}" if prism_anchor_mode != 'raw' else '')
+          + (f", exclude={prism_anchor_exclude}" if _anchor_excl else '') + ')')
 
 # Prism CKA representational regularizer (opt-in) — pull student block activations
 # toward a frozen teacher's. Set up before compile so hooks fire on the raw model.

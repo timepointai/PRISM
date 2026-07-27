@@ -70,6 +70,11 @@ ARM_SPECS = {
     'raw_lo':          dict(resume=True,  mod=0.005, mode='raw'),
     'raw_mid':         dict(resume=True,  mod=0.01,  mode='raw'),
     'raw_hi':          dict(resume=True,  mod=0.02,  mode='raw'),
+    # Selective / weak anchors (the fact-injection frontier, RESULTS §12): a full
+    # anchor blocks new-fact storage, so free the storage substrate instead.
+    'raw_weak':        dict(resume=True,  mod=0.0025, mode='raw'),
+    'raw_exffn':       dict(resume=True,  mod=0.01,  mode='raw', exclude='mlp.'),
+    'raw_exattn':      dict(resume=True,  mod=0.01,  mode='raw', exclude='attn.'),
     'lowlr_a':         dict(resume=True,  mod=0.0,   lr='1.5e-4'),
     'lowlr_b':         dict(resume=True,  mod=0.0,   lr='1e-4'),
     'lowlr_c':         dict(resume=True,  mod=0.0,   lr='5e-5'),
@@ -230,6 +235,8 @@ def run_arm(arm, seed, base_ckpt, a, device, run_dir):
                     f'--prism_anchor_mode={spec.get("mode", "raw")}']
             if spec.get('refresh'):
                 cmd.append(f'--prism_anchor_refresh={spec["refresh"]}')
+            if spec.get('exclude'):
+                cmd.append(f'--prism_anchor_exclude={spec["exclude"]}')
     else:   # scratch_ceiling: best NEW-domain loss reachable fresh in ft_steps
         cmd += ['--init_from=scratch', '--prism_init=False',
                 f'--max_iters={a.ft_steps}', f'--warmup_iters={a.ft_warmup}',
