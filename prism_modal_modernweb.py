@@ -34,6 +34,7 @@ vols = {
     "recipe": modal.Volume.from_name("prism-eval-mw-recipe", create_if_missing=True),
     "spec": modal.Volume.from_name("prism-eval-mw-spec", create_if_missing=True),
     "gpt2": modal.Volume.from_name("prism-eval-mw-gpt2", create_if_missing=True),
+    "dirs": modal.Volume.from_name("prism-eval-mw-dirs", create_if_missing=True),
 }
 WORK = "/work"
 REPO = f"{WORK}/nanogpt-prism"
@@ -48,6 +49,9 @@ ARM_FLAGS = {
     "recipe": "--method=recipe",
     "spec": "--method=spectral_only",
     "gpt2": "--method=spectral_only --fingerprint=../fingerprints/gpt2-124M",
+    # dirs_only = imprint + EigenTransfer, NO mod wheel — completes the
+    # decomposition (recipe minus wheel; spec is recipe minus directions).
+    "dirs": "--method=dirs_only",
 }
 
 
@@ -102,12 +106,18 @@ def run_gpt2(extra: str):
     _run(vols["gpt2"], extra)
 
 
+@app.function(image=image, gpu="L4", volumes={WORK: vols["dirs"]}, timeout=24 * 3600)
+def run_dirs(extra: str):
+    _run(vols["dirs"], extra)
+
+
 @app.local_entrypoint()
 def main(arm: str = "recipe", gpu: str = "L4", extra: str = ""):
     if arm not in ARM_FLAGS:
         raise SystemExit(f"--arm must be one of {list(ARM_FLAGS)}")
     flags = f"{PROBE} {ARM_FLAGS[arm]}" + (f" {extra}" if extra else "")
-    fn = {"recipe": run_recipe, "spec": run_spec, "gpt2": run_gpt2}[arm]
+    fn = {"recipe": run_recipe, "spec": run_spec, "gpt2": run_gpt2,
+          "dirs": run_dirs}[arm]
     call = fn.with_options(gpu=gpu).spawn(extra=flags)
     print(f"launched {arm} arm (detached). call id: {call.object_id}")
     print("watch: modal app list  →  modal app logs <ap-...>")
