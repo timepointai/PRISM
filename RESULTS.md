@@ -26,6 +26,10 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | — | Finetune attribution probe (1 seed) — superseded by J | [`finetune_20260721T212408Z.json`](results/finetune_20260721T212408Z.json) |
 | O | **Teacher-free init (§10)**: Sherlock-*only* teacher → Shakespeare student, matched LR, dense eval | [`recipe_20260725T164604Z.json`](results/recipe_20260725T164604Z.json) |
 | P | **Teacher-free control (§10)**: identical rig, same-corpus teacher | [`recipe_20260725T164640Z.json`](results/recipe_20260725T164640Z.json) |
+| Q | **Modern web — full recipe (§11)**: byte-level FineWeb-Edu, native teacher | [`recipe_20260727T145008Z.json`](results/recipe_20260727T145008Z.json) |
+| R | **Modern web — dirs_only (§11)**: init-only transfer, no Mod Wheel — **the winner** | [`dirs_only_20260727T154359Z.json`](results/dirs_only_20260727T154359Z.json) |
+| S | **Modern web — spectral_only ablation (§11)**: spectrum + wheel, no directions | [`spectral_only_20260727T145028Z.json`](results/spectral_only_20260727T145028Z.json) |
+| T | **Modern web — GPT-2 fingerprint (§11)**: spectrum-only from OpenAI's public weights, no teacher | [`spectral_only_20260727T145039Z.json`](results/spectral_only_20260727T145039Z.json) |
 
 ## 1. Speed: ~12×, resolved (Run C)
 
@@ -285,6 +289,62 @@ baseline-best quality* over a 1,500-step horizon is what pays a cross-corpus
 price. Bounds: one corpus pair, one direction, one distance (token-JS 0.028), and
 the cross teacher trained on a ~40% smaller corpus (499K vs 803K tokens) — a
 teacher-corpus-size control would isolate that confound.
+
+## 11. Modern web text: init-only transfer wins outright; the Mod Wheel is an overfitting brake (Runs Q–T)
+
+The move off Shakespeare: a committed ~5MB slice of **FineWeb-Edu** (2024
+CommonCrawl web text, [`data/modernweb/`](data/modernweb/), provenance + sha256
+in its README), encoded **byte-level** (vocab 256 — nothing dropped, and the
+vocab now covers code/other languages for future far-modality work). 4.5M-token
+train pool — 4.5× Shakespeare's — so the baseline **no longer overfits** inside
+the horizon. Four arms on identical matched-schedule rigs (3 seeds, 2,000-step
+native teachers where used, 1,500-step students, eval every 10, all scores
+resolved), decomposing the recipe one component at a time:
+
+| arm (medians of 3) | components | best loss | vs. baseline best (1.4892) | reaches it |
+|---|---|---|---|---|
+| baseline | — | 1.4892 | — | — |
+| **dirs_only (Run R)** | imprint + EigenTransfer at init, *nothing during training* | **1.3794** | **−0.110 (better), 3/3 seeds** | **3.3×** faster (2.9–3.9×) |
+| recipe (Run Q) | + Mod Wheel | 1.4907 | +0.001 (tie), 1/3 seeds | 1.1× (1 seed) |
+| spectral_only (Run S) | imprint + wheel, **no directions** | 1.7623 | +0.273 (worse) | never, 0/3 |
+| GPT-2 fingerprint (Run T) | as S, spectra from **GPT-2's public weights**, no teacher | 1.7471 | +0.258 (worse) | never, 0/3 |
+
+**The headline (Run R): hand a fresh model a trained teacher's geometry at init
+— directions + spectrum, then leave it alone — and on 2024 web text it reaches
+the baseline's best quality 3.3× faster and converges 0.11 nats below anything
+the baseline ever reaches**, on every seed, without overfitting. The early
+window is bigger still: the quality dirs_only has at step 100, the baseline
+needs 600–650 steps to reach (~6×); its init loss is already 4.4 vs the
+baseline's 5.6.
+
+**The decomposition, and an honest revision of the story so far:**
+
+- **The directions carry the from-scratch effect.** Remove them (Run S) and the
+  arm is *below baseline at every step measured* — the spectrum alone is not
+  the active ingredient, mirroring the finetune-retention attribution (§7)
+  where the raw directions were the anchor and the spectrum did nothing.
+- **The Mod Wheel is an overfitting brake, not a universal accelerant.** The
+  full recipe (Run Q) = dirs_only + wheel, and the wheel costs the entire
+  endpoint lead (1.379 → 1.491): its continuous pull toward the spectral
+  target throttles late learning. On 1M-token Shakespeare, where every baseline
+  overfit (§2), that brake *was* the endpoint win. On 4.5M tokens there is no
+  overfitting to prevent, so the brake only binds. Small data → wheel on;
+  adequate data → init-only.
+- **The one clean positive for the spectrum: it is genuinely universal.**
+  GPT-2's fingerprint — 40 numbers off OpenAI's public weights, crossing model
+  size (124M→10.65M), tokenizer (BPE→bytes), and corpus — performs at **parity
+  with a purpose-trained native teacher's spectrum** in the identical mode
+  (1.747 vs 1.762, GPT-2's marginally *better*). The spectrum ports across
+  everything; it just isn't the lever from scratch. The teacher-free/universal
+  init that *should* work is directional — which needs the cross-size
+  projection (future work).
+
+Bounds: one modern corpus, one 1,500-step horizon; the wheel's decay schedule
+(0.01 / 0.9999) was tuned on Shakespeare and never retuned here — at step 1,500
+it still pulls at ~86% strength, so a faster decay might rescue the recipe arm
+(untested); and the mirror cell — dirs_only on *Shakespeare*, where the brake
+should still win — hasn't run, so "wheel helps on small data" is inferred from
+Runs A–C, not yet isolated.
 
 ## What this does NOT establish
 

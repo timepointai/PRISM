@@ -5,6 +5,15 @@
 > teacher-free init experiment (§6's biggest lead) has been **run** — see
 > [RESULTS §10](RESULTS.md) and `docs/NEXT-EXPERIMENTS.md` #1 for the verdict
 > (~half the speedup survives, quality fully survives) and the ranked follow-ups.
+>
+> **Status update (2026-07-27):** the **modern-web probe** ran — byte-level
+> FineWeb-Edu bench (`data/modernweb/`, solves the far-modality vocab gotcha),
+> four decomposition arms, [RESULTS §11](RESULTS.md). Verdicts: init-only
+> transfer (dirs_only) **beats** the modern baseline outright (3.3×, −0.11
+> nats, 3/3 seeds); the Mod Wheel is an overfitting *brake*; spectrum-only is
+> refuted as the from-scratch lever; GPT-2's public-weights fingerprint
+> (`fingerprints/gpt2-124M/`) ≈ a native teacher's spectrum across
+> size/tokenizer/corpus. New priorities in `docs/NEXT-EXPERIMENTS.md`.
 
 You are picking up **PRISM** in its new home, `timepointai/PRISM`. This document is your
 full orientation — read it first. It explains what exists, where it is, what to do, and
