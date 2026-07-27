@@ -30,6 +30,7 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | R | **Modern web — dirs_only (§11)**: init-only transfer, no Mod Wheel — **the winner** | [`dirs_only_20260727T154359Z.json`](results/dirs_only_20260727T154359Z.json) |
 | S | **Modern web — spectral_only ablation (§11)**: spectrum + wheel, no directions | [`spectral_only_20260727T145028Z.json`](results/spectral_only_20260727T145028Z.json) |
 | T | **Modern web — GPT-2 fingerprint (§11)**: spectrum-only from OpenAI's public weights, no teacher | [`spectral_only_20260727T145039Z.json`](results/spectral_only_20260727T145039Z.json) |
+| U | **Fact injection (§12)**: closed-book recall of novel facts — anchor vs low-LR vs plain, modernweb base | [`finetune_20260727T203023Z.json`](results/finetune_20260727T203023Z.json) |
 
 ## 1. Speed: ~12×, resolved (Run C)
 
@@ -345,6 +346,51 @@ it still pulls at ~86% strength, so a faster decay might rescue the recipe arm
 (untested); and the mirror cell — dirs_only on *Shakespeare*, where the brake
 should still win — hasn't run, so "wheel helps on small data" is inferred from
 Runs A–C, not yet isolated.
+
+## 12. Fact injection: the directional anchor blocks it — and loss metrics can't see that (Run U)
+
+The retention anchor (§7) meets the task it wasn't built for: injecting
+**novel facts** into the modern-web base. 120 facts about invented people
+(60 birth-years, 60 cities; [`data/facts/`](data/facts/)) trained as 4
+paraphrase templates each; a 5th template is held out for both the adaptation
+val and closed-book **exact-match recall** — `seen` (a trained phrasing: did
+the facts go in) vs `unseen` (the held-out phrasing: do they generalize). The
+base scores **0%** on both (the facts are novel by construction). 3 seeds, one
+base per seed, every arm forks it with one flag changed, 1,000 finetune steps.
+
+| arm (medians of 3) | forgets modernweb | facts-val loss | seen recall | unseen recall |
+|---|---|---|---|---|
+| plain | +3.31 | 1.59 | **100%** | 26% |
+| low-LR 1e-4 | +2.19 | 1.36 | 98% | **59%** |
+| raw anchor 0.01 | +0.49 | **1.14** | **3%** | 0% |
+| raw anchor 0.02 | **+0.31** | 1.17 | 2% | 0% |
+
+**Three findings, one reversal:**
+
+- **The anchor blocks fact injection.** At the exact strengths that won the
+  domain-adaptation study (§7, where the anchor Pareto-dominated low-LR), the
+  facts simply never go in: 2–3% seen recall vs 98–100% unanchored. The §7
+  conclusion is **task-dependent** — adaptation to a new domain reuses the
+  base's structure and survives the anchor; storing *new bindings* requires
+  moving the very directions the anchor pins. This is also the sharpest
+  confirmation of "directions carry content" in the whole project: pin them
+  and new content *cannot be written*, by construction.
+- **LM loss is not an injection metric.** The anchored arms post the *best*
+  facts-val loss (1.14 vs plain's 1.59 — they model the unseen templates'
+  English scaffolding beautifully) while recalling *nothing*. Only the
+  exact-match probe catches this. Any fact-injection study scored on loss
+  alone would have ranked these arms exactly backwards.
+- **Low-LR generalizes better than full-LR at equal injection.** 59% vs 26%
+  median unseen recall (seed-noisy: 28–77% vs 19–41%) with less forgetting
+  (+2.19 vs +3.31). For fact injection, the simple low-LR baseline survives;
+  the anchor, as-is, is disqualified.
+
+Bounds: probe scale (10.65M params, byte-level), a brutal ~200-epoch
+memorization regime (19KB of facts for 1,000 steps), and **no arm both
+retains and injects** — the open frontier is the untested weak-anchor band
+(s ≤ 0.005), partial/layer-subset anchors, and anchor+replay. Absolute
+forgetting is catastrophic everywhere except the anchored arms, which are
+the arms that don't inject.
 
 ## What this does NOT establish
 

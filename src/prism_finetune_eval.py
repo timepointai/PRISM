@@ -55,8 +55,8 @@ from prism_eval import (provenance, parse_curve, stream_train, acquire_lock,
                         _stats, _token_js, _encode_corpus, log, default_device,
                         RESULTS_DIR, RUNS_DIR, SRC_DIR)
 
-SHAKE = 'data/shakespeare_char'      # OLD domain (retention). base trains here.
-FT = 'data/sherlock_ft'              # NEW domain (adaptation). built from far_corpus.
+SHAKE = 'data/shakespeare_char'      # OLD domain (retention); --old_corpus overrides.
+FT = 'data/sherlock_ft'              # NEW-domain working slot. built from far_corpus.
 CONFIG = 'config/train_shakespeare_char.py'
 
 # The arms. Resume arms finetune a fork of the base; scratch_ceiling trains fresh.
@@ -90,14 +90,16 @@ def parse_retain(stdout):
     return curve
 
 
-def setup_ft(far_corpus):
-    """Build the NEW-domain dataset (data/sherlock_ft) from far_corpus, encoded in
-    Shakespeare's char vocab (so a resumed model's embedding matches). Holds out a
-    tail for the adaptation val, mirroring the proven far_val split. Returns a
-    distance dict for the artifact."""
+def setup_ft(far_corpus, ft_val_corpus=None):
+    """Build the NEW-domain dataset (the FT slot) from far_corpus, encoded in the
+    OLD corpus's vocab (so a resumed model's embedding matches). Default: hold out
+    a tail of far_corpus for the adaptation val (the proven far_val split). With
+    ft_val_corpus, the val set is that file instead and ALL of far_corpus trains —
+    the fact-injection protocol, where val = the held-out paraphrase template.
+    Returns a distance dict for the artifact."""
     os.chdir(SRC_DIR)
     if not os.path.exists(f'{SHAKE}/train.bin'):
-        log('Preparing Shakespeare char dataset (first run only)…', 2)
+        log(f'Preparing {SHAKE} dataset (first run only)…', 2)
         subprocess.run([sys.executable, f'{SHAKE}/prepare.py'],
                        capture_output=True, check=True)
 
@@ -105,8 +107,12 @@ def setup_ft(far_corpus):
     shake_train = np.array(np.memmap(f'{SHAKE}/train.bin', dtype=np.uint16, mode='r'))
     shake_val = np.array(np.memmap(f'{SHAKE}/val.bin', dtype=np.uint16, mode='r'))
 
-    n_val = min(len(far) // 10, len(shake_val))
-    ft_val, ft_train = far[-n_val:], far[:-n_val]
+    if ft_val_corpus:
+        ft_train = far
+        ft_val = _encode_corpus(ft_val_corpus, f'{SHAKE}/meta.pkl')
+    else:
+        n_val = min(len(far) // 10, len(shake_val))
+        ft_val, ft_train = far[-n_val:], far[:-n_val]
 
     os.makedirs(FT, exist_ok=True)
     ft_train.astype(np.uint16).tofile(f'{FT}/train.bin')
@@ -115,6 +121,7 @@ def setup_ft(far_corpus):
 
     dist = {
         'far_corpus': os.path.basename(far_corpus),
+        'ft_val_corpus': os.path.basename(ft_val_corpus) if ft_val_corpus else None,
         'ft_train_tokens': int(len(ft_train)),
         'ft_val_tokens': int(len(ft_val)),
         'token_js_new_vs_old_train': _token_js(ft_train.astype(np.uint16),
@@ -152,7 +159,7 @@ def train_base(seed, a, device, run_dir):
 
     log(f'Training base (seed {seed}, {a.base_steps} steps, {SHAKE})…', 2)
     rc, stdout = stream_train(
-        [sys.executable, '-u', 'train.py', CONFIG, f'--dataset=shakespeare_char',
+        [sys.executable, '-u', 'train.py', CONFIG, f'--dataset={a.old_corpus}',
          f'--seed={seed}', f'--device={device}', f'--max_iters={a.base_steps}',
          f'--eval_interval={a.base_steps}', f'--eval_iters={a.eval_iters}',
          '--log_interval=100', f'--out_dir={out}', '--always_save_checkpoint=True',
@@ -165,8 +172,23 @@ def train_base(seed, a, device, run_dir):
         raise RuntimeError(f'No eval lines for base (seed {seed}):\n{stdout[-1000:]}')
     r = {'ckpt': ckpt, 'val_best': min(curve.values()),
          'val_end': curve[max(curve)], 'curve': {str(k): v for k, v in sorted(curve.items())}}
+    if a.recall_prompts:
+        # Sanity floor: the base has never seen the facts — expect ~0 recall.
+        r['recall'] = run_recall(ckpt, a, device)
+        log(f'base recall (should be ~0): {r["recall"]["acc"]}', 2)
     json.dump(r, open(meta_f, 'w'), indent=2)
     return r
+
+
+def run_recall(ckpt, a, device):
+    """Closed-book exact-match recall on the injected facts (fact_recall.py)."""
+    p = subprocess.run([sys.executable, 'fact_recall.py', '--ckpt', ckpt,
+                        '--meta', f'{FT}/meta.pkl', '--prompts', a.recall_prompts,
+                        '--device', device],
+                       capture_output=True, text=True, timeout=3600)
+    if p.returncode != 0:
+        raise RuntimeError(f'fact_recall failed on {ckpt}:\n{p.stderr[-2000:]}')
+    return json.loads(p.stdout.strip().splitlines()[-1])
 
 
 def run_arm(arm, seed, base_ckpt, a, device, run_dir):
@@ -190,7 +212,10 @@ def run_arm(arm, seed, base_ckpt, a, device, run_dir):
     cmd = [sys.executable, '-u', 'train.py', CONFIG, f'--seed={seed}',
            f'--device={device}', f'--eval_interval={a.eval_every}',
            f'--eval_iters={a.eval_iters}', '--log_interval=100', f'--out_dir={out}',
-           '--compile=False', '--wandb_log=False', '--dataset=sherlock_ft'] + size_args(a)
+           '--compile=False', '--wandb_log=False', '--dataset=sherlock_ft',
+           # save at every eval so the on-disk ckpt is the END state (recall
+           # must score the finished arm, not its best-val snapshot)
+           '--always_save_checkpoint=True'] + size_args(a)
 
     if resume:
         shutil.copy(base_ckpt, f'{out}/ckpt.pt')          # fork the base
@@ -239,6 +264,9 @@ def run_arm(arm, seed, base_ckpt, a, device, run_dir):
         r['retain_curve'] = {str(k): v for k, v in sorted(retain.items())}
         r['retain_at_base'] = retain[a.base_steps]
         r['retain_at_end'] = retain[max(retain)]
+    if a.recall_prompts:
+        r['recall'] = run_recall(f'{out}/ckpt.pt', a, device)
+        log(f'arm "{arm}" recall: {r["recall"]["acc"]}', 2)
     json.dump(r, open(meta_f, 'w'), indent=2)
     return r
 
@@ -258,6 +286,8 @@ def score_seed(arms):
         f = round(v['retain_at_end'] - rb, 4)
         rec = {'forgetting': f, 'adapt_best': v['adapt_best'],
                'adapt_at_end': v['adapt_at_end'], 'adapt_overfits': v['adapt_overfits']}
+        if 'recall' in v:
+            rec['recall_acc'] = v['recall']['acc']
         if plain:
             pf = plain['retain_at_end'] - rb
             rec['forgetting_ratio_vs_plain'] = round(pf / f, 3) if abs(f) > 1e-6 else None
@@ -288,15 +318,28 @@ def run_key(a):
     # --tag disambiguates runs that share the schedule but differ in arm set (the
     # key does NOT hash arms, so a bigger arm set on the same schedule would collide
     # with / overwrite an earlier run's artifact without a distinct tag).
-    return (f"ft_{corpus}_b{a.base_steps}_f{a.ft_steps}_e{a.eval_every}"
-            f"_lr{a.learning_rate}_bs{a.batch_size}_bl{a.block_size}_seeds{seeds}"
-            + (f"_{a.tag}" if a.tag else ''))
+    key = (f"ft_{corpus}_b{a.base_steps}_f{a.ft_steps}_e{a.eval_every}"
+           f"_lr{a.learning_rate}_bs{a.batch_size}_bl{a.block_size}_seeds{seeds}")
+    if a.old_corpus != 'shakespeare_char':
+        key += f"_old{a.old_corpus[:8]}"
+    if a.ft_val_corpus:
+        key += "_fv"
+    return key + (f"_{a.tag}" if a.tag else '')
 
 
 def main():
     p = argparse.ArgumentParser(description='PRISM finetune-retention benchmark')
     p.add_argument('--far_corpus', default='data/far.txt',
-                   help='NEW-domain .txt (char-encoded in Shakespeare vocab)')
+                   help='NEW-domain .txt (encoded in the OLD corpus vocab)')
+    p.add_argument('--old_corpus', default='shakespeare_char',
+                   help='OLD-domain dataset dir under data/ (e.g. modernweb) — '
+                        'the base trains here and retention is scored on its val')
+    p.add_argument('--ft_val_corpus', default=None,
+                   help='.txt for the adaptation val set (fact-injection: the '
+                        'held-out paraphrase template). ALL of far_corpus trains.')
+    p.add_argument('--recall_prompts', default=None,
+                   help='TSV (kind, prompt, answer) — closed-book exact-match '
+                        'recall scored on the base and every finetuned arm')
     p.add_argument('--base_steps', type=int, default=2000)
     p.add_argument('--ft_steps', type=int, default=1000)
     p.add_argument('--ft_warmup', type=int, default=20,
@@ -320,6 +363,8 @@ def main():
                    help='disambiguator folded into the run key / artifact (use a '
                         'distinct tag when a new arm set shares a prior run schedule)')
     a = p.parse_args()
+    global SHAKE
+    SHAKE = f'data/{a.old_corpus}'
     a.seeds = [int(s) for s in a.seeds.split(',') if s.strip()]
     arms = [x for x in a.arms.split(',') if x.strip()]
     bad = [x for x in arms if x != 'base' and x not in ARM_SPECS]
@@ -350,7 +395,7 @@ def main():
     log(f'base {a.base_steps} steps ({SHAKE}) → finetune {a.ft_steps} steps '
         f'({a.far_corpus}) @ LR {a.learning_rate}', 2)
 
-    dist = setup_ft(a.far_corpus)
+    dist = setup_ft(a.far_corpus, ft_val_corpus=a.ft_val_corpus)
     lock = acquire_lock(run_dir)
     try:
         per_seed, per_seed_metrics = [], []
@@ -400,6 +445,8 @@ def _persist(stamp, key, a, dist, device, arms, per_seed, metrics, complete):
                 'forgetting_ratio_vs_plain': _agg([g.get('forgetting_ratio_vs_plain') for g in got]),
                 'adaptation_cost_vs_plain': _agg([g.get('adaptation_cost_vs_plain') for g in got]),
                 'overfits_any': any(g['adapt_overfits'] for g in got),
+                'recall_seen': _agg([g.get('recall_acc', {}).get('seen') for g in got]),
+                'recall_unseen': _agg([g.get('recall_acc', {}).get('unseen') for g in got]),
             }
         summary = {
             'n_seeds': len(metrics),
@@ -424,6 +471,9 @@ def _persist(stamp, key, a, dist, device, arms, per_seed, metrics, complete):
         'provenance': provenance(),
         'config': {
             'far_corpus': a.far_corpus,
+            'old_corpus': a.old_corpus,
+            'ft_val_corpus': a.ft_val_corpus,
+            'recall_prompts': a.recall_prompts,
             'base_steps': a.base_steps, 'ft_steps': a.ft_steps,
             'ft_warmup': a.ft_warmup, 'eval_every': a.eval_every,
             'eval_iters': a.eval_iters, 'seeds': a.seeds, 'arms': arms,
@@ -468,7 +518,11 @@ def _report(a):
           + (f' · scratch ceiling {s["adapt_best_ceiling"]["median"]:.3f}'
              if s.get('adapt_best_ceiling') else ''))
     print('  ' + '-' * 74)
-    print(f'    {"arm":16} | {"forget↓":>8} | {"adapt↓":>7} | {"less-forget/plain":>17} | overfit')
+    has_recall = any(g.get('recall_seen') for g in s['arms'].values())
+    hdr = (f'    {"arm":16} | {"forget↓":>8} | {"adapt↓":>7} | {"less-forget/plain":>17} | overfit')
+    if has_recall:
+        hdr += f' | {"seen":>6} | {"unseen":>6}'
+    print(hdr)
     print('  ' + '-' * 74)
     # order: plain first, then anchors by forgetting (best retention first)
     items = sorted(s['arms'].items(),
@@ -479,8 +533,13 @@ def _report(a):
         ab = g['adapt_best']['median'] if g['adapt_best'] else float('nan')
         rr = g['forgetting_ratio_vs_plain']
         rr_s = f'{rr["median"]:.2f}x' if rr and rr['median'] is not None else '—'
-        print(f'    {name:16} | {fo:>+8.3f} | {ab:>7.3f} | {rr_s:>17} | '
-              f'{"Y" if g["overfits_any"] else "n"}')
+        line = (f'    {name:16} | {fo:>+8.3f} | {ab:>7.3f} | {rr_s:>17} | '
+                f'{"Y" if g["overfits_any"] else "n"}')
+        if has_recall:
+            rs = g.get('recall_seen'); ru = g.get('recall_unseen')
+            line += (f' | {rs["median"]:>6.0%}' if rs else ' |      —')
+            line += (f' | {ru["median"]:>6.0%}' if ru else ' |      —')
+        print(line)
     print('  ' + '-' * 74)
     print('    forget↓ = old-domain (Shakespeare) val climb from base (lower=better).')
     print('    adapt↓  = new-domain (Sherlock) best val (lower=better; beat the ceiling).')
