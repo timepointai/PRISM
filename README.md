@@ -1,9 +1,9 @@
 # PRISM
 
-**Transfer the *geometry* of a trained neural network — not its weights, not its
-data — and training gets dramatically faster, forgets less, and compounds with
-other priors.** Validated end-to-end on nanoGPT char-level (10.65M params), three
-seeds, every number backed by a committed artifact in [`results/`](results/).
+**Run an SVD over a trained neural network's weights and compress the shape of
+what training built into a ~128-byte fingerprint. That fingerprint — not the
+weights, not the data — is where the trainability lives.** PRISM extracts it,
+transplants it, and measures what it carries. It turns out to carry a lot.
 
 *(Formerly `nanogpt-prism-shakespeare`, now archived — full history
 [there](https://github.com/timepointai/nanogpt-prism-shakespeare); development
@@ -15,35 +15,83 @@ continues here.)*
 
 ---
 
-Every trained model's weight matrices have a geometry: `W = U Σ Vᵀ` — the
-**directions** (U, V: which subspaces the model uses) and the **spectrum** (Σ: how
-much energy it puts in each). PRISM is three small operations on that geometry:
+Everything below is measured on a deliberately small bench — nanoGPT char-level,
+10.65M params, three seeds, one L4 — and every number has a committed artifact in
+[`results/`](results/). The bench is just the pointing hand: **the claims are
+about the finger(print), not what it happens to be pointing at.**
 
-1. **Spectral Imprint** — compress the teacher's singular-value distribution to
-   8 DCT coefficients per weight group (**~128 bytes total**) and reshape a fresh
-   model's spectrum to match at init.
-2. **EigenTransfer** — blend the fresh model's singular vectors 75% toward the
-   teacher's, then re-orthogonalize.
-3. **Mod Wheel** — after every optimizer step, pull the weights gently back toward
-   a stored target: `W ← (1−s)·W + s·W_target`. Pointed at a spectral target it
-   regularizes a from-scratch run; pointed at a model's *own* weights it prevents
-   catastrophic forgetting.
+## What's interesting
 
-No parameters are copied. Only geometry. The through-line of every result below:
-**the spectral geometry is special** — it is transferable, data-independent
-structure, and it compounds.
+### 1. Two tiny priors compound to 30× — and the best loss of anything measured
 
-## The results
+Stack PRISM's *geometric* prior on a fixed *statistical* one — a shared n-gram
+prior fused into the logits as a product of experts, so the model only learns the
+residual — and the two multiply: PRISM alone 15×, the n-gram alone 3.8×, **the
+hybrid 30× to baseline quality, at the best final loss of all four arms** — below
+the baseline, below PRISM alone, below the n-gram's own floor. Geometry is what
+breaks the residual through the statistical ceiling. (Single-seed probe; the
+documented path from here to a literal reach-baseline-*at-init* 1000× needs a
+context-4+ sparse prior — see [What's next](#whats-next).) Full study:
+[`docs/PRIOR-FUSED-PRISM.md`](docs/PRIOR-FUSED-PRISM.md).
+
+### 2. ~128 bytes of geometry trains a fresh model ~12× faster
+
+Hand a fresh model nothing but a trained one's spectral fingerprint — no weights
+copied, no data shared — and it reaches the from-scratch baseline's best quality
+in ~100 steps instead of ~1,200 (**11.8× median**, resolved, not a bound; **7×**
+with the schedule held identical so *only* the spectral flags differ). And it
+**stops overfitting**: through 5,000 steps the baseline collapses from 1.78 to
+~2.31 on every seed; the fingerprinted model holds. The advantage tracks the
+teacher's geometry exactly — it grows with teacher training and saturates right
+where the teacher itself converges; a barely-trained teacher's geometry is noise
+imprinted with authority, *worse* than random init.
+Evidence: [`RESULTS.md`](RESULTS.md) §1–2, §5.
+
+### 3. It's the finger, not what it points at
+
+Three experiments built to kill the "the teacher leaked its content" explanation,
+in escalating order:
+
+- **Same corpus, disjoint data.** Teacher and student get overlapping or disjoint
+  halves of 100 random blocks (difficulty-controlled). The head start is
+  **identical at 100% and 0% overlap** ([`RESULTS.md`](RESULTS.md) §3).
+- **Different corpus.** Move the student to Sherlock Holmes and score it on
+  held-out *Sherlock*: the advantage doesn't shrink — it *grows* slightly
+  (Δloss 0.591 → 0.627; [`RESULTS.md`](RESULTS.md) §4).
+- **Teacher never sees the corpus at all.** Train the teacher *exclusively* on
+  Sherlock, transplant its ~128-byte fingerprint into a Shakespeare student: it
+  still trains **4.6×** faster at near-identical final quality — about half the
+  speedup and ~80% of the quality gain of a same-corpus teacher on the identical
+  rig ([`RESULTS.md`](RESULTS.md) §10).
+
+So the fingerprint is not "a Shakespeare model, compressed." It is substantially
+a property of the *modality* — transferable, data-independent structure — and a
+matched teacher buys the remaining half of the speed, not the phenomenon.
+
+### 4. Pointed backward, it retains instead of transfers: ~10× less forgetting
+
+The same machinery, anchored to a trained model's *own* weights during a
+finetune, cuts catastrophic forgetting by **up to ~10×** while the model still
+genuinely learns the new domain — Pareto-dominating the lower-learning-rate
+frontier (~2× more retention at equal adaptation). The attribution landed on a
+negative to the obvious guess: retention is carried by the raw *directions*, not
+the spectrum (an only-spectrum anchor does nothing; a wrong-spectrum placebo
+harms). And the two uses **compound**: a base that was PRISM-pretrained finetunes
+with **≈ zero forgetting** and adapts ~8% better at matched quality — attributably
+the spectral geometry, not the schedule. Full studies:
+[`docs/FINETUNE-RETENTION.md`](docs/FINETUNE-RETENTION.md),
+[`docs/UNIFIED-ARC.md`](docs/UNIFIED-ARC.md).
+
+### The ledger
 
 | study | finding | evidence |
 |---|---|---|
-| **From-scratch transfer** | a teacher's spectral geometry → a fresh model reaches baseline quality **11.8×** faster (tuned; **7×** schedule-matched), and stops overfitting | [`RESULTS.md`](RESULTS.md) §1–2 |
-| **Structure, not content** | the head start is **identical at 100% and 0%** teacher/student data overlap, and *grows* slightly when the student trains and is scored on a different corpus | [`RESULTS.md`](RESULTS.md) §3–4 |
-| **Finetune retention** | Mod Wheel self-anchored during a finetune → up to **~10× less catastrophic forgetting**, Pareto-dominating low-LR; attribution: a *raw directional* anchor, not spectral | [`docs/FINETUNE-RETENTION.md`](docs/FINETUNE-RETENTION.md) |
-| **The arc** | a PRISM-*pretrained* base is a far better finetune-anchor at matched quality: **≈0 forgetting, ~8% better adaptation** — attributably the spectral geometry | [`docs/UNIFIED-ARC.md`](docs/UNIFIED-ARC.md) |
-| **Prior-Fused PRISM** | fuse a fixed T9-style n-gram prior into the logits and stack PRISM: **30×** hybrid — double PRISM alone — at the best loss of all arms | [`docs/PRIOR-FUSED-PRISM.md`](docs/PRIOR-FUSED-PRISM.md) |
-
-| **Teacher-free init** | a fingerprint from a teacher that **never saw the target corpus** still trains it **4.6×** faster at near-identical final quality (vs. 9.9× same-corpus, identical rig) — portable, not yet free | [`RESULTS.md`](RESULTS.md) §10 |
+| **Prior-Fused PRISM** | geometry × statistics compound: **30×** hybrid at the best loss of all arms | [`docs/PRIOR-FUSED-PRISM.md`](docs/PRIOR-FUSED-PRISM.md) |
+| **From-scratch transfer** | **11.8×** faster to baseline quality (tuned; **7×** schedule-matched), no overfitting | [`RESULTS.md`](RESULTS.md) §1–2 |
+| **Structure, not content** | head start identical at 100% and 0% data overlap; grows on a different corpus | [`RESULTS.md`](RESULTS.md) §3–4 |
+| **Teacher-free init** | a fingerprint from a teacher that **never saw the target corpus** keeps **4.6×** of 9.9× and ~80% of the quality gain | [`RESULTS.md`](RESULTS.md) §10 |
+| **Finetune retention** | self-anchored Mod Wheel → up to **~10× less forgetting**, beating low-LR on the Pareto frontier | [`docs/FINETUNE-RETENTION.md`](docs/FINETUNE-RETENTION.md) |
+| **The arc** | a PRISM-pretrained base finetunes with **≈0 forgetting, ~8% better adaptation** at matched quality | [`docs/UNIFIED-ARC.md`](docs/UNIFIED-ARC.md) |
 
 Every number has a matching committed `results/*.json` (loss curves, provenance,
 git commit, argv, censoring flags). A claim without an artifact is not a result in
@@ -51,81 +99,49 @@ this repo.
 
 <img src="assets/prism-transfer.svg" alt="Left: validation loss at step 100 versus teacher/student data overlap, with the student scored on its own data mixture — the from-scratch baseline sits at ~2.47 while the PRISM recipe sits at ~1.88, and the gap grows from 0.591 at full overlap to 0.627 when the student trains and is scored entirely on Sherlock Holmes. Right: the advantage versus teacher training steps — negative at a 100-step teacher, rising monotonically and saturating at a +0.46 plateau around 2,000 steps, where the teacher itself converges; 4k and 8k teachers are flat." width="100%">
 
-## Why this is interesting
+## How it works
 
-The obvious explanation for any teacher→student speedup is that the teacher leaked
-its *content*. The experiments were built to kill that explanation, and they did:
+Every weight matrix of a trained model factors as `W = U Σ Vᵀ`: the
+**directions** (U, V — which subspaces the model decided were worth using) and
+the **spectrum** (Σ — how much energy it put in each). Together they describe the
+model's *organization* without describing anything it *knows*. PRISM is three
+small operations on that geometry:
 
-1. **Same corpus, disjoint data.** Cut the corpus into 100 random blocks, give
-   teacher and student overlapping or disjoint halves (both spanning the whole
-   corpus, so difficulty is controlled). The early advantage is **identical at
-   100% and 0% overlap** ([`…T050203Z`](results/recipe_20260721T050203Z.json)).
-2. **Different corpus entirely.** Swap the student's data for Sherlock Holmes and
-   score it on held-out *Sherlock*. A Shakespeare teacher's geometry accelerates
-   learning of Sherlock at least as much as Shakespeare — Δloss 0.627 vs. 0.591
-   ([`…T161208Z`](results/recipe_20260721T161208Z.json)).
+1. **Spectral Imprint** — compress the teacher's singular-value distribution to
+   8 DCT coefficients per weight group (**~128 bytes total** — the fingerprint)
+   and reshape a fresh model's spectrum to match at init.
+2. **EigenTransfer** — blend the fresh model's singular vectors 75% toward the
+   teacher's, then re-orthogonalize.
+3. **Mod Wheel** — after every optimizer step, pull the weights gently back
+   toward a stored target: `W ← (1−s)·W + s·W_target`.
 
-3. **Teacher never sees the corpus at all.** Train the teacher *exclusively* on
-   Sherlock and use its ~128-byte fingerprint to init a Shakespeare student: it
-   still reaches baseline-best quality **4.6×** faster (median of 3, resolved),
-   at a final loss the baseline never touches — about half the speedup and ~80%
-   of the quality gain of a same-corpus teacher on the identical rig
-   ([`…T164604Z`](results/recipe_20260725T164604Z.json) vs.
-   [`…T164640Z`](results/recipe_20260725T164640Z.json)). The geometry is
-   substantially a *modality* property; a matched teacher still buys the other
-   half.
+No parameters are copied. Only geometry. The student learns its own content from
+scratch — it just doesn't spend its first thousand steps rediscovering *how a
+transformer should be shaped*, and it doesn't drift out of that shape later
+(which is what overfitting looks like, geometrically).
 
-And the effect tracks exactly what it should if the geometry is what matters: the
-advantage grows with teacher training and **saturates right where the teacher
-itself converges** (≈2,000 steps; 4k/8k teachers add nothing —
-[`…T143246Z`](results/recipe_20260721T143246Z.json),
-[`…T172238Z`](results/recipe_20260721T172238Z.json)). A barely-trained teacher's
-geometry is noise imprinted with authority — actively *worse* than random init.
+<img src="assets/prism-method.svg" alt="How PRISM works: SVD a trained teacher into directions (U, V) and a spectrum, compress the spectrum to 8 DCT coefficients, inject both into a fresh student, then hold the student toward the spectral target with the mod wheel." width="100%">
 
-## The other direction: finetuning without forgetting
+<img src="assets/prism-imprint.svg" alt="Deriving the spectral imprint: SVD each trained weight matrix, normalize and average the singular values per group, then least-squares fit 8 cosine (DCT) coefficients. The plot overlays a real group-averaged spectrum against its reconstruction from just 8 coefficients, mean absolute error about 0.03." width="100%">
 
-Everything above hands a trained model's geometry to a *fresh* one. The same Mod
-Wheel, pointed the other way — anchored to a trained model's **own pre-finetune
-weights** — lets it adapt to a new domain without wrecking the old one:
+The same three parts run in two directions, and the measurements split the
+geometry cleanly between them:
+
+- **Forward (transfer):** the **spectrum carries structure** — data-independent,
+  portable across corpora, the thing findings 1–3 above are about.
+- **Backward (retain):** the **directions carry content** — domain-specific, and
+  *pinning* them is what prevents forgetting. The whole backward method is one
+  line, applied after each optimizer step of a finetune:
 
 ```
-# after each optimizer step, for every weight matrix:
-W  ←  (1 − s)·W  +  s·W₀        # s ≈ 0.01–0.02, constant
+W  ←  (1 − s)·W  +  s·W₀        # W₀ = the pre-finetune weights; s ≈ 0.01–0.02
 ```
 
-| finetune arm (Shakespeare → Sherlock, 3 seeds) | forgets Shakespeare | learns Sherlock | vs. plain |
-|---|---|---|---|
-| plain finetune | +0.43 | 1.25 | 1× |
-| **Mod Wheel anchor (s = 0.02)** | **+0.04** | 1.37 | **~10× less forgetting** |
+Gradient descent still dominates each step, so the model keeps learning the new
+domain — but it never drifts far from what it already knew. `s` is the
+retention/plasticity dial.
 
-The anchored model still beats a from-scratch Sherlock model — it genuinely learns
-the new domain. The attribution landed on a **negative** to the obvious guess:
-anchoring only the *spectrum* does nothing for retention (1.07×), a wrong-spectrum
-placebo actively harms (0.39×), and the anchor Pareto-dominates the low-LR
-frontier (~2× more retention at equal adaptation). The protection is a raw
-**directional / whole-weight** anchor. That splits PRISM's geometry cleanly:
-
-- **Spectrum → structure.** Data-*independent*; *transfer* it into fresh models.
-- **Directions → content.** Domain-*specific*; *pin* them to retain what's known.
-
-Full study, frontier, and bounds: [`docs/FINETUNE-RETENTION.md`](docs/FINETUNE-RETENTION.md).
-
-### The two directions compound
-
-A base that was itself PRISM-*pretrained* makes a much better thing to
-anchor-*finetune*: at **matched** Shakespeare quality, a PRISM base finetunes on
-Sherlock with **≈ zero forgetting** (vs. +0.05 nats plain) and adapts **~8%
-better** — and a schedule-matched plain control confirms it's the spectral
-geometry, not the learning rate. Full study: [`docs/UNIFIED-ARC.md`](docs/UNIFIED-ARC.md).
-
-### …and they compound with a statistical prior
-
-Fuse a tiny fixed **shared n-gram prior** into the logits as a product of experts
-(`final = model_logits + λ·log p_ngram`), so the model learns only the residual,
-and stack PRISM on top. Measured as steps-to-baseline-quality: PRISM alone 15×,
-the n-gram alone 3.8×, **the hybrid 30× — at the best loss of all four arms**,
-below even the n-gram's own floor. Statistics from T9, geometry from PRISM, and
-they stack. Full study: [`docs/PRIOR-FUSED-PRISM.md`](docs/PRIOR-FUSED-PRISM.md).
+<img src="assets/prism-result.svg" alt="Validation loss over training, nanoGPT Shakespeare, three seeds each. The baseline (LR 1e-3) falls to ~1.78 near step 1,400 then overfits to ~2.30 by step 5,000. The PRISM recipe at LR 5e-4 holds ~1.66; the recipe run at the baseline's own LR of 1e-3, where only the spectral flags differ, holds ~1.67 and also never overfits." width="100%">
 
 ## Use it
 
@@ -198,29 +214,29 @@ bottom of the [visual explainer](https://timepointai.github.io/PRISM/docs/how-pr
 a standalone, self-contained page (no scripts, no external requests) served from
 GitHub Pages; source: [`docs/how-prism-works.html`](docs/how-prism-works.html).
 
-<img src="assets/prism-method.svg" alt="How PRISM works: SVD a trained teacher into directions (U, V) and a spectrum, compress the spectrum to 8 DCT coefficients, inject both into a fresh student, then hold the student toward the spectral target with the mod wheel." width="100%">
-
-<img src="assets/prism-result.svg" alt="Validation loss over training, nanoGPT Shakespeare, three seeds each. The baseline (LR 1e-3) falls to ~1.78 near step 1,400 then overfits to ~2.30 by step 5,000. The PRISM recipe at LR 5e-4 holds ~1.66; the recipe run at the baseline's own LR of 1e-3, where only the spectral flags differ, holds ~1.67 and also never overfits." width="100%">
-
 ## Honest bounds on the claims
 
 Every number above has a committed artifact, and every artifact has a scope:
 
-- **The transfer probes are early-window measurements** (step-100, init-dominated,
-  3 seeds, matched LR). They prove the head start is structural and
-  domain-portable; the long-horizon no-overfitting runs (1,500 / 5,000 steps) are
-  same-data.
+- **The 30× is a single-seed probe** and measures the compounding of two free
+  priors (the fused arms start near baseline) — the defensible claim is that the
+  hybrid beats PRISM alone *and* reaches the best loss, not that PRISM alone is
+  30×. The three-seed spine of the story is the transfer/retention work.
+- **The transfer probes are early-window measurements** (step-100,
+  init-dominated, 3 seeds, matched LR). They prove the head start is structural
+  and domain-portable; the long-horizon no-overfitting runs (1,500 / 5,000
+  steps) are same-data.
 - **"Different corpus" means Sherlock Holmes** — a different author, but still
   English prose over the same character vocabulary (token-JS ≈ 0.03). A genuinely
   different modality (code, another language) is untested and is where the plain
   recipe may finally need the geometric levers.
+- **Teacher-free init is measured at one distance, in one direction**
+  (Sherlock → Shakespeare), and the cross teacher trained on ~40% less data than
+  the control's — a teacher-corpus-size control is the immediate follow-up before
+  reading the "missing half" as a distance effect.
 - **Spectral vs. generic regularization is not fully isolated** — the
   teacher-strength dependence argues the spectral target matters, but a
   tuned-dropout/weight-decay control has not been run.
-- **Teacher-free init is measured at one distance, in one direction**
-  (Sherlock → Shakespeare, token-JS 0.028), and the cross teacher trained on ~40%
-  less data than the control's — a teacher-corpus-size control is the immediate
-  follow-up before reading the "missing half" as a distance effect.
 - **Scale:** 10.65M params, ~1M-token corpora. Nothing here has met a production
   model.
 - **In finetuning, the retention shown is old-domain retention**, not new-domain
@@ -271,14 +287,14 @@ own isolated Modal volumes — `prism_modal_finetune.py`, `prism_modal_arc.py`,
 The ranked, run-command-ready list lives in
 [`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md). Highlights:
 
-1. **A truly far modality** — point the far-corpus arm at source code or another
-   language (needs a vocab decision) and find where structural transfer degrades;
-   that's where the opt-in geometric levers (Grassmann pairing, top-k, CKA —
-   contributed in PR #1) get their real test.
-2. **The reach-at-init moonshot** — the Prior-Fused hybrid reaches baseline
+1. **The reach-at-init moonshot** — the Prior-Fused hybrid reaches baseline
    quality *at init* if the shared prior sits clearly below baseline; that needs a
    **context-4+ sparse n-gram** (dense V⁴ times out). The documented path from the
    30× hybrid toward a literal 1000×.
+2. **A truly far modality** — point the far-corpus arm at source code or another
+   language (needs a vocab decision) and find where structural transfer degrades;
+   that's where the opt-in geometric levers (Grassmann pairing, top-k, CKA —
+   contributed in PR #1) get their real test.
 3. **Close the teacher-free gap** — a teacher-corpus-size control (was the
    missing half of the speedup just 40% less teacher data?), a second far corpus
    to map score-vs-distance, and averaged multi-corpus (Σ\*) fingerprints.
