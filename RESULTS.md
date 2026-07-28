@@ -33,6 +33,8 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | U | **Fact injection (§12)**: closed-book recall of novel facts — anchor vs low-LR vs plain, modernweb base | [`finetune_20260727T203023Z.json`](results/finetune_20260727T203023Z.json) |
 | V | **Fact injection round 2 (§12)**: the weak-band anchor + selective (free-FFN / free-attn) anchors | [`finetune_20260727T230910Z.json`](results/finetune_20260727T230910Z.json) |
 | W | **Catalog task (§13)**: scored structured-decision workflow — the dial on *judgment*, not facts | [`finetune_20260728T044511Z.json`](results/finetune_20260728T044511Z.json) |
+| X | **enwik8 (§14)**: dirs_only on the canonical byte-LM bench — 2.90×, −0.152 bpb | [`dirs_only_20260728T054705Z.json`](results/dirs_only_20260728T054705Z.json) |
+| Y | **Cold directions (§15)**: never-trained analytic DCT bases — refuted, 3/3 seeds | [`dirs_only_20260728T060256Z.json`](results/dirs_only_20260728T060256Z.json) |
 
 ## 1. Speed: ~12×, resolved (Run C)
 
@@ -463,6 +465,48 @@ protected brands), single-format prompts, and the same unmapped dial region
 (0.0025–0.01) as §12. The natural production analog — the anchor as a
 zero-forward-pass alternative to KL-to-reference in RL post-training — is
 designed but unrun (see NEXT-EXPERIMENTS).
+
+## 14. enwik8: the canonical bench, same verdict (Run X)
+
+The §11 protocol on the benchmark with two decades of published numbers around
+it: **enwik8** ([`data/enwik8/`](data/enwik8/), standard 90M/5M split, final
+5M test tail untouched, fixed corpus sha256 in the README). 3 seeds, matched
+schedules, 2,000-step native teachers, dense eval. The 90M pool means the
+1,500-step student sees every byte **once at most** — zero epochs, the purest
+adequate-data regime yet, and the least hospitable setting for any
+memorization-flavored account of the head start.
+
+| medians of 3 | best (nats/byte) | best (bits/byte) |
+|---|---|---|
+| baseline @1,500 steps | 1.3388 | 1.9315 |
+| **dirs_only** | **1.2335** | **1.7796** |
+
+**dirs_only reaches the baseline's best quality 2.90× faster (2.72–3.10, all
+resolved) and converges 0.152 bpb below anything the baseline reaches** — it
+passes the baseline's *final* quality at ~step 500 and leads by 1.40 bpb at
+step 100. Third corpus, third win for geometry-at-init; first on a bench
+where every number has published context. (These are probe-horizon figures —
+1,500 steps, 10.65M params — not literature-competitive absolute bpb.)
+
+## 15. Cold directions: never-trained geometry is refuted (Run Y)
+
+The cold-assembly control. Runs R/X show *trained* directions carry the
+transfer; Run S shows ~random directions don't. The missing cell: directions
+that are **structured but never trained** — analytic orthonormal DCT-II bases
+(pure trigonometry, low-frequency-first, `src/gen_cold_directions.py`) paired
+with GPT-2's universal spectrum ([`fingerprints/cold-dct/`](fingerprints/cold-dct/)),
+so *nothing* in the fingerprint was trained on anything relevant. Modern-web
+bench, 3 seeds, no teacher stage at all.
+
+**Refuted, 3/3 seeds**: a marginally better init (step-0 Δ +0.28) that falls
+behind by step 10 and never reaches baseline-best (1.539 vs 1.489 median).
+Smooth well-formedness is not the load-bearing property — **training is**.
+The triad closes cleanly: trained directions win (R, X), random directions
+lose (S), structured-but-untrained directions lose (Y). Geometry is *mined*,
+not *drawn* — which makes trained checkpoints (the "geometry commons") the
+irreducible asset in any cold-assembly or amortized-init scheme, and makes
+fingerprint *reuse* (§10, and the energy passes below) the economically
+interesting operation.
 
 ## What this does NOT establish
 

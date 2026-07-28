@@ -147,6 +147,8 @@ projection — see [What's next](#whats-next)).
 | study | finding | evidence |
 |---|---|---|
 | **Modern-web transfer** | geometry-at-init beats a non-overfitting FineWeb-Edu baseline: **3.3×** to its best, **−0.11 nats** beyond it | [`RESULTS.md`](RESULTS.md) §11 |
+| **enwik8** | the same effect on the canonical byte-LM bench: **2.90×** to baseline-best, **−0.152 bpb** beyond it, zero-epoch data regime | [`RESULTS.md`](RESULTS.md) §14 |
+| **Cold directions** | never-trained analytic bases refuted (3/3) — geometry is *mined*, not *drawn*; trained checkpoints are the commons | [`RESULTS.md`](RESULTS.md) §15 |
 | **From-scratch transfer (scarce data)** | **11.8×** tuned / **7×** schedule-matched to baseline-best; no overfitting where every baseline overfits | [`RESULTS.md`](RESULTS.md) §1–2 |
 | **Structure, not content** | advantage identical at 100% and 0% data overlap; grows on a different corpus | [`RESULTS.md`](RESULTS.md) §3–4 |
 | **Teacher-free init** | a teacher that **never saw the target corpus** keeps **4.6×** of 9.9× and ~80% of the quality gain | [`RESULTS.md`](RESULTS.md) §10 |
