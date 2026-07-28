@@ -359,6 +359,14 @@ docs. Everything is stepwise-resumable and refuses to score partial runs.
 
 ## What's next
 
+**The core bet, pre-registered:** everything above is probe-scale. The claim
+that would change training economics — and its failure condition — is written
+down in [`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md): a
+PRISM-initialized run on a trusted public family (Pythia/OLMo) reaching the
+published baseline's loss in meaningfully fewer tokens, holding at 410M–1B.
+If the advantage fades toward 1× with scale, the core bet has failed,
+regardless of how good this page looks.
+
 The ranked, run-command-ready list lives in
 [`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md). Highlights:
 

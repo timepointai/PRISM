@@ -79,6 +79,32 @@ KL-to-ref, no-KL + weak anchor, neither; score task reward, general-benchmark
 retention, and training throughput — the anchor arm needs no reference-model
 forwards; ~$500 scale, adjacent prior art: Elastic Reset).
 
+## THE CORE BET (2026-07-28) — pre-registered, above everything below
+
+**Claim under test:** on a trusted open model family (Pythia or OLMo), a
+PRISM-initialized run reaches the same validation loss — and the same
+downstream scores — using meaningfully fewer tokens than the published
+baseline. **The primary number is tokens-to-target-loss.** Downstream
+metrics are confirmation, not the main event.
+
+**Decision rule, both directions:** if the tokens-to-loss advantage survives
+to 410M–1B on a public family with clean comparisons, this is real. If the
+advantage fades toward 1× as scale increases, **the core bet has failed,
+regardless of how good the small-scale results looked** — no reframing, no
+retreat to the side results.
+
+**Explicitly demoted to supporting evidence:** compressor comparisons on
+enwik8, small-scale retention wins on synthetic shifts, framing and charts,
+and absolute capability against larger models. Useful context; not the thing
+that changes training economics.
+
+**Why the comparison can be unusually clean:** Pythia published architecture,
+exact data order, schedules, checkpoints, and loss curves. The baseline needs
+no trust and no re-run; our arm is the same architecture, same token stream,
+same schedule, with exactly one variable changed — the initialization. The
+next dollar of GPU spend goes to this track's G2 gate (below), not to further
+refinement of the small bench.
+
 ## The three outcomes (2026-07-28) — what "wildly successful" looks like, and the ladder to each
 
 Ranked by field status; every rung gated, with kill-criteria, so no tier is
