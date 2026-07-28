@@ -1,0 +1,47 @@
+PRISM — Copyright (c) 2026 Timepoint Labs (Timepoint AI).
+Licensed under the PRISM Community License 1.0 (see LICENSE).
+
+THE LICENSE THRESHOLD
+All versions up to and including git commit 00d7a3c (July 28, 2026), and the
+entire archived predecessor repository timepointai/nanogpt-prism-shakespeare,
+were published under the MIT License and remain available under it. Versions
+after that commit are governed by the PRISM Community License 1.0.
+
+THIRD-PARTY COMPONENTS (MIT, notices preserved)
+
+1. nanoGPT — Copyright (c) 2022 Andrej Karpathy. MIT License.
+   Files: src/model.py, src/configurator.py, src/sample.py, src/bench.py,
+   data/shakespeare/prepare.py, data/shakespeare_char/prepare.py,
+   data/openwebtext/prepare.py, and the base training loop of src/train.py
+   (PRISM hooks added; all off by default).
+
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the
+   "Software"), to deal in the Software without restriction, including
+   without limitation the rights to use, copy, modify, merge, publish,
+   distribute, sublicense, and/or sell copies of the Software, and to
+   permit persons to whom the Software is furnished to do so, subject to
+   the following conditions: The above copyright notice and this permission
+   notice shall be included in all copies or substantial portions of the
+   Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+   KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+2. Geometric-alignment contributions (Grassmann pairing, top-k transfer,
+   CKA regularizer) — contributed by Leonard Wang via PR #1 to the
+   predecessor repository under its then-current MIT License; incorporated
+   here with that notice preserved.
+
+DATA PROVENANCE
+- data/far.txt: Project Gutenberg #1661 (public domain, boilerplate stripped).
+- data/modernweb/: slice of FineWeb-Edu (HuggingFaceFW), ODC-By 1.0 —
+  attribution and hashes in data/modernweb/README.md.
+- data/enwik8/: the Hutter Prize corpus, downloaded at prepare time (not
+  redistributed here) — hashes in data/enwik8/README.md.
+- fingerprints/gpt2-124M/: 40 aggregate statistics of OpenAI's publicly
+  released GPT-2 weights (© OpenAI, modified-MIT), redistributed for
+  reproducibility.

@@ -428,15 +428,30 @@ src/prism_selftest.py         ← 30 offline invariant tests — run before any 
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+**PRISM Community License 1.0** — see [LICENSE](LICENSE) and
+[NOTICE](NOTICE). In brief: Apache-2.0-scope rights, free, for individuals,
+researchers, and organizations under **US $100M annual revenue** — use it,
+modify it, ship it. Two uses are reserved and require a commercial license
+from Timepoint Labs: use by larger enterprises, and **any training run over
+10²⁴ FLOPs / 1T tokens** (by anyone) using the software or geometry it
+extracts. If PRISM helps train a frontier model, Timepoint gets paid. This is
+source-available, not OSI open source.
 
-A standalone clone of [nanoGPT](https://github.com/karpathy/nanoGPT) by Andrej
-Karpathy (MIT, © 2022), not a fork. `model.py`, `configurator.py`, `bench.py`,
-`sample.py`, and the `data/` preparers are his; `train.py` is his with PRISM
-hooks added (all off by default — a scratch run is byte-identical to nanoGPT).
-The PRISM code (`prism_*.py`, `fact_recall.py`, `gen_cold_directions.py`,
-`build_ngram_prior.py`, `config/prism_*.py`) is Timepoint Labs', under the
-same terms.
+**The threshold is explicit and honest:** everything published through commit
+[`00d7a3c`](https://github.com/timepointai/PRISM/commit/00d7a3c) (July 28,
+2026) — and the entire archived predecessor repo — was MIT-licensed, and
+those grants are irrevocable for those versions. The new license governs
+everything after that commit: the license text itself names the threshold
+commit.
+
+Third-party components keep their original MIT terms with notices preserved
+in [NOTICE](NOTICE): PRISM is a standalone clone of
+[nanoGPT](https://github.com/karpathy/nanoGPT) by Andrej Karpathy (MIT,
+© 2022) — `model.py`, `configurator.py`, `bench.py`, `sample.py`, and the
+`data/` preparers are his; `train.py` is his with PRISM hooks added (all off
+by default — a scratch run is byte-identical to nanoGPT). The
+geometric-alignment levers were contributed by Leonard Wang (PR #1, MIT,
+notice preserved).
 
 ---
 

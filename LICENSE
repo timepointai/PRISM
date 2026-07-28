@@ -1,21 +1,109 @@
-MIT License
+PRISM COMMUNITY LICENSE
+Version 1.0 — July 28, 2026
 
-Copyright (c) 2022 Andrej Karpathy
+Copyright (c) 2026 Timepoint Labs (Timepoint AI).
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This license governs the PRISM software and associated assets in this
+repository (the "Software"). It grants broad, free rights — comparable in
+scope to the Apache License 2.0 — to individuals, researchers, and
+organizations below the Commercial Threshold, and reserves large-scale and
+large-enterprise commercial use to separately negotiated terms. It is a
+source-available license, not an OSI-approved open-source license.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. DEFINITIONS
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+   "Timepoint" means Timepoint Labs (Timepoint AI) and its successors.
+
+   "You" means the individual or legal entity exercising rights under this
+   license, together with all entities that control, are controlled by, or
+   are under common control with that entity.
+
+   "Derived Geometry" means any spectral fingerprint, singular-value
+   spectrum, direction set (U/V bases), anchor target, or other geometric
+   summary of model weights that is extracted, generated, or transformed by
+   the Software or by a Modified Version of it.
+
+   "Modified Version" means any work based on or derived from the Software.
+
+   "Large Enterprise" means You, if Your aggregate annual gross revenue
+   (including all affiliates) exceeded US $100,000,000 in the preceding
+   twelve months.
+
+   "Large-Scale Training Use" means using the Software, a Modified Version,
+   or Derived Geometry in the development, initialization, regularization,
+   fine-tuning, or training of any machine-learning model or system whose
+   cumulative training compute exceeds 1e24 floating-point operations, or
+   that is trained on more than one trillion tokens, whichever is reached
+   first.
+
+2. GRANT OF RIGHTS
+
+   Subject to Section 3, Timepoint grants You a perpetual, worldwide,
+   non-exclusive, royalty-free copyright license to use, reproduce, modify,
+   distribute, and create derivative works of the Software, and a patent
+   license of the same scope covering claims of Timepoint necessarily
+   infringed by the Software, on the following conditions:
+
+   (a) Redistributions of the Software or any Modified Version must include
+       this license and the NOTICE file, and must be distributed under this
+       same license;
+   (b) Modified files must carry prominent notice that they were changed;
+   (c) You may not remove or alter copyright, attribution, or provenance
+       notices, including third-party notices listed in NOTICE.
+
+3. COMMERCIAL THRESHOLD (THE RESERVED USES)
+
+   The grant in Section 2 does NOT extend to:
+
+   (a) any use of the Software, a Modified Version, or Derived Geometry by
+       or for a Large Enterprise, other than evaluation and research that is
+       not deployed in production; or
+   (b) any Large-Scale Training Use, by any entity of any size.
+
+   Each Reserved Use requires a separate commercial license from Timepoint,
+   negotiated in good faith on commercially reasonable terms. Contact:
+   https://timepointai.com. Exercising a Reserved Use without such a license
+   terminates the grant in Section 2.
+
+4. PRIOR VERSIONS (THE THRESHOLD COMMIT)
+
+   All versions of this work published up to and including git commit
+   00d7a3c ("docs: README consolidated — all findings in one
+   first-time-reader narrative", July 28, 2026) in the repository
+   github.com/timepointai/PRISM — and the entire predecessor repository
+   github.com/timepointai/nanogpt-prism-shakespeare — were published under
+   the MIT License. Those grants are irrevocable for those versions: copies
+   obtained at or before that commit remain governed by the MIT License.
+   This license governs all changes, additions, and versions AFTER that
+   commit.
+
+5. THIRD-PARTY COMPONENTS
+
+   The Software incorporates components licensed under the MIT License by
+   their respective authors, including nanoGPT by Andrej Karpathy (c) 2022
+   (model.py, configurator.py, sample.py, bench.py, data preparers, and the
+   base of train.py) and community contributions identified in NOTICE. Those
+   components remain available under their original licenses and notices,
+   which are preserved in NOTICE and must be retained in all distributions.
+   Nothing in this license restricts rights granted directly by those
+   original licenses to those original components.
+
+6. PATENT ASSERTION TERMINATION
+
+   If You institute patent litigation asserting that the Software or
+   Derived Geometry infringes a patent, all licenses granted to You under
+   this license terminate as of the date such litigation is filed.
+
+7. TRADEMARKS
+
+   This license grants no rights to the names "PRISM", "Timepoint Labs", or
+   "Timepoint AI" except for reasonable and customary attribution.
+
+8. DISCLAIMER OF WARRANTY AND LIMITATION OF LIABILITY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL
+   TIMEPOINT BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER
+   IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN
+   CONNECTION WITH THE SOFTWARE OR ITS USE.

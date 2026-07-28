@@ -6,6 +6,15 @@
 > [RESULTS §10](RESULTS.md) and `docs/NEXT-EXPERIMENTS.md` #1 for the verdict
 > (~half the speedup survives, quality fully survives) and the ranked follow-ups.
 >
+> **Status update (2026-07-28, licensing):** the repo moved from MIT to the
+> **PRISM Community License 1.0** (Apache-2.0-scope rights below US$100M
+> revenue; large-enterprise use and >10²⁴-FLOP training runs require a
+> commercial license). The threshold commit is `00d7a3c` — everything at or
+> before it, and the archived predecessor repo, remains MIT irrevocably. The
+> MIT references below describe the repo's state when this handoff was
+> written. See LICENSE + NOTICE (Karpathy's and contributors' MIT notices
+> preserved there).
+>
 > **Status update (2026-07-27):** the **modern-web probe** ran — byte-level
 > FineWeb-Edu bench (`data/modernweb/`, solves the far-modality vocab gotcha),
 > four decomposition arms, [RESULTS §11](RESULTS.md). Verdicts: init-only
