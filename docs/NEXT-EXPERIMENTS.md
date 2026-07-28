@@ -79,6 +79,55 @@ KL-to-ref, no-KL + weak anchor, neither; score task reward, general-benchmark
 retention, and training throughput — the anchor arm needs no reference-model
 forwards; ~$500 scale, adjacent prior art: Elastic Reset).
 
+## The three outcomes (2026-07-28) — what "wildly successful" looks like, and the ladder to each
+
+Ranked by field status; every rung gated, with kill-criteria, so no tier is
+funded on hope.
+
+**Outcome 1 — the scaling-curve shift (highest status).** PRISM-init curves of
+a known public family (Pythia first: full curves + checkpoints public, so the
+gray field needs no trust) shifted left/down on a FLOPs-to-loss plot, holding
+from ~100M to 1B+. Ladder: G1 port the ops to the GPT-NeoX family + selftest
+($0, real work — RoPE, parallel attn/MLP, new name map); G2 Pythia-70M
+single-seed probe, same-size fingerprint from Pythia's own checkpoints (~$100)
+— **kill if the shift is <1.2×**; G3 160M, 3 seeds, the chart against
+EleutherAI's published curves (~$500); G4 410M (~$1.5k) — the scale test: if
+the 410M ratio holds ≥80% of the 70M ratio, the story survives scale and 1B+
+(~$10–20k) becomes a fundable claim rather than a wish. The honest unknown all
+the way up: our zero-epoch enwik8 result is the right regime evidence, but
+10M→1B is 100×.
+
+**Outcome 2 — retention on evals people track (most practical, most probable,
+fund first).** The anchor as a ~50-line HF Trainer/optimizer callback (post-
+step lerp; W₀ sharded or CPU-offloaded), run on a strong public 1–3B base
+through realistic domain/instruction adaptation, scored on lm-eval-harness
+suites — the "target gain vs. capability retained" scatter, with the public
+leaderboard's own base-vs-finetune deltas as the free gray field. Ladder: G1
+callback + 1B smoke (~$20, include a mini dial sweep — **the weak band's
+location may shift with Adam scale**); G2 the 1B study, anchored vs full vs
+LoRA (~$300–500); G3 7B (~$1–3k). Three internal replications of the dial say
+this is the highest probability-per-dollar claim we own; it is also the
+artifact fine-tune shippers can use the same week.
+
+**Outcome 3 — the post-training regularizer (most surprising if true).** The
+same callback from Outcome 2 dropped into GRPO/DPO in place of (or alongside)
+KL-to-reference: measure reward, retention, stability, and throughput — the
+anchor needs zero reference-model forwards, which is a measurable compute win
+independent of quality. Almost no direct evidence on preference/RL objectives
+yet; position against Elastic Reset as the continuous, dialed variant. Run it
+only AFTER Outcome 2's port exists (it reuses ~90% of the engineering):
+pilot at 1.5–3B (~$500), 9B (~$1.5–3k). Kill honestly if KL's stability role
+turns out not to be a weight-space phenomenon.
+
+Sequencing is forced by dependencies: **2 → 3 share one port; 1 is its own
+track whose $100 gate (G2) can run in parallel once the NeoX port exists.**
+Budget tiers: ~$500 buys Outcome-2-at-1B plus Outcome-1's kill-or-continue
+probe; ~$2k adds the 160M chart and the RL pilot; the citable scaling claim
+is a $10–20k decision made only after G4 holds. Release hygiene is part of
+the claim at every tier: seeds, configs, public training curves — and note
+the license's 1e22 threshold does not impede academic reproduction at these
+scales.
+
 ## The experiments, ranked
 
 ### 1. Teacher-free PRISM init — MEASURED (Runs O/P, 2026-07-25)
