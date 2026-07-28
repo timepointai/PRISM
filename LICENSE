@@ -1,5 +1,5 @@
 PRISM COMMUNITY LICENSE
-Version 1.1 — July 28, 2026 (the "Effective Date")
+Version 1.2 — July 28, 2026 (the "Effective Date")
 
 Copyright (c) 2026 Timepoint Labs (Timepoint AI).
 
@@ -26,14 +26,14 @@ source-available license, not an OSI-approved open-source license.
    "Modified Version" means any work based on or derived from the Software.
 
    "Large Enterprise" means You, if Your aggregate annual gross revenue
-   (including all affiliates) exceeded US $100,000,000 in the preceding
+   (including all affiliates) exceeded US $1,000,000 in the preceding
    twelve months.
 
    "Large-Scale Training Use" means using the Software, a Modified Version,
    or Derived Geometry in the development, initialization, regularization,
    fine-tuning, or training of any machine-learning model or system whose
-   cumulative training compute exceeds 1e24 floating-point operations, or
-   that is trained on more than one trillion tokens, whichever is reached
+   cumulative training compute exceeds 1e22 floating-point operations, or
+   that is trained on more than ten billion tokens, whichever is reached
    first.
 
 2. GRANT OF RIGHTS

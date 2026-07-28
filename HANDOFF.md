@@ -7,9 +7,10 @@
 > (~half the speedup survives, quality fully survives) and the ranked follow-ups.
 >
 > **Status update (2026-07-28, licensing):** the repo moved from MIT to the
-> **PRISM Community License 1.1** (Apache-2.0-scope rights below US$100M
-> revenue; large-enterprise use and >10²⁴-FLOP training runs require a
-> commercial license), applied **retroactively to the entire history** —
+> **PRISM Community License 1.2** (Apache-2.0-scope rights below US$1M
+> revenue; commercial use above it and >10²²-FLOP / 10B-token training runs
+> require a commercial license), applied **retroactively to the entire
+> history** —
 > Timepoint now offers every commit solely under it, and the predecessor
 > repo has been made **private**, closing the public MIT channel. Copies
 > obtained under MIT before 2026-07-28 keep their irrevocable rights;

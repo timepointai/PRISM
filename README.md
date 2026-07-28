@@ -427,14 +427,14 @@ src/prism_selftest.py         ← 30 offline invariant tests — run before any 
 
 ## License
 
-**PRISM Community License 1.1** — see [LICENSE](LICENSE) and
+**PRISM Community License 1.2** — see [LICENSE](LICENSE) and
 [NOTICE](NOTICE). In brief: Apache-2.0-scope rights, free, for individuals,
-researchers, and organizations under **US $100M annual revenue** — use it,
-modify it, ship it. Two uses are reserved and require a commercial license
-from Timepoint Labs: use by larger enterprises, and **any training run over
-10²⁴ FLOPs / 1T tokens** (by anyone) using the software or geometry it
-extracts. If PRISM helps train a frontier model, Timepoint gets paid. This is
-source-available, not OSI open source.
+researchers, and organizations under **US $1M annual revenue** — learn from
+it, modify it, build with it. Two uses are reserved and require a commercial
+license from Timepoint Labs: use by anyone above that revenue line, and **any
+training run over 10²² FLOPs / 10B tokens** (by anyone) using the software or
+geometry it extracts. If PRISM makes money or trains models at scale,
+Timepoint gets paid. This is source-available, not OSI open source.
 
 **The license applies to the whole repository, retroactively:** as of July
 28, 2026, every version and every commit in this history is offered by
