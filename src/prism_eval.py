@@ -873,11 +873,13 @@ def main():
                              '--cross_teacher).')
         method_knobs['corpus'] = args.corpus
     if args.fingerprint:
-        if args.method != 'spectral_only':
-            raise SystemExit('--fingerprint requires --method=spectral_only: a '
-                             'pre-extracted spectra.json carries no directions, so '
-                             'EigenTransfer methods would silently degrade — '
-                             'refusing instead.')
+        if (args.method != 'spectral_only'
+                and not os.path.exists(os.path.join(args.fingerprint,
+                                                    'directions.pt'))):
+            raise SystemExit('--fingerprint with an EigenTransfer method needs '
+                             'directions.pt in the fingerprint dir (generate one, '
+                             'e.g. gen_cold_directions.py) — a spectra-only '
+                             'fingerprint would silently degrade; refusing.')
         if teacher_sweep is not None or args.cross_teacher:
             raise SystemExit('--fingerprint replaces the teacher — it cannot be '
                              'combined with --teacher_sweep or --cross_teacher.')
