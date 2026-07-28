@@ -105,6 +105,22 @@ same schedule, with exactly one variable changed — the initialization. The
 next dollar of GPU spend goes to this track's G2 gate (below), not to further
 refinement of the small bench.
 
+**The path from ~3× to "way left / way down" is composition, and it gates
+cheap.** Single-lever evidence: geometry-at-init ×2.9–3.3 (three corpora).
+The one composition ever measured — prior fusion on top of geometry —
+*multiplied* (15× → 30×, Shakespeare, single seed). If that reproduces,
+the composed system sits at 6–10× tokens-to-target; a tuned-schedule system
+arm adds ~×1.5 more. Therefore **Act 2 on enwik8 (~$3) is re-purposed as the
+composition gate for the core bet** — it measures whether lever two
+multiplies or saturates, before any Pythia spend. The Pythia chart then
+carries two arms against the published curve: the one-variable init arm (the
+credible shift) and the best composed system arm (the large shift), labeled
+as such. "Way down" needs no extra run: the same trajectories give the
+matched-tokens endpoint gap. Cross-size projection (Pythia's own 1B/2.8B
+checkpoints as free teachers) is the one unmeasured factor that could raise
+the base lever; for Pile-scale priors, infini-gram-style public suffix-array
+counts may make the fusion table free.
+
 ## The three outcomes (2026-07-28) — what "wildly successful" looks like, and the ladder to each
 
 Ranked by field status; every rung gated, with kill-criteria, so no tier is
