@@ -154,6 +154,7 @@ projection — see [What's next](#whats-next)).
 | **Attribution: the wheel** | an overfitting brake — endpoint-decisive on scarce data, a cost on adequate data | [`RESULTS.md`](RESULTS.md) §2, §11 |
 | **The arc** | PRISM-pretrained base: **≈0 forgetting, ~8% better adaptation** at matched quality | [`docs/UNIFIED-ARC.md`](docs/UNIFIED-ARC.md) |
 | **Fact injection** | the anchor is an injection↔retention **dial**: retention-grade strength blocks storage (2–3% recall); the weak band (s≈0.0025) injects at parity with plain while forgetting **3× less** (2× less than low-LR); LM loss can't see any of it | [`RESULTS.md`](RESULTS.md) §12 |
+| **Task specialization** | on a scored catalog-review workflow, the weak-band anchor **Pareto-dominates low-LR**: 97% on novel cases (≈plain's 98%) at **3× less** general-ability loss — the axis specialization pipelines don't report | [`RESULTS.md`](RESULTS.md) §13 |
 | **Prior-Fused PRISM** | geometry × statistics: **30×** hybrid at the best loss of all arms (single-seed probe) | [`docs/PRIOR-FUSED-PRISM.md`](docs/PRIOR-FUSED-PRISM.md) |
 | **Spectrum universality** | GPT-2's 40 public-weight numbers ≈ a native teacher's spectrum across size, tokenizer, and corpus | [`RESULTS.md`](RESULTS.md) §11 |
 

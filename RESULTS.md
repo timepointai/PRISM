@@ -32,6 +32,7 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | T | **Modern web — GPT-2 fingerprint (§11)**: spectrum-only from OpenAI's public weights, no teacher | [`spectral_only_20260727T145039Z.json`](results/spectral_only_20260727T145039Z.json) |
 | U | **Fact injection (§12)**: closed-book recall of novel facts — anchor vs low-LR vs plain, modernweb base | [`finetune_20260727T203023Z.json`](results/finetune_20260727T203023Z.json) |
 | V | **Fact injection round 2 (§12)**: the weak-band anchor + selective (free-FFN / free-attn) anchors | [`finetune_20260727T230910Z.json`](results/finetune_20260727T230910Z.json) |
+| W | **Catalog task (§13)**: scored structured-decision workflow — the dial on *judgment*, not facts | [`finetune_20260728T044511Z.json`](results/finetune_20260728T044511Z.json) |
 
 ## 1. Speed: ~12×, resolved (Run C)
 
@@ -422,6 +423,46 @@ memorization regime (19KB of facts for 1,000 steps), one corpus, and high
 seed variance on unseen-phrasing recall everywhere. The weak band was probed
 at a single strength (0.0025); the dial's shape between 0.0025 and 0.005 is
 unmapped.
+
+## 13. The specialist's dial: task-training with retention (Run W)
+
+The fact-injection dial (§12) pointed at the deployment pattern the industry
+is converging on — specializing small open models on scored company workflows
+("intelligence ownership"). This probe runs that shape directly: a
+**catalog-integrity task** ([`data/catalog/`](data/catalog/)) — listing line
+in, category + policy verdict out — with ground truth fixed by deterministic
+rules (banned product types; protected brands allowed in exactly one category,
+with legitimate uses as hard negatives). Exact-match is scored on **novel
+attribute combinations never seen in training**, so the metric is internalized
+*judgment*, not memorization. Same rig as §12: modernweb base, 3 seeds, one
+flag per arm, base recall floor 0%.
+
+| arm (medians of 3) | forgets modernweb | seen | **novel cases** | task-val |
+|---|---|---|---|---|
+| plain | +2.91 | 100% | 98% | 0.141 |
+| low-LR 1e-4 | +2.00 | 90% | 88% | 0.144 |
+| **weak anchor, s=0.0025** | **+0.94** | 93% | **97%** | 0.145 |
+| anchor, s=0.01 | +0.37 | 15% | 12% | 0.153 |
+
+- **On judgment, the weak-band anchor Pareto-dominates low-LR on both axes**:
+  better task accuracy on novel cases (97% vs 88%) *and* half the forgetting
+  (+0.94 vs +2.00). Against plain it concedes ~1 point of task accuracy for
+  **3.1× less** loss of general ability. This is stronger than the facts
+  result (§12), where the anchor matched plain's generalization but didn't
+  beat low-LR's: rule-shaped capability apparently coexists with the weak
+  pull better than rote bindings do.
+- **The blocking cliff is task-general.** s=0.01 blocks judgment acquisition
+  (12–15%) just as it blocked facts (2–3%) — the dial's useful band and its
+  cliff do not depend on what is being learned.
+- Read as the industry playbook's missing axis: specialization pipelines
+  report task score and cost; none report what the specialist *lost*. The
+  dial makes that loss a chosen quantity instead of an accident.
+
+Bounds: probe scale, one synthetic rule system (~30 product types, 6
+protected brands), single-format prompts, and the same unmapped dial region
+(0.0025–0.01) as §12. The natural production analog — the anchor as a
+zero-forward-pass alternative to KL-to-reference in RL post-training — is
+designed but unrun (see NEXT-EXPERIMENTS).
 
 ## What this does NOT establish
 

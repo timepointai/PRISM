@@ -67,8 +67,17 @@ vs 98–100%) while posting the best val loss — loss is not an injection metri
 Round 2: **the weak band (s=0.0025) is the recipe** — 96% injection at 3× less
 forgetting than plain, 2× less than low-LR; selective anchors show facts store
 in either attention or FFNs (not FFN-exclusive at this scale), and freeing
-FFNs costs more retention than freeing attention. Open cells: low-LR × weak
-anchor combined; the dial's shape in (0.0025, 0.005); anchor+replay.
+FFNs costs more retention than freeing attention. Round 3 ([RESULTS
+§13](../RESULTS.md), `data/catalog/`): on a scored structured-decision task
+the weak anchor **Pareto-dominates low-LR** (97% vs 88% on novel cases at
+half the forgetting) — the specialist's retention dial, demonstrated in the
+intelligence-ownership shape. Open cells: low-LR × weak anchor combined; the
+dial's shape in (0.0025, 0.005); anchor+replay; and the production-scale test
+— **the weight-space anchor as a zero-forward-pass alternative to
+KL-to-reference in GRPO/RL post-training** (three arms on a ~9B with prime-rl:
+KL-to-ref, no-KL + weak anchor, neither; score task reward, general-benchmark
+retention, and training throughput — the anchor arm needs no reference-model
+forwards; ~$500 scale, adjacent prior art: Elastic Reset).
 
 ## The experiments, ranked
 
