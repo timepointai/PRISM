@@ -31,6 +31,7 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | S | **Modern web — spectral_only ablation (§11)**: spectrum + wheel, no directions | [`spectral_only_20260727T145028Z.json`](results/spectral_only_20260727T145028Z.json) |
 | T | **Modern web — GPT-2 fingerprint (§11)**: spectrum-only from OpenAI's public weights, no teacher | [`spectral_only_20260727T145039Z.json`](results/spectral_only_20260727T145039Z.json) |
 | U | **Fact injection (§12)**: closed-book recall of novel facts — anchor vs low-LR vs plain, modernweb base | [`finetune_20260727T203023Z.json`](results/finetune_20260727T203023Z.json) |
+| V | **Fact injection round 2 (§12)**: the weak-band anchor + selective (free-FFN / free-attn) anchors | [`finetune_20260727T230910Z.json`](results/finetune_20260727T230910Z.json) |
 
 ## 1. Speed: ~12×, resolved (Run C)
 
@@ -385,12 +386,42 @@ base per seed, every arm forks it with one flag changed, 1,000 finetune steps.
   (+2.19 vs +3.31). For fact injection, the simple low-LR baseline survives;
   the anchor, as-is, is disqualified.
 
+**Round 2 (Run V): the anchor is a dial, and the weak band is the recipe.**
+Same rig (plain and low-LR reproduce round 1), three new cells — a weak full
+anchor (s=0.0025) and two *selective* anchors at s=0.01
+(`--prism_anchor_exclude`): free-FFN (attention+embeddings pinned) and
+free-attention (FFNs+embeddings pinned).
+
+| arm (medians of 3) | forgets modernweb | seen recall | unseen recall |
+|---|---|---|---|
+| plain | +3.31 | 100% | 26% |
+| low-LR 1e-4 | +2.19 | 98% | 59% |
+| **weak anchor, s=0.0025** | **+1.08** | **96%** | 25% |
+| free-FFN anchor, s=0.01 | +2.55 | 100% | 21% |
+| free-attn anchor, s=0.01 | +1.55 | 92% | 37% |
+
+- **The weak-band anchor injects at parity with plain (96% seen) while
+  forgetting 3× less than plain and 2× less than low-LR.** The blocking
+  threshold sits between 0.0025 (injects) and 0.01 (blocks): the anchor is a
+  continuous injection↔retention dial and s≈0.002–0.003 is the useful band
+  for fact injection at this rig. One line, any optimizer, W₀ already frozen
+  in adapter-style setups.
+- **Fact storage is not FFN-exclusive at this scale.** Both selective cells
+  inject (100% through FFNs alone, 92% through attention alone) — facts go
+  wherever there is free capacity. And freeing the FFNs costs *more*
+  retention (+2.55) than freeing attention (+1.55): the old domain leans
+  harder on the FFNs than the FFN-centric editing literature would predict
+  here. Selective anchoring works for injection but the weak *full* anchor
+  dominates it on retention.
+- Low-LR keeps the best *unseen*-phrasing generalization (59% median, noisy);
+  the weak anchor's is plain-like (25%, range 23–90%). The untested combo —
+  low-LR × weak anchor — is the natural next cell.
+
 Bounds: probe scale (10.65M params, byte-level), a brutal ~200-epoch
-memorization regime (19KB of facts for 1,000 steps), and **no arm both
-retains and injects** — the open frontier is the untested weak-anchor band
-(s ≤ 0.005), partial/layer-subset anchors, and anchor+replay. Absolute
-forgetting is catastrophic everywhere except the anchored arms, which are
-the arms that don't inject.
+memorization regime (19KB of facts for 1,000 steps), one corpus, and high
+seed variance on unseen-phrasing recall everywhere. The weak band was probed
+at a single strength (0.0025); the dial's shape between 0.0025 and 0.005 is
+unmapped.
 
 ## What this does NOT establish
 

@@ -58,14 +58,17 @@ decay recover dirs_only's endpoint?); (c) **cross-size directional projection**
 directional (GPT-2's U/Vᵀ projected down); (d) the truly-far modality (#2) is
 now unblocked — point `--corpus` at a code corpus.
 
-**Second update (same day): the fact-injection probe ran** ([RESULTS
-§12](../RESULTS.md), `data/facts/` + `fact_recall.py` + `prism_modal_facts.py`;
-eval knobs `--old_corpus` / `--ft_val_corpus` / `--recall_prompts`). The §7
-anchor **blocks** novel-fact storage (2–3% recall at s=0.01–0.02 vs 98–100%
-unanchored) while posting the best val loss — retention and injection trade off
-through the directions, and loss is not an injection metric. Follow-up worth a
-probe: the **weak-anchor band** (s ≤ 0.005), layer-subset anchors, and
-anchor+replay — no measured arm both retains and injects yet.
+**Second update (same day): the fact-injection probes ran — both rounds**
+([RESULTS §12](../RESULTS.md), `data/facts/` + `fact_recall.py` +
+`prism_modal_facts.py`; eval knobs `--old_corpus` / `--ft_val_corpus` /
+`--recall_prompts`, train.py knob `--prism_anchor_exclude`). Round 1: the §7
+anchor **blocks** novel-fact storage at retention-grade strength (2–3% recall
+vs 98–100%) while posting the best val loss — loss is not an injection metric.
+Round 2: **the weak band (s=0.0025) is the recipe** — 96% injection at 3× less
+forgetting than plain, 2× less than low-LR; selective anchors show facts store
+in either attention or FFNs (not FFN-exclusive at this scale), and freeing
+FFNs costs more retention than freeing attention. Open cells: low-LR × weak
+anchor combined; the dial's shape in (0.0025, 0.005); anchor+replay.
 
 ## The experiments, ranked
 

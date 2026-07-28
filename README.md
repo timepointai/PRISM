@@ -83,12 +83,15 @@ forward and backward:
   equal adaptation). Anchoring only the spectrum does nothing (1.07×); a
   wrong-spectrum placebo actively harms (0.39×)
   ([`docs/FINETUNE-RETENTION.md`](docs/FINETUNE-RETENTION.md)).
-- **And by construction:** pin the directions and new *content cannot be
-  written*. Injecting novel facts under the anchor fails outright (2–3%
-  closed-book recall vs 98–100% unanchored) even as the anchored model posts
-  the *best* validation loss — domain adaptation reuses the base's
-  directions; new bindings need to move them ([`RESULTS.md`](RESULTS.md) §12,
-  which also shows LM loss is not an injection metric).
+- **And by construction:** pin the directions hard and new *content cannot be
+  written* — novel-fact injection under a retention-grade anchor fails
+  outright (2–3% closed-book recall vs 98–100% unanchored) even as the
+  anchored model posts the *best* validation loss. Weaken the pull into the
+  s≈0.0025 band and injection returns at parity **while still forgetting 3×
+  less than plain** — the anchor is a continuous injection↔retention dial
+  ([`RESULTS.md`](RESULTS.md) §12, which also shows LM loss is not an
+  injection metric, and that facts store in *either* attention or FFNs when
+  the other is pinned).
 - And the effect tracks exactly what it should: it grows with teacher training
   and **saturates right where the teacher's geometry converges** (≈2,000 steps
   here; 4k/8k teachers add nothing). A barely-trained teacher's geometry is
@@ -150,7 +153,7 @@ projection — see [What's next](#whats-next)).
 | **Attribution: directions** | spectrum-only below baseline everywhere from scratch; directional anchor is what retains (~**10×** less forgetting) | [`RESULTS.md`](RESULTS.md) §11, [`docs/FINETUNE-RETENTION.md`](docs/FINETUNE-RETENTION.md) |
 | **Attribution: the wheel** | an overfitting brake — endpoint-decisive on scarce data, a cost on adequate data | [`RESULTS.md`](RESULTS.md) §2, §11 |
 | **The arc** | PRISM-pretrained base: **≈0 forgetting, ~8% better adaptation** at matched quality | [`docs/UNIFIED-ARC.md`](docs/UNIFIED-ARC.md) |
-| **Fact injection** | the anchor **blocks** novel-fact storage (2–3% recall vs 98–100%) — retention and injection trade off through the directions; LM loss can't see it | [`RESULTS.md`](RESULTS.md) §12 |
+| **Fact injection** | the anchor is an injection↔retention **dial**: retention-grade strength blocks storage (2–3% recall); the weak band (s≈0.0025) injects at parity with plain while forgetting **3× less** (2× less than low-LR); LM loss can't see any of it | [`RESULTS.md`](RESULTS.md) §12 |
 | **Prior-Fused PRISM** | geometry × statistics: **30×** hybrid at the best loss of all arms (single-seed probe) | [`docs/PRIOR-FUSED-PRISM.md`](docs/PRIOR-FUSED-PRISM.md) |
 | **Spectrum universality** | GPT-2's 40 public-weight numbers ≈ a native teacher's spectrum across size, tokenizer, and corpus | [`RESULTS.md`](RESULTS.md) §11 |
 
