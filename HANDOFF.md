@@ -7,13 +7,15 @@
 > (~half the speedup survives, quality fully survives) and the ranked follow-ups.
 >
 > **Status update (2026-07-28, licensing):** the repo moved from MIT to the
-> **PRISM Community License 1.0** (Apache-2.0-scope rights below US$100M
+> **PRISM Community License 1.1** (Apache-2.0-scope rights below US$100M
 > revenue; large-enterprise use and >10²⁴-FLOP training runs require a
-> commercial license). The threshold commit is `00d7a3c` — everything at or
-> before it, and the archived predecessor repo, remains MIT irrevocably. The
-> MIT references below describe the repo's state when this handoff was
-> written. See LICENSE + NOTICE (Karpathy's and contributors' MIT notices
-> preserved there).
+> commercial license), applied **retroactively to the entire history** —
+> Timepoint now offers every commit solely under it. Copies obtained under
+> MIT before 2026-07-28 (through `00d7a3c`, or from the archived predecessor
+> repo) keep their irrevocable MIT rights; Timepoint's own MIT distribution
+> is discontinued. The MIT references below describe the repo's state when
+> this handoff was written. See LICENSE + NOTICE (Karpathy's and
+> contributors' MIT notices preserved there).
 >
 > **Status update (2026-07-27):** the **modern-web probe** ran — byte-level
 > FineWeb-Edu bench (`data/modernweb/`, solves the far-modality vocab gotcha),

@@ -1,5 +1,5 @@
 PRISM COMMUNITY LICENSE
-Version 1.0 — July 28, 2026
+Version 1.1 — July 28, 2026 (the "Effective Date")
 
 Copyright (c) 2026 Timepoint Labs (Timepoint AI).
 
@@ -65,17 +65,26 @@ source-available license, not an OSI-approved open-source license.
    https://timepointai.com. Exercising a Reserved Use without such a license
    terminates the grant in Section 2.
 
-4. PRIOR VERSIONS (THE THRESHOLD COMMIT)
+4. RETROACTIVE APPLICATION AND SURVIVING PRIOR GRANTS
 
-   All versions of this work published up to and including git commit
-   00d7a3c ("docs: README consolidated — all findings in one
-   first-time-reader narrative", July 28, 2026) in the repository
-   github.com/timepointai/PRISM — and the entire predecessor repository
-   github.com/timepointai/nanogpt-prism-shakespeare — were published under
-   the MIT License. Those grants are irrevocable for those versions: copies
-   obtained at or before that commit remain governed by the MIT License.
-   This license governs all changes, additions, and versions AFTER that
-   commit.
+   As of the Effective Date, Timepoint offers the Software — including
+   EVERY prior version, commit, tag, and artifact in this repository's
+   history, without exception — solely under this license. Obtaining any
+   copy of any version from this repository, or from Timepoint by any
+   other means, after the Effective Date constitutes receipt under this
+   license and only this license.
+
+   Acknowledgment of surviving grants: versions of this work were
+   previously published under the MIT License (in this repository through
+   git commit 00d7a3c, July 28, 2026, and in the predecessor repository
+   github.com/timepointai/nanogpt-prism-shakespeare). Recipients who
+   obtained copies under that license before the Effective Date retain the
+   irrevocable MIT rights attached to the copies they received, including
+   redistribution of those copies under MIT. Nothing in this section
+   limits those surviving grants, and nothing in this section limits the
+   rights granted directly by the original licenses of third-party
+   components (Section 5). Timepoint's own distribution under the MIT
+   License is discontinued as of the Effective Date.
 
 5. THIRD-PARTY COMPONENTS
 

@@ -428,7 +428,7 @@ src/prism_selftest.py         ← 30 offline invariant tests — run before any 
 
 ## License
 
-**PRISM Community License 1.0** — see [LICENSE](LICENSE) and
+**PRISM Community License 1.1** — see [LICENSE](LICENSE) and
 [NOTICE](NOTICE). In brief: Apache-2.0-scope rights, free, for individuals,
 researchers, and organizations under **US $100M annual revenue** — use it,
 modify it, ship it. Two uses are reserved and require a commercial license
@@ -437,12 +437,15 @@ from Timepoint Labs: use by larger enterprises, and **any training run over
 extracts. If PRISM helps train a frontier model, Timepoint gets paid. This is
 source-available, not OSI open source.
 
-**The threshold is explicit and honest:** everything published through commit
-[`00d7a3c`](https://github.com/timepointai/PRISM/commit/00d7a3c) (July 28,
-2026) — and the entire archived predecessor repo — was MIT-licensed, and
-those grants are irrevocable for those versions. The new license governs
-everything after that commit: the license text itself names the threshold
-commit.
+**The license applies to the whole repository, retroactively:** as of July
+28, 2026, every version and every commit in this history is offered by
+Timepoint solely under this license — cloning any part of it today means
+accepting these terms, whatever the commit date. Stated honestly: versions
+were previously published under MIT (through
+[`00d7a3c`](https://github.com/timepointai/PRISM/commit/00d7a3c), and in the
+archived predecessor repo), and anyone who obtained a copy before the switch
+keeps the irrevocable MIT rights attached to *that copy*. We can't and don't
+claim otherwise — but Timepoint's own MIT distribution is over.
 
 Third-party components keep their original MIT terms with notices preserved
 in [NOTICE](NOTICE): PRISM is a standalone clone of
