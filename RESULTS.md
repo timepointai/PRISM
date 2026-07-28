@@ -35,6 +35,9 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | W | **Catalog task (§13)**: scored structured-decision workflow — the dial on *judgment*, not facts | [`finetune_20260728T044511Z.json`](results/finetune_20260728T044511Z.json) |
 | X | **enwik8 (§14)**: dirs_only on the canonical byte-LM bench — 2.90×, −0.152 bpb | [`dirs_only_20260728T054705Z.json`](results/dirs_only_20260728T054705Z.json) |
 | Y | **Cold directions (§15)**: never-trained analytic DCT bases — refuted, 3/3 seeds | [`dirs_only_20260728T060256Z.json`](results/dirs_only_20260728T060256Z.json) |
+| Z1 | **Energy P1 (§16)**: mined fingerprint crosses corpora (modernweb → enwik8) at 1.97× | [`dirs_only_20260728T065345Z.json`](results/dirs_only_20260728T065345Z.json) |
+| Z2 | **Energy P2 (§16)**: baseline-1500 quality from a complete 600-step run — 42% of the GPU time | [`dirs_only_20260728T085214Z.json`](results/dirs_only_20260728T085214Z.json) |
+| Z3 | **Energy P3 (§16)**: −0.072 bpb beyond the baseline's ceiling at 56% of its GPU time | [`dirs_only_20260728T102700Z.json`](results/dirs_only_20260728T102700Z.json) |
 
 ## 1. Speed: ~12×, resolved (Run C)
 
@@ -507,6 +510,43 @@ not *drawn* — which makes trained checkpoints (the "geometry commons") the
 irreducible asset in any cold-assembly or amortized-init scheme, and makes
 fingerprint *reuse* (§10, and the energy passes below) the economically
 interesting operation.
+
+## 16. The energy ladder: a committed quality-per-joule frontier (Runs Z1–Z3)
+
+Three passes on the enwik8 bench turning §14's speedup into an explicit
+**performance-per-energy** frontier, with wall-clock seconds recorded inside
+every artifact (single L4, `wall_sec` per stage — the energy proxy).
+
+**The frontier (medians of 3; "beats baseline" = every seed's final loss below
+every seed's 1,500-step baseline best):**
+
+| arm | bits/byte | vs. baseline best | GPU wall | energy | beats baseline 3/3 |
+|---|---|---|---|---|---|
+| baseline, 1,500 steps | 1.9315 | — | 414s | 100% | — |
+| **dirs_only, 600 steps (Z2)** | 1.9031 | **−0.028** | 172s | **42%** | yes |
+| **dirs_only, 800 steps (Z3)** | 1.8595 | **−0.072** | 230s | **56%** | yes |
+| dirs_only, 1,500 steps (X) | 1.7796 | −0.152 | 403s | 97% | yes |
+
+Every PRISM point strictly dominates the baseline — better quality at equal or
+less energy; the practitioner picks the point. These are *complete* schedules
+(warmup + full LR decay to the shorter horizon), not truncated curves: the
+600-step *baseline* control only reaches 1.75 nats, so the short schedule
+alone does nothing of the sort.
+
+**The teacher term is amortized, not free — and Z1 prices the amortization.**
+A native teacher costs ~2,000 steps once (~560s/seed here, cache-hit for every
+later run on the volume). Z1 shows the mined fingerprint **crosses corpora**:
+a teacher trained only on the 4.5M-token modern-web corpus accelerates enwik8
+students at **1.97× (1.82–2.01)**, converging 0.122 bpb below the baseline —
+~68% of the native speedup, ~80% of its quality gain. One mined fingerprint
+serves many corpora; marginal cost per new training run approaches
+student-only.
+
+Bounds: wall-clock on one GPU class as the energy proxy (no power metering);
+probe scale and horizon; the frontier's low end is unmapped below 600 steps;
+and the amortization constant (how many corpora one fingerprint usefully
+serves, vs. fingerprint distance) has exactly one cross-corpus datapoint
+here plus §10's Shakespeare pair.
 
 ## What this does NOT establish
 

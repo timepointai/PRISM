@@ -230,7 +230,8 @@ def setup(workdir=SRC_DIR, overlap=None, far_corpus=None, far_val=False,
                 'token_js': _token_js(teacher_train, student_train)}
         log(f'cross-teacher: teacher trains ONLY on '
             f'{os.path.basename(cross_teacher)} ({len(teacher_train):,} tok) · '
-            f'student on Shakespeare · token-JS {dist["token_js"]:.4f}', 2)
+            f'student on {corpus or "shakespeare_char"} · '
+            f'token-JS {dist["token_js"]:.4f}', 2)
     elif overlap is None:
         split = int(len(pool) * 0.80)
         teacher_train = pool[:split].astype(np.uint16)
@@ -864,13 +865,12 @@ def main():
                              '--teacher_sweep, or --far_corpus.')
         method_knobs['cross_teacher'] = os.path.basename(args.cross_teacher)
     if args.corpus:
-        # A different bench corpus is a different experiment — own run key. Only
-        # the plain same-data protocol is wired up for alternate corpora so far.
-        if overlaps is not None or teacher_sweep is not None or args.far_corpus \
-                or args.cross_teacher:
+        # A different bench corpus is a different experiment — own run key.
+        # --cross_teacher composes (teacher mined on one corpus, students on
+        # another — the amortized-fingerprint test); sweeps/far_corpus don't yet.
+        if overlaps is not None or teacher_sweep is not None or args.far_corpus:
             raise SystemExit('--corpus currently supports only the plain protocol '
-                             '(no --overlap/--teacher_sweep/--far_corpus/'
-                             '--cross_teacher).')
+                             '(no --overlap/--teacher_sweep/--far_corpus).')
         method_knobs['corpus'] = args.corpus
     if args.fingerprint:
         if (args.method != 'spectral_only'
