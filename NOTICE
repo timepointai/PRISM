@@ -5,9 +5,9 @@ LICENSING HISTORY AND RETROACTIVE APPLICATION
 As of July 28, 2026, Timepoint offers this repository — including its entire
 commit history — solely under the PRISM Community License 1.1. Versions were
 previously published under the MIT License (through commit 00d7a3c here, and
-in the archived predecessor repository
-timepointai/nanogpt-prism-shakespeare); recipients who obtained copies under
-MIT before that date retain the irrevocable rights attached to those copies.
+in the predecessor repository timepointai/nanogpt-prism-shakespeare, since
+made private); recipients who obtained copies under MIT before that date
+retain the irrevocable rights attached to those copies.
 Timepoint's own MIT distribution is discontinued. See LICENSE Section 4.
 
 THIRD-PARTY COMPONENTS (MIT, notices preserved)

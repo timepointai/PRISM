@@ -11,9 +11,8 @@ PRISM extracts that geometry, transplants it, and measures — one committed
 artifact per claim — which parts of it carry the effect. This repo has killed
 several of its own hypotheses on the way; everything below is what survived.
 
-*(Formerly `nanogpt-prism-shakespeare`, now archived — full history
-[there](https://github.com/timepointai/nanogpt-prism-shakespeare); development
-continues here.)*
+*(Formerly `nanogpt-prism-shakespeare`; the predecessor repository is
+archived privately and its full history is preserved by Timepoint.)*
 
 <img src="assets/prism-flashlight.svg" alt="A spectrographic flashlight for models: a trained checkpoint's raw weights enter a prism as white light and split into spectral bands — attention, FFN up, FFN down, embedding — each carrying a spectrum and directions. A reversed prism recombines the bands into a fresh model that trains several times faster. Geometry crosses; content never does." width="100%">
 
@@ -440,12 +439,9 @@ source-available, not OSI open source.
 **The license applies to the whole repository, retroactively:** as of July
 28, 2026, every version and every commit in this history is offered by
 Timepoint solely under this license — cloning any part of it today means
-accepting these terms, whatever the commit date. Stated honestly: versions
-were previously published under MIT (through
-[`00d7a3c`](https://github.com/timepointai/PRISM/commit/00d7a3c), and in the
-archived predecessor repo), and anyone who obtained a copy before the switch
-keeps the irrevocable MIT rights attached to *that copy*. We can't and don't
-claim otherwise — but Timepoint's own MIT distribution is over.
+accepting these terms, whatever the commit date. (Copies distributed under
+the earlier MIT terms before that date retain the rights attached to those
+copies — see LICENSE §4.)
 
 Third-party components keep their original MIT terms with notices preserved
 in [NOTICE](NOTICE): PRISM is a standalone clone of

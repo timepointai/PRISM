@@ -10,10 +10,10 @@
 > **PRISM Community License 1.1** (Apache-2.0-scope rights below US$100M
 > revenue; large-enterprise use and >10²⁴-FLOP training runs require a
 > commercial license), applied **retroactively to the entire history** —
-> Timepoint now offers every commit solely under it. Copies obtained under
-> MIT before 2026-07-28 (through `00d7a3c`, or from the archived predecessor
-> repo) keep their irrevocable MIT rights; Timepoint's own MIT distribution
-> is discontinued. The MIT references below describe the repo's state when
+> Timepoint now offers every commit solely under it, and the predecessor
+> repo has been made **private**, closing the public MIT channel. Copies
+> obtained under MIT before 2026-07-28 keep their irrevocable rights;
+> Timepoint's own MIT distribution is discontinued. The MIT references below describe the repo's state when
 > this handoff was written. See LICENSE + NOTICE (Karpathy's and
 > contributors' MIT notices preserved there).
 >
