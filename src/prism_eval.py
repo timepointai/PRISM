@@ -490,8 +490,10 @@ def compute_score(baseline, method, eval_every):
             'reached_at_init': True,
             'baseline_target': target,
             'left_censored': True,
-            'note': 'reached baseline best at initialization (step 0) — the '
-                    'spectral init alone matches it; speedup unbounded',
+            'note': 'baseline-best matched at the step-0 eval; steps-to-target '
+                    'is not measurable on this run. Before publishing any '
+                    'at-init claim, see the binding framing spec in '
+                    'docs/NEXT-EXPERIMENTS.md.',
         }
 
     return {

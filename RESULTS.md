@@ -38,6 +38,7 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | Z1 | **Energy P1 (§16)**: mined fingerprint crosses corpora (modernweb → enwik8) at 1.97× | [`dirs_only_20260728T065345Z.json`](results/dirs_only_20260728T065345Z.json) |
 | Z2 | **Energy P2 (§16)**: baseline-1500 quality from a complete 600-step run — 42% of the GPU time | [`dirs_only_20260728T085214Z.json`](results/dirs_only_20260728T085214Z.json) |
 | Z3 | **Energy P3 (§16)**: −0.072 bpb beyond the baseline's ceiling at 56% of its GPU time | [`dirs_only_20260728T102700Z.json`](results/dirs_only_20260728T102700Z.json) |
+| AA | **Act 1 — the prior's floor on enwik8 (§17)**: NOT a PRISM result; the reach-at-init gate | [`ngram_floor_20260728T202028Z.json`](results/ngram_floor_20260728T202028Z.json) |
 
 ## 1. Speed: ~12×, resolved (Run C)
 
@@ -547,6 +548,29 @@ probe scale and horizon; the frontier's low end is unmapped below 600 steps;
 and the amortization constant (how many corpora one fingerprint usefully
 serves, vs. fingerprint distance) has exactly one cross-corpus datapoint
 here plus §10's Shakespeare pair.
+
+## 17. Act 1: the prior's floor on enwik8 — not a PRISM result (Run AA)
+
+The free CPU gate for the reach-at-init experiment, run under the binding
+two-act framing spec in [NEXT-EXPERIMENTS](docs/NEXT-EXPERIMENTS.md). **This
+number belongs to the n-gram**: a static sparse byte n-gram (orders 0–6,
+Jelinek–Mercer interpolation, μ tuned only on a dev slice held out of the
+counting data; `src/ngram_floor.py`) counted over enwik8's training bytes and
+scored sequentially on the untouched val slice:
+
+**1.9061 bits/byte** — below xz's whole-file figure (≈1.99, different
+protocol), below zstd and gzip, and 0.025 below the final val quality of the
+from-scratch 1,500-step baseline (1.9315, Run X's rig). Dev→val gap 0.014;
+the order curve was still descending at 6 (2.05 → 1.89 from order 5 → 6);
+11.4M distinct 7-grams at order 6.
+
+Per the spec, no PRISM claim attaches here. The canonical sentence: *a sparse
+byte n-gram prior already reaches 1.91 bpb on the held-out tail (Act 1);
+adding the PRISM geometry and training produces a trajectory that continues
+below that prior floor (Act 2)* — Act 2 is the part that is a PRISM claim,
+and this gate result is what authorizes spending on it (needs the sparse
+gather + block-edge backoff in `train.py`'s `_prior_logp`, then
+`prism_prior_eval` arms on enwik8).
 
 ## What this does NOT establish
 

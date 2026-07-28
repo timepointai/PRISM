@@ -203,6 +203,22 @@ first; Act 1 landing ~1.80–1.95 bpb on enwik8 val (block-edge backoff fix
 required — it is worth ~0.09 bpb at context-5) is what justifies paying for
 Act 2 at all.
 
+**Language rule (same binding force):** the phrases "reached at init",
+"unbounded speedup", and "already sits at the baseline's final loss" are
+banned from any public artifact of this experiment — they get screenshotted
+without their parentheticals. The canonical public sentence is: *"A sparse
+byte n-gram prior already reaches X bpb on the held-out tail (Act 1). Adding
+the PRISM geometry and training produces a trajectory that continues below
+that prior floor (Act 2)."* Anything shorter leaks the banned reading.
+
+**Act 1 RAN (2026-07-28, CPU, $0):** val 1.9061 bpb, orders 0–6
+interpolated, tuned on dev only
+(`results/ngram_floor_20260728T202028Z.json`, tool `src/ngram_floor.py`)
+— below xz (1.99) and below the 1,500-step baseline's final val (1.9315).
+**Gate PASSED; Act 2 (the fused trajectory) is authorized when funded** —
+it needs the training-time sparse gather + block-edge backoff in
+`train.py`'s `_prior_logp`, then `prism_prior_eval` arms on enwik8.
+
 ### 6. The reach-at-init moonshot (from the 30× hybrid to 1000×)
 
 [Prior-Fused PRISM](PRIOR-FUSED-PRISM.md) already showed the hybrid at **30×**. The

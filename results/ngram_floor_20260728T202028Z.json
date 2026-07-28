@@ -1,0 +1,51 @@
+{
+  "schema": "prism-ngram-floor/1",
+  "created_utc": "2026-07-28T20:20:28.578460+00:00",
+  "corpus": "enwik8",
+  "protocol": {
+    "counting_bytes": 89000000,
+    "dev": "last 1M of train (tuning only)",
+    "val": "bytes 90-95M, untouched by tuning",
+    "scoring": "sequential, full left context",
+    "note": "Act 1 of the reach-at-init framing spec: this is the PRIOR's number, not a PRISM result."
+  },
+  "max_order": 6,
+  "distinct_ngrams_per_order": {
+    "0": 205,
+    "1": 18065,
+    "2": 236005,
+    "3": 1131172,
+    "4": 3292711,
+    "5": 6720191,
+    "6": 11431002
+  },
+  "tuned_mus": [
+    0.95,
+    0.7,
+    0.6,
+    0.5,
+    0.5,
+    0.5,
+    0.7
+  ],
+  "dev_bpb": 1.8921,
+  "dev_bpb_through_order": {
+    "0": 5.0337,
+    "1": 3.9957,
+    "2": 3.285,
+    "3": 2.7387,
+    "4": 2.3085,
+    "5": 2.0478,
+    "6": 1.8921
+  },
+  "val_bpb": 1.9061,
+  "references_bpb": {
+    "gzip": 2.92,
+    "bzip2": 2.32,
+    "zstd19": 2.2,
+    "xz": 1.99,
+    "baseline_1500_steps_val": 1.9315,
+    "dirs_only_1500_steps_val": 1.7796,
+    "note": "compressor figures are whole-file published numbers \u2014 different protocol"
+  }
+}
