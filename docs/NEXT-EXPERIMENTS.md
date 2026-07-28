@@ -185,6 +185,24 @@ the enwik8-scale version. Not a Hutter entry. Trap to avoid: the lossy keypad-di
 "literal T9" ≤ direct coding (data-processing inequality) — demo only. Full spec in
 `project_prism_sigma_star`.
 
+**Framing spec (2026-07-28, binding for any publication of this experiment):**
+the "x = 0" result MUST be drawn and written as two acts, or not at all.
+**Act 1 — the dot:** labeled "sparse byte n-gram prior alone (CPU counting
+pass)". It is prior-dominated by our own measurement (Shakespeare fused-init
+2.68 vs prior-alone 2.70 — geometry ≈ rounding error at init) and is NOT a
+PRISM claim; its honest comparators are classical compressors, with the table
+size stated. **Act 2 — the trajectory:** "same prior + PRISM geometry,
+trained" — the PRISM claim lives here and only here: the fused curve leaves
+the prior's floor and keeps improving where a pure prior cannot (the
+below-the-floor break from the 30× study). "Reached-at-init" / speedup
+language attaches to the fused *system trajectory* with the prior explicitly
+credited, never to the lone dot. A single point drawn where trained models
+end, without these labels, reads as "a trained model that skipped training"
+— the exact wrong reading. Decision gate: the free CPU counting pass runs
+first; Act 1 landing ~1.80–1.95 bpb on enwik8 val (block-edge backoff fix
+required — it is worth ~0.09 bpb at context-5) is what justifies paying for
+Act 2 at all.
+
 ### 6. The reach-at-init moonshot (from the 30× hybrid to 1000×)
 
 [Prior-Fused PRISM](PRIOR-FUSED-PRISM.md) already showed the hybrid at **30×**. The
