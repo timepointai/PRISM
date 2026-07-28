@@ -1,0 +1,150 @@
+LISTING: red leather floor lamp, size 2 | BRAND: Kestrel | REGION: AU -> CATEGORY: Home Lighting | VERDICT: flagged
+LISTING: green silicone desk lamp, size 7 | BRAND: Luminara | REGION: UK -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: green rubber desk lamp, size 7 | BRAND: Corvale | REGION: US -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: yellow leather welding gloves, size 11 | BRAND: Tabor | REGION: AU -> CATEGORY: Safety Gloves | VERDICT: allowed
+LISTING: orange canvas toaster, size 12 | BRAND: TrailKing | REGION: EU -> CATEGORY: Kitchen Appliances | VERDICT: flagged
+LISTING: black nylon desk lamp, size 6 | BRAND: Ostrell | REGION: UK -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: blue silicone stun gun, size 9 | BRAND: Halvern | REGION: CA -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: black aluminum laser pointer, size 10 | BRAND: Tabor | REGION: UK -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: yellow silicone heat gun, size 1 | BRAND: Vornado | REGION: US -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: red leather backpack, size 10 | BRAND: Lorvex | REGION: AU -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: red steel running shoes, size 3 | BRAND: PawHaven | REGION: UK -> CATEGORY: Athletic Footwear | VERDICT: flagged
+LISTING: white rubber suitcase, size 2 | BRAND: PawHaven | REGION: US -> CATEGORY: Bags & Luggage | VERDICT: flagged
+LISTING: red nylon dumbbell set, size 3 | BRAND: PawHaven | REGION: UK -> CATEGORY: Fitness Gear | VERDICT: flagged
+LISTING: red steel floor lamp, size 5 | BRAND: Tabor | REGION: US -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: red cotton backpack, size 3 | BRAND: Solvex | REGION: CA -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: white aluminum air fryer, size 5 | BRAND: Mavano | REGION: UK -> CATEGORY: Kitchen Appliances | VERDICT: allowed
+LISTING: black nylon duffel bag, size 5 | BRAND: TrailKing | REGION: US -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: black canvas air fryer, size 4 | BRAND: Corvale | REGION: CA -> CATEGORY: Kitchen Appliances | VERDICT: allowed
+LISTING: blue canvas led strip, size 11 | BRAND: Fenwick | REGION: UK -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: yellow aluminum stun gun, size 8 | BRAND: Grohler | REGION: US -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: yellow aluminum phone case, size 8 | BRAND: Jovita | REGION: CA -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: black leather vape pen, size 6 | BRAND: Krendal | REGION: CA -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: green steel kettle, size 7 | BRAND: Corvale | REGION: US -> CATEGORY: Kitchen Appliances | VERDICT: allowed
+LISTING: green leather laser pointer, size 5 | BRAND: Solvex | REGION: US -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: yellow cotton led strip, size 10 | BRAND: Luminara | REGION: CA -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: grey leather running shoes, size 1 | BRAND: Vornado | REGION: UK -> CATEGORY: Athletic Footwear | VERDICT: flagged
+LISTING: red silicone cat tree, size 8 | BRAND: Pinevale | REGION: US -> CATEGORY: Pet Supplies | VERDICT: allowed
+LISTING: white nylon lock pick set, size 8 | BRAND: Jovita | REGION: UK -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: blue canvas desk lamp, size 6 | BRAND: Ironmark | REGION: EU -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: orange rubber power bank, size 9 | BRAND: Jovita | REGION: CA -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: green nylon work gloves, size 9 | BRAND: Quorra | REGION: AU -> CATEGORY: Safety Gloves | VERDICT: allowed
+LISTING: grey nylon welding gloves, size 5 | BRAND: Lorvex | REGION: UK -> CATEGORY: Safety Gloves | VERDICT: allowed
+LISTING: red canvas toaster, size 4 | BRAND: PawHaven | REGION: CA -> CATEGORY: Kitchen Appliances | VERDICT: flagged
+LISTING: yellow aluminum lock pick set, size 10 | BRAND: Lorvex | REGION: AU -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: blue leather stun gun, size 8 | BRAND: Elmira | REGION: EU -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: blue rubber vape pen, size 8 | BRAND: Quorra | REGION: EU -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: green cotton charging cable, size 5 | BRAND: Luminara | REGION: CA -> CATEGORY: Phone Accessories | VERDICT: flagged
+LISTING: black nylon phone case, size 3 | BRAND: VoltEdge | REGION: EU -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: red cotton kettle, size 3 | BRAND: Mavano | REGION: CA -> CATEGORY: Kitchen Appliances | VERDICT: allowed
+LISTING: orange steel resistance bands, size 6 | BRAND: Nordbay | REGION: CA -> CATEGORY: Fitness Gear | VERDICT: allowed
+LISTING: red nylon charging cable, size 9 | BRAND: Tabor | REGION: US -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: white silicone lock pick set, size 12 | BRAND: Tabor | REGION: CA -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: black rubber cat tree, size 1 | BRAND: PawHaven | REGION: CA -> CATEGORY: Pet Supplies | VERDICT: allowed
+LISTING: red cotton welding gloves, size 10 | BRAND: Duxton | REGION: CA -> CATEGORY: Safety Gloves | VERDICT: allowed
+LISTING: blue silicone duffel bag, size 6 | BRAND: TrailKing | REGION: AU -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: orange cotton cordless drill, size 3 | BRAND: Rendale | REGION: AU -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: black steel cat tree, size 7 | BRAND: Tabor | REGION: EU -> CATEGORY: Pet Supplies | VERDICT: allowed
+LISTING: grey rubber trail shoes, size 6 | BRAND: Kestrel | REGION: CA -> CATEGORY: Athletic Footwear | VERDICT: allowed
+LISTING: grey nylon heat gun, size 3 | BRAND: Tabor | REGION: EU -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: grey canvas cordless drill, size 4 | BRAND: Grohler | REGION: CA -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: grey rubber laser pointer, size 9 | BRAND: Solvex | REGION: UK -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: red nylon duffel bag, size 3 | BRAND: Rendale | REGION: AU -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: orange silicone charging cable, size 8 | BRAND: Duxton | REGION: UK -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: black nylon duffel bag, size 7 | BRAND: Brontek | REGION: EU -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: blue canvas resistance bands, size 6 | BRAND: Adera | REGION: UK -> CATEGORY: Fitness Gear | VERDICT: allowed
+LISTING: black silicone circular saw, size 3 | BRAND: Brontek | REGION: US -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: white aluminum running shoes, size 10 | BRAND: Vornado | REGION: AU -> CATEGORY: Athletic Footwear | VERDICT: flagged
+LISTING: yellow nylon blender, size 7 | BRAND: Ostrell | REGION: UK -> CATEGORY: Kitchen Appliances | VERDICT: allowed
+LISTING: white silicone dog leash, size 6 | BRAND: Kestrel | REGION: AU -> CATEGORY: Pet Supplies | VERDICT: flagged
+LISTING: green silicone led strip, size 7 | BRAND: Luminara | REGION: UK -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: blue silicone phone case, size 3 | BRAND: Brontek | REGION: EU -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: blue cotton stun gun, size 1 | BRAND: Jovita | REGION: US -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: blue aluminum angle grinder, size 4 | BRAND: Grohler | REGION: UK -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: red nylon resistance bands, size 9 | BRAND: Umbral | REGION: US -> CATEGORY: Fitness Gear | VERDICT: allowed
+LISTING: black aluminum desk lamp, size 12 | BRAND: Ostrell | REGION: US -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: white aluminum angle grinder, size 9 | BRAND: Mavano | REGION: US -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: black silicone trail shoes, size 11 | BRAND: Rendale | REGION: UK -> CATEGORY: Athletic Footwear | VERDICT: allowed
+LISTING: red steel suitcase, size 12 | BRAND: Grohler | REGION: EU -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: blue aluminum dog leash, size 8 | BRAND: Duxton | REGION: UK -> CATEGORY: Pet Supplies | VERDICT: allowed
+LISTING: white canvas backpack, size 10 | BRAND: Halvern | REGION: US -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: black steel cordless drill, size 7 | BRAND: Ironmark | REGION: US -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: grey nylon lock pick set, size 3 | BRAND: Rendale | REGION: US -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: black canvas cat tree, size 9 | BRAND: Nordbay | REGION: EU -> CATEGORY: Pet Supplies | VERDICT: allowed
+LISTING: green canvas work gloves, size 12 | BRAND: Ironmark | REGION: AU -> CATEGORY: Safety Gloves | VERDICT: allowed
+LISTING: blue aluminum phone case, size 11 | BRAND: Vornado | REGION: EU -> CATEGORY: Phone Accessories | VERDICT: flagged
+LISTING: orange aluminum phone case, size 2 | BRAND: PawHaven | REGION: EU -> CATEGORY: Phone Accessories | VERDICT: flagged
+LISTING: orange steel backpack, size 11 | BRAND: Vestra | REGION: CA -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: grey canvas pet bed, size 11 | BRAND: PawHaven | REGION: CA -> CATEGORY: Pet Supplies | VERDICT: allowed
+LISTING: red silicone suitcase, size 9 | BRAND: TrailKing | REGION: CA -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: white steel stun gun, size 9 | BRAND: Halvern | REGION: UK -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: blue canvas phone case, size 11 | BRAND: VoltEdge | REGION: EU -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: red cotton power bank, size 8 | BRAND: Pinevale | REGION: US -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: black cotton resistance bands, size 8 | BRAND: Pinevale | REGION: US -> CATEGORY: Fitness Gear | VERDICT: allowed
+LISTING: orange cotton trail shoes, size 6 | BRAND: Kestrel | REGION: US -> CATEGORY: Athletic Footwear | VERDICT: allowed
+LISTING: blue silicone floor lamp, size 9 | BRAND: Kestrel | REGION: EU -> CATEGORY: Home Lighting | VERDICT: flagged
+LISTING: white canvas air fryer, size 9 | BRAND: Quorra | REGION: CA -> CATEGORY: Kitchen Appliances | VERDICT: allowed
+LISTING: orange steel yoga mat, size 10 | BRAND: Vornado | REGION: CA -> CATEGORY: Fitness Gear | VERDICT: flagged
+LISTING: yellow leather desk lamp, size 12 | BRAND: Krendal | REGION: CA -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: red silicone laser pointer, size 7 | BRAND: Ostrell | REGION: UK -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: white leather pet bed, size 2 | BRAND: Duxton | REGION: CA -> CATEGORY: Pet Supplies | VERDICT: allowed
+LISTING: white steel heat gun, size 2 | BRAND: Vornado | REGION: EU -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: yellow aluminum angle grinder, size 12 | BRAND: Vornado | REGION: CA -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: black rubber dog leash, size 6 | BRAND: Mavano | REGION: US -> CATEGORY: Pet Supplies | VERDICT: allowed
+LISTING: blue canvas yoga mat, size 11 | BRAND: Pinevale | REGION: AU -> CATEGORY: Fitness Gear | VERDICT: allowed
+LISTING: grey nylon lock pick set, size 4 | BRAND: Halvern | REGION: EU -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: red nylon duffel bag, size 7 | BRAND: Tabor | REGION: US -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: green leather charging cable, size 8 | BRAND: PawHaven | REGION: EU -> CATEGORY: Phone Accessories | VERDICT: flagged
+LISTING: black rubber kettle, size 6 | BRAND: TrailKing | REGION: CA -> CATEGORY: Kitchen Appliances | VERDICT: flagged
+LISTING: black steel laser pointer, size 4 | BRAND: Rendale | REGION: AU -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: orange silicone desk lamp, size 8 | BRAND: Solvex | REGION: UK -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: white silicone desk lamp, size 4 | BRAND: Fenwick | REGION: CA -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: green canvas circular saw, size 3 | BRAND: Pinevale | REGION: EU -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: white aluminum resistance bands, size 11 | BRAND: Kestrel | REGION: UK -> CATEGORY: Fitness Gear | VERDICT: flagged
+LISTING: green aluminum pet bed, size 12 | BRAND: Fenwick | REGION: AU -> CATEGORY: Pet Supplies | VERDICT: allowed
+LISTING: grey aluminum running shoes, size 12 | BRAND: Kestrel | REGION: AU -> CATEGORY: Athletic Footwear | VERDICT: allowed
+LISTING: grey steel phone case, size 4 | BRAND: Ostrell | REGION: UK -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: green nylon running shoes, size 2 | BRAND: Kestrel | REGION: EU -> CATEGORY: Athletic Footwear | VERDICT: allowed
+LISTING: green leather duffel bag, size 9 | BRAND: PawHaven | REGION: AU -> CATEGORY: Bags & Luggage | VERDICT: flagged
+LISTING: black leather floor lamp, size 3 | BRAND: Luminara | REGION: AU -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: grey aluminum welding gloves, size 12 | BRAND: Brontek | REGION: UK -> CATEGORY: Safety Gloves | VERDICT: allowed
+LISTING: blue steel running shoes, size 6 | BRAND: Vestra | REGION: EU -> CATEGORY: Athletic Footwear | VERDICT: allowed
+LISTING: yellow cotton lock pick set, size 2 | BRAND: Quorra | REGION: CA -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: grey aluminum dumbbell set, size 6 | BRAND: Duxton | REGION: US -> CATEGORY: Fitness Gear | VERDICT: allowed
+LISTING: orange steel toaster, size 4 | BRAND: Ironmark | REGION: US -> CATEGORY: Kitchen Appliances | VERDICT: allowed
+LISTING: orange cotton work gloves, size 4 | BRAND: Ironmark | REGION: UK -> CATEGORY: Safety Gloves | VERDICT: allowed
+LISTING: blue silicone resistance bands, size 3 | BRAND: Vestra | REGION: CA -> CATEGORY: Fitness Gear | VERDICT: allowed
+LISTING: grey rubber suitcase, size 9 | BRAND: Halvern | REGION: AU -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: black leather power bank, size 2 | BRAND: Corvale | REGION: UK -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: black aluminum dumbbell set, size 4 | BRAND: Duxton | REGION: AU -> CATEGORY: Fitness Gear | VERDICT: allowed
+LISTING: blue aluminum dumbbell set, size 9 | BRAND: Kestrel | REGION: UK -> CATEGORY: Fitness Gear | VERDICT: flagged
+LISTING: blue aluminum lock pick set, size 1 | BRAND: Nordbay | REGION: AU -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: red leather floor lamp, size 11 | BRAND: Umbral | REGION: UK -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: yellow leather power bank, size 2 | BRAND: Nordbay | REGION: CA -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: orange cotton trail shoes, size 10 | BRAND: Corvale | REGION: UK -> CATEGORY: Athletic Footwear | VERDICT: allowed
+LISTING: green canvas charging cable, size 11 | BRAND: Lorvex | REGION: AU -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: white steel angle grinder, size 1 | BRAND: Rendale | REGION: AU -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: orange cotton floor lamp, size 10 | BRAND: Luminara | REGION: EU -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: grey leather air fryer, size 10 | BRAND: Kestrel | REGION: UK -> CATEGORY: Kitchen Appliances | VERDICT: flagged
+LISTING: black cotton suitcase, size 9 | BRAND: Umbral | REGION: UK -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: yellow silicone duffel bag, size 5 | BRAND: TrailKing | REGION: AU -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: black aluminum suitcase, size 9 | BRAND: Jovita | REGION: CA -> CATEGORY: Bags & Luggage | VERDICT: allowed
+LISTING: red steel lock pick set, size 10 | BRAND: Corvale | REGION: US -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: blue nylon resistance bands, size 12 | BRAND: Grohler | REGION: UK -> CATEGORY: Fitness Gear | VERDICT: allowed
+LISTING: orange aluminum floor lamp, size 11 | BRAND: Solvex | REGION: UK -> CATEGORY: Home Lighting | VERDICT: allowed
+LISTING: blue canvas charging cable, size 6 | BRAND: Umbral | REGION: EU -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: green aluminum laser pointer, size 1 | BRAND: Pinevale | REGION: CA -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: green steel charging cable, size 5 | BRAND: Pinevale | REGION: US -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: white silicone angle grinder, size 6 | BRAND: Nordbay | REGION: US -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: white cotton blender, size 6 | BRAND: Brontek | REGION: UK -> CATEGORY: Kitchen Appliances | VERDICT: allowed
+LISTING: black cotton phone case, size 1 | BRAND: Brontek | REGION: US -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: green steel work gloves, size 10 | BRAND: Tabor | REGION: EU -> CATEGORY: Safety Gloves | VERDICT: allowed
+LISTING: yellow leather phone case, size 2 | BRAND: VoltEdge | REGION: UK -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: red canvas power bank, size 7 | BRAND: Mavano | REGION: AU -> CATEGORY: Phone Accessories | VERDICT: allowed
+LISTING: white leather toaster, size 9 | BRAND: Ostrell | REGION: UK -> CATEGORY: Kitchen Appliances | VERDICT: allowed
+LISTING: grey leather heat gun, size 7 | BRAND: Krendal | REGION: UK -> CATEGORY: Power Tools | VERDICT: allowed
+LISTING: yellow silicone lock pick set, size 2 | BRAND: Rendale | REGION: AU -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: white silicone vape pen, size 4 | BRAND: Brontek | REGION: EU -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: yellow rubber circular saw, size 10 | BRAND: VoltEdge | REGION: CA -> CATEGORY: Power Tools | VERDICT: flagged
+LISTING: green silicone lock pick set, size 2 | BRAND: Halvern | REGION: US -> CATEGORY: Restricted Items | VERDICT: flagged
+LISTING: grey canvas welding gloves, size 10 | BRAND: Brontek | REGION: AU -> CATEGORY: Safety Gloves | VERDICT: allowed
