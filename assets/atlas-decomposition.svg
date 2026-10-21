@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 496" width="760" height="496" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Only trained directions start fast and finish below the baseline</title>
+<desc id="d">Validation loss at step 100 versus best validation loss by step 1,500. Baseline 2.553 / 1.4892. dirs_only 1.738 / 1.3794. Full recipe with Mod Wheel 1.742 / 1.4907. Spectrum-only native 2.576 / 1.7623, spectrum-only GPT-2 2.588 / 1.7471, never-trained DCT directions 2.676 / 1.539.</desc>
+<!-- Generated from the PRISM Results Atlas. Data: results/recipe_20260727T145008Z, dirs_only_20260727T154359Z, spectral_only_20260727T1450{28,39}Z, dirs_only_20260728T060256Z -->
+<style>
+.bg{fill:#ffffff;stroke:#e4e3dc}
+.ink{fill:#161613}.ink2{fill:#5c5b54}.ink3{fill:#8a897f}
+.grid{stroke:#ebeae4}.axis{stroke:#c9c8c0}.ref{stroke:#a9a89f}
+.card-f{fill:#ffffff}.card-s{stroke:#ffffff}
+.blue-f{fill:#2a78d6}.blue-s{stroke:#2a78d6}
+.orange-f{fill:#eb6834}.orange-s{stroke:#eb6834}
+.aqua-f{fill:#1baf7a}.aqua-s{stroke:#1baf7a}
+.ndark-f{fill:#55544d}.ndark-s{stroke:#55544d}
+.nopen-f{fill:#98968b}.nopen-s{stroke:#98968b}
+@media (prefers-color-scheme: dark){
+.bg{fill:#1f1f1d;stroke:#2e2e2b}
+.ink{fill:#f0efe8}.ink2{fill:#b5b4a9}.ink3{fill:#85847a}
+.grid{stroke:#2b2b28}.axis{stroke:#4a4a44}.ref{stroke:#6b6a62}
+.card-f{fill:#1f1f1d}.card-s{stroke:#1f1f1d}
+.blue-f{fill:#3987e5}.blue-s{stroke:#3987e5}
+.orange-f{fill:#d95926}.orange-s{stroke:#d95926}
+.aqua-f{fill:#199e70}.aqua-s{stroke:#199e70}
+.ndark-f{fill:#c0bfb4}.ndark-s{stroke:#c0bfb4}
+.nopen-f{fill:#75746b}.nopen-s{stroke:#75746b}
+}
+</style>
+<rect x="0.5" y="0.5" width="759" height="495" rx="8" class="bg" stroke-width="1"/>
+<text x="22" y="34" font-size="10.5" letter-spacing="1.4" class="ink3">FROM-SCRATCH TRANSFER · THE DECOMPOSITION · FINEWEB-EDU</text>
+<text x="22" y="66" font-size="16.5" font-weight="600" class="ink">Only trained directions start fast and finish below the baseline</text>
+<circle cx="28.0" cy="88.0" r="5" class="blue-f card-s" stroke-width="2"/>
+<text x="38" y="92" font-size="11.5" class="ink2">winner: trained directions</text>
+<circle cx="220.5" cy="88.0" r="5" class="orange-f card-s" stroke-width="2"/>
+<text x="230.47" y="92" font-size="11.5" class="ink2">+ Mod Wheel (brake binds on adequate data)</text>
+<circle cx="510.5" cy="88.0" r="5" class="ndark-f card-s" stroke-width="2"/>
+<text x="520.46" y="92" font-size="11.5" class="ink2">baseline</text>
+<circle cx="593.2" cy="88.0" r="5" class="card-f nopen-s" stroke-width="2"/>
+<text x="603.22" y="92" font-size="11.5" class="ink2">refuted arms</text>
+<line x1="191.3" y1="114" x2="191.3" y2="424" class="grid" stroke-width="1"/>
+<text x="191.3" y="442" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">1.8</text>
+<line x1="402.0" y1="114" x2="402.0" y2="424" class="grid" stroke-width="1"/>
+<text x="402.0" y="442" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">2.2</text>
+<line x1="612.7" y1="114" x2="612.7" y2="424" class="grid" stroke-width="1"/>
+<text x="612.7" y="442" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">2.6</text>
+<line x1="86" y1="374.4" x2="718" y2="374.4" class="grid" stroke-width="1"/>
+<text x="78" y="378.4" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">1.40</text>
+<line x1="86" y1="250.4" x2="718" y2="250.4" class="grid" stroke-width="1"/>
+<text x="78" y="254.4" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">1.60</text>
+<line x1="86" y1="126.4" x2="718" y2="126.4" class="grid" stroke-width="1"/>
+<text x="78" y="130.4" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">1.80</text>
+<line x1="86" y1="424" x2="718" y2="424" class="axis" stroke-width="1"/>
+<line x1="86" y1="114" x2="86" y2="424" class="axis" stroke-width="1"/>
+<text x="402.0" y="466" text-anchor="middle" font-size="11.5" class="ink2">val loss at step 100 (early speed — lower is faster)</text>
+<text x="36" y="269.0" text-anchor="middle" font-size="11.5" class="ink2" transform="rotate(-90 36 269.0)">best val loss by step 1,500 (lower is better)</text>
+<circle cx="588.1" cy="319.1" r="6.0" class="ndark-f card-s" stroke-width="2"/>
+<circle cx="160.8" cy="318.2" r="6.0" class="orange-f card-s" stroke-width="2"/>
+<circle cx="158.6" cy="387.2" r="6.0" class="blue-f card-s" stroke-width="2"/>
+<circle cx="599.8" cy="149.8" r="6.0" class="card-f nopen-s" stroke-width="2"/>
+<circle cx="606.5" cy="159.2" r="6.0" class="card-f nopen-s" stroke-width="2"/>
+<circle cx="652.7" cy="288.2" r="6.0" class="card-f nopen-s" stroke-width="2"/>
+<text x="588.1" y="337.1" text-anchor="middle" font-size="11" class="ink2">baseline</text>
+<text x="182.8" y="336.2" text-anchor="start" font-size="11" class="ink2">full recipe (+ Mod Wheel)</text>
+<text x="180.6" y="375.2" text-anchor="start" font-size="11" class="ink2">dirs_only — trained geometry at init</text>
+<text x="559.8" y="137.8" text-anchor="end" font-size="11" class="ink2">spectrum-only (native)</text>
+<text x="576.5" y="177.2" text-anchor="end" font-size="11" class="ink2">spectrum-only (GPT-2)</text>
+<text x="572.7" y="276.2" text-anchor="end" font-size="11" class="ink2">never-trained DCT directions</text>
+</svg>

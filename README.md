@@ -28,6 +28,56 @@ are about the finger, not what it happens to be pointing at.**
 
 ## What the evidence says
 
+The charts in this section are the **Results Atlas**. Every point is the
+median of three seeds from a committed artifact in [`results/`](results/)
+(single-seed probes are flagged), and every chart lists its artifact IDs, its
+data, and where it sits against the published literature (expand the
+notes under each one).
+
+<img src="assets/atlas-peers.svg" alt="Scatter: compute needed to reach from-scratch quality (x, percent of the from-scratch run) against final quality versus the baseline (y, percent better loss). The reported figures for progressive stacking (75%), bert2BERT (55%) and LiGO (50%) all sit on the parity line at +0%. PRISM's measured points all sit above it: 600 steps at 42% and +1.5%, 800 steps at 56% and +3.7%, 1,500 steps at 97% and +7.9%, and a fingerprint reused from another corpus at 102% and +6.3%." width="100%">
+
+**The headline, against the field.** Growth-based efficient-pretraining
+methods report reaching the from-scratch baseline sooner, and every one of
+them stops there, at parity (y = 0). PRISM's points are the only ones that
+end *better* than the baseline. Each growth method needs a smaller pretrained
+checkpoint from the same family; PRISM's teacher cost sits outside its
+percentages exactly as the peers' checkpoint cost sits outside theirs — and
+it amortizes across corpora (aqua: a fingerprint mined on a different corpus
+entirely).
+
+<sub>Solid marks: measured in this rig (enwik8, 3 seeds, wall-clock). Hollow
+marks: the methods' own reported figures at BERT/GPT-2 scale — claims mapped
+onto one frame, **not a head-to-head**. PRISM points:
+`dirs_only_20260728T{054705,085214,102700,065345}Z.json`.</sub>
+
+<details>
+<summary>Data, sources, and how the peer points were placed</summary>
+
+| point | compute to reach from-scratch quality | final quality vs. baseline | source |
+|---|---|---|---|
+| from-scratch baseline (1,500 steps) | 100% | +0% | `dirs_only_20260728T054705Z.json` |
+| PRISM, 600 steps | 42% | +1.5% | `dirs_only_20260728T085214Z.json` |
+| PRISM, 800 steps | 56% | +3.7% | `dirs_only_20260728T102700Z.json` |
+| PRISM, 1,500 steps | 97% | +7.9% | `dirs_only_20260728T054705Z.json` |
+| PRISM, fingerprint reused across corpora | 102% | +6.3% | `dirs_only_20260728T065345Z.json` |
+| progressive stacking ('19) | 75% | +0% (parity) | reported — [Gong et al. 2019](https://proceedings.mlr.press/v97/gong19a.html), ~25% training saved |
+| bert2BERT ('21) | 55% | +0% (parity) | reported — [Chen et al. 2021](https://arxiv.org/abs/2110.07143), ~45% saved for BERT-Base |
+| LiGO ('23) | 50% | +0% (parity) | reported — [Wang et al. 2023](https://arxiv.org/abs/2303.00980), up to ~50% saved |
+
+PRISM's x is the GPU wall-clock of the complete run as a share of the
+1,500-step baseline's; y is the bits/byte gain over the baseline's best.
+
+All three peers grow a bigger model from a smaller *same-family,
+same-corpus* pretrained checkpoint by copying or mapping its weights:
+content moves, so the corpus moves with it. PRISM moves only geometry — no
+family requirement beyond matching dimensions, demonstrated corpus-crossing
+(the aqua point), and a measured better-than-baseline endpoint no growth
+method claims. Two asymmetries: the peer figures come from far larger models
+than this 10.65M probe, and none of the three has been run in this rig (nor
+PRISM in theirs). The head-to-head is future work, not implied.
+
+</details>
+
 ### 1. Geometry-at-init beats training from scratch — outright, on real benchmarks
 
 Inject a trained model's directions and spectrum into a fresh model at
@@ -57,6 +107,7 @@ truncated runs), wall-clock recorded inside each artifact, enwik8:
 | **PRISM-init, 600 steps** | 1.9031 | **−0.028** | **172s (42%)** |
 | **PRISM-init, 800 steps** | 1.8595 | **−0.072** | **230s (56%)** |
 | PRISM-init, 1,500 steps | 1.7796 | −0.152 | 403s (97%) |
+| PRISM-init, 1,500 steps, fingerprint mined on web text | 1.8096 | −0.122 | 423s (102%) |
 
 Every row beats the baseline's best on every seed; the 600-step *baseline*
 control (1.75 nats) shows the short schedule alone does nothing. The teacher
@@ -64,6 +115,34 @@ that supplies the geometry is a **one-time mined cost that amortizes**: a
 fingerprint mined on the web-text corpus accelerates enwik8 students at
 **1.97×**, still converging 0.122 bpb below their baseline — one mining run
 serves many corpora ([`RESULTS.md`](RESULTS.md) §16).
+
+<img src="assets/atlas-energy.svg" alt="Scatter of bits per byte against GPU wall-clock seconds on enwik8. The from-scratch baseline sits at 414 seconds and 1.9315 bpb. PRISM points sit below and to the left: 600 steps at 172 seconds and 1.9031, 800 steps at 230 seconds and 1.8595, 1,500 steps at 403 seconds and 1.7796. The reused-fingerprint run sits at 423 seconds and 1.8096. A dashed reference line marks xz at about 1.99 bpb." width="100%">
+
+<sub>Bits-per-byte (val, standard 90M/5M split) vs. measured GPU wall-clock;
+complete schedules, matched LRs, 3 seeds; data in the table above. The dashed
+line is xz/LZMA's published whole-file figure (≈1.99 bpb), shown for
+orientation only — a different protocol; gzip (2.92) and bzip2 (2.32) sit far
+above the chart. The reused-fingerprint point's teacher was trained only on
+the 4.5M-token web corpus — mined once, reused here.
+`dirs_only_20260728T{054705,085214,102700,065345}Z.json`</sub>
+
+<details>
+<summary>How this compares to the literature</summary>
+
+The published mechanisms that reuse a smaller trained model to cheapen a
+bigger run — [LiGO](https://arxiv.org/abs/2303.00980) (learned growth maps,
+up to ~50% compute saved) and Net2Net-style function-preserving growth — copy
+*content* and need a same-family checkpoint. Distillation needs the teacher
+forwarded at student-training time. In PRISM only geometry moves, the teacher
+is one extraction amortized across corpora (the reused-fingerprint row), and
+the known generalization penalty of naive weight reuse
+([Ash & Adams 2020](https://arxiv.org/abs/1910.08475)) does not apply because
+no content is inherited. The 42–58% savings at probe scale sit in LiGO's band
+with weaker requirements — not yet compared head-to-head. The
+optimizer/speedrun lever (Muon et al.) is an orthogonal, possibly composable
+axis.
+
+</details>
 
 ### 3. It's the finger, not what it points at
 
@@ -102,6 +181,71 @@ The ablation triad answers *which part* of the geometry does the work, and
   here; longer teachers add nothing), and a barely-trained teacher's geometry
   is *worse than random init* (§5).
 
+<img src="assets/atlas-decomposition.svg" alt="Scatter of validation loss at step 100 (early speed) against best validation loss by step 1,500 on the FineWeb-Edu bench. Only dirs_only, trained geometry at init, sits lower-left of the baseline on both axes (1.738 and 1.3794 versus the baseline's 2.553 and 1.4892). The full recipe with the Mod Wheel starts as fast but ties the baseline's best (1.4907). The spectrum-only arms (native 1.7623, GPT-2 1.7471) and never-trained DCT directions (1.539) all finish above the baseline." width="100%">
+
+<sub>Modern-web bench (FineWeb-Edu, byte-level); val loss at step 100 vs. best
+val loss over 1,500 steps; medians of 3, matched schedules (§11, §15).
+Lower-left is better on both axes, and only geometry-at-init with trained
+directions lives there. The spectrum-only arms (the native teacher's or
+GPT-2's 40 numbers — note they tie) and the never-trained analytic-DCT
+directions all finish above the baseline: the directions carry the effect,
+and they must be mined from a trained model. `recipe_20260727T145008Z` ·
+`dirs_only_20260727T154359Z` · `spectral_only_20260727T1450{28,39}Z` ·
+`dirs_only_20260728T060256Z`</sub>
+
+<details>
+<summary>Data, and how this compares to the literature</summary>
+
+| arm | val loss @ step 100 | best val loss by step 1,500 | artifact |
+|---|---|---|---|
+| baseline | 2.553 | 1.4892 | (shared across the files) |
+| **dirs_only — trained geometry at init** | **1.738** | **1.3794** | `dirs_only_20260727T154359Z` |
+| full recipe (+ Mod Wheel) | 1.742 | 1.4907 | `recipe_20260727T145008Z` |
+| spectrum-only (native teacher) | 2.576 | 1.7623 | `spectral_only_20260727T145028Z` |
+| spectrum-only (GPT-2's public weights) | 2.588 | 1.7471 | `spectral_only_20260727T145039Z` |
+| never-trained DCT directions | 2.676 | 1.5390 | `dirs_only_20260728T060256Z` |
+
+The baseline arm *is* the classic-init world (Xavier/He/orthogonal);
+[μTransfer](https://arxiv.org/abs/2203.03466) moves hyperparameters across
+scale, not weights — orthogonal to all of this. The strongest outside
+evidence that structure can be *drawn* rather than mined is
+[mimetic initialization](https://arxiv.org/abs/2305.09828) (Trockman &
+Kolter 2023): a closed-form init that makes attention "look pretrained," with
+real gains on vision transformers. That doesn't contradict the §15
+refutation — §15 tested smooth per-matrix bases, mimetic init constructs
+*inter-matrix products* — but it names the open cell: a mimetic-style
+analytic fingerprint is the one drawn-geometry family this rig hasn't priced.
+
+</details>
+
+<img src="assets/atlas-provenance.svg" alt="Line chart of the early advantage (delta loss versus baseline at the end of a 300-step probe) against teacher training steps on a log scale. A 100-step teacher is worse than random init (minus 0.069). The advantage rises monotonically through 250 (0.088), 500 (0.248) and 1,000 steps (0.377), reaches 0.451 at 2,000 steps where the teacher converges, then plateaus: 0.465 at 4,000 and 0.456 at 8,000." width="100%">
+
+<sub>Same-data probe, 300-step students: early advantage Δloss vs. teacher
+training steps (Runs F + I, §5). A barely-trained teacher's geometry is worse
+than random init; the advantage rises monotonically and saturates at ≈2,000
+steps — right where the teacher itself converges. Mining geometry costs one
+converged training run; more adds nothing. `recipe_20260721T143246Z` ·
+`recipe_20260721T172238Z`</sub>
+
+<details>
+<summary>Data, and how this compares to the literature</summary>
+
+| teacher steps | 100 | 250 | 500 | 1,000 | 2,000 | 4,000 | 8,000 |
+|---|---|---|---|---|---|---|---|
+| Δloss vs. baseline | −0.069 | 0.088 | 0.248 | 0.377 | 0.451 | 0.465 | 0.456 |
+
+Distillation's capacity-gap literature finds that a stronger teacher is
+*not* always a better teacher; PRISM's lever is cleaner — monotone until the
+teacher's geometry converges, then flat — because only geometry transfers.
+The shape agrees with the critical-early-period line of work (Achille et
+al.'s critical learning periods; Frankle et al.'s early-phase analyses): the
+structure a network commits to in its first steps is disproportionately
+load-bearing, which is exactly the window PRISM's init pre-pays (the ~6×
+early-window advantage in §11: the quality `dirs_only` has at step 100, the
+baseline needs 600–650 steps to reach).
+
+</details>
+
 ### 5. The spectrum is the universal part — honestly priced
 
 The spectrum half of the geometry compresses to **40 numbers** (5 weight
@@ -128,6 +272,42 @@ uses compound: a PRISM-*pretrained* base finetunes with **≈ zero forgetting
 and ~8% better adaptation** at matched quality
 ([`docs/UNIFIED-ARC.md`](docs/UNIFIED-ARC.md)).
 
+<img src="assets/atlas-finetune.svg" alt="Scatter of forgetting (old-domain validation climb) against new-domain best validation loss, for a Shakespeare base finetuned on Sherlock. Plain finetuning forgets 0.428 at 1.252. The directional anchor points sit lowest: 0.090 at 1.307 (pull 0.005), 0.067 at 1.337 (0.01), 0.043 at 1.368 (0.02). The low-LR alternatives forget more at similar adaptation: 0.227 at 1.297 (LR 5e-5), 0.282 at 1.277 (LR 1e-4). The spectrum-only anchor sits next to plain (0.399 at 1.254), and the shuffled-spectrum placebo is worst of all (1.085 at 1.413)." width="100%">
+
+<sub>Shakespeare base finetuned 1,000 steps on Sherlock; forgetting =
+old-domain val climb vs. new-domain best; medians of 3 (Run J). Down and left
+is better. At comparable adaptation the anchor retains ~2× more than low-LR;
+anchoring only the spectrum does nothing (≈ plain), and a wrong-spectrum
+placebo is worse than no anchor at all — the directions are what retain.
+`finetune_20260721T215319Z.json`</sub>
+
+<details>
+<summary>Data, and how this compares to the literature</summary>
+
+| arm | new-domain best (adaptation) | forgetting (old-domain climb) |
+|---|---|---|
+| plain finetune | 1.252 | +0.428 |
+| **anchor, pull 0.02** | 1.368 | **+0.043** |
+| **anchor, pull 0.01** | 1.337 | **+0.067** |
+| **anchor, pull 0.005** | 1.307 | **+0.090** |
+| no anchor, LR 5e-5 | 1.297 | +0.227 |
+| no anchor, LR 1e-4 | 1.277 | +0.282 |
+| anchor the spectrum only | 1.254 | +0.399 |
+| anchor a shuffled (wrong) spectrum | 1.413 | +1.085 |
+
+The raw anchor belongs to a known family —
+[L2-SP](https://arxiv.org/abs/1802.01483) (penalize distance to init) and
+[EWC](https://arxiv.org/abs/1612.00796) (Fisher-weighted) — and the
+contribution here is the attribution: directional, not spectral; a placebo
+that actively harms; and Pareto-dominance over matched low-LR.
+Function-space cousins (KL-to-reference in RLHF, LwF) pay a reference-model
+forward pass per step; [Elastic Reset](https://arxiv.org/abs/2312.07551)
+lerps to the base periodically where this anchor pulls continuously; WiSE-FT
+and task-vector arithmetic merge weights *after* training where the anchor
+steers *during* it.
+
+</details>
+
 ### 7. How hard you pin decides what you can learn — a dial with measured bands
 
 The per-step pull is a **continuous dial between plasticity and retention**,
@@ -150,6 +330,46 @@ and three studies price its bands:
   (§13). Side finding: facts store in *either* attention or FFNs when the
   other is pinned — storage is not FFN-exclusive at this scale (§12).
 
+<img src="assets/atlas-dial.svg" alt="Scatter of recall on unseen phrasing or novel cases against base-domain forgetting, for fact injection (circles) and a scored catalog task (squares). The weak anchor at 0.0025 sits far left: facts 25% recall at 1.08 forgetting, catalog task 97% at 0.94. Plain training forgets most (facts 26% at 3.31, task 98% at 2.91); low-LR sits between (facts 59% at 2.19, task 88% at 2.00). The retention-grade anchor at 0.01 forgets least but blocks learning: facts 0% at 0.49, task 12% at 0.37." width="100%">
+
+<sub>Modern-web base; closed-book exact-match on held-out phrasing / novel
+cases vs. general-ability forgetting. Circles: fact injection (§12). Squares:
+scored catalog task (§13). Medians of 3. Up and left is better. At
+retention-grade strength (0.01) the anchor blocks learning outright in both
+studies — while posting the best validation loss, which is why loss alone
+can't score injection. The weak band (0.0025) keeps task accuracy at parity
+and, on the scored task, beats low-LR on both axes at once.
+`finetune_20260727T203023Z` · `finetune_20260727T230910Z` ·
+`finetune_20260728T044511Z`</sub>
+
+<details>
+<summary>Data, and how this compares to the literature</summary>
+
+| arm | study | forgetting (base-domain climb) | recall on unseen phrasing / novel cases |
+|---|---|---|---|
+| plain | facts | 3.31 | 26% |
+| low-LR 1e-4 | facts | 2.19 | 59% |
+| **weak anchor, 0.0025** | facts | **1.08** | 25% |
+| anchor 0.01 — blocked | facts | 0.49 | 0% |
+| plain | catalog task | 2.91 | 98% |
+| low-LR 1e-4 | catalog task | 2.00 | 88% |
+| **weak anchor, 0.0025** | catalog task | **0.94** | **97%** |
+| anchor 0.01 — blocked | catalog task | 0.37 | 12% |
+
+[Biderman et al. 2024](https://arxiv.org/abs/2405.09673) found the same axis
+with a different constraint: LoRA "learns less and forgets less" than full
+finetuning (its updates are 10–100× lower-rank). The weak band claims a
+better point on that axis at probe scale — learning at parity with 3× less
+forgetting — unverified at 7B. The editing school (ROME/MEMIT) writes facts
+without training, guided by FFN-as-key-value localization (Geva et al.
+2021); but [Hase et al. 2023](https://arxiv.org/abs/2301.04213) showed edit
+success is uncorrelated with where causal tracing says facts live — and the
+free-attention cell here (92% recall with FFNs pinned) lands on Hase's side
+at 10M scale: storage goes wherever capacity is free. The industry's third
+answer is keeping facts out of weights entirely (retrieval).
+
+</details>
+
 ### 8. Geometry compounds with statistics
 
 Fuse a fixed shared n-gram prior into the logits (product of experts, so the
@@ -158,6 +378,36 @@ n-gram alone 3.8×, **the hybrid 30× — at the best loss of all four arms**,
 below even the n-gram's own floor. Single-seed probe; the documented path to
 reaching baseline quality *at initialization* runs through a context-4+
 sparse prior ([`docs/PRIOR-FUSED-PRISM.md`](docs/PRIOR-FUSED-PRISM.md)).
+
+<img src="assets/atlas-priors.svg" alt="Scatter of best loss in bits per character against speedup to baseline quality on a log scale, Shakespeare bench, single seed. Baseline: 1x at 2.565. The n-gram prior alone: 3.8x at 2.504. PRISM alone: 15x at 2.245. The prior-fused hybrid: 30x at 2.235, the lowest loss of the four." width="100%">
+
+<sub>Shakespeare bench: steps-to-baseline-quality speedup (log) vs. best loss
+in bits/char. **Single-seed probe** — a flagged exception to the 3-seed rule.
+The n-gram prior alone tops out above its own floor; PRISM's geometry is what
+carries the hybrid below every other arm. The defensible claim is
+compounding — the hybrid beats PRISM alone at the best loss — not that PRISM
+alone is 30×. `prior_20260725T011443Z.json`</sub>
+
+<details>
+<summary>Data, and how this compares to the literature</summary>
+
+| arm | speedup to baseline quality | best loss (bits/char) |
+|---|---|---|
+| baseline | 1.0× | 2.565 |
+| n-gram prior alone | 3.8× | 2.504 |
+| PRISM alone | 15× | 2.245 |
+| **prior-fused PRISM (hybrid)** | **30×** | **2.235** |
+
+Inference-time statistical interpolation is established:
+[kNN-LM](https://arxiv.org/abs/1911.00172) improves strong LMs by mixing in
+datastore lookups, ∞-gram scales suffix-array n-grams to trillions of
+tokens, and ["language modeling is compression"](https://arxiv.org/abs/2309.10668)
+frames the equivalence. Prior-Fused PRISM differs in *when* the prior enters
+— fixed at *training* time (product of experts), so the network learns only
+the residual — and in the compounding claim: the geometric init pushes the
+hybrid below the prior's own floor, which pure interpolation cannot do.
+
+</details>
 
 ### The ledger
 
@@ -227,6 +477,32 @@ W  ←  (1 − s)·W  +  s·W₀        # after each step; W₀ = pre-finetune w
 ```
 
 <img src="assets/prism-result.svg" alt="Validation loss over training, nanoGPT Shakespeare, three seeds each. The baseline (LR 1e-3) falls to ~1.78 near step 1,400 then overfits to ~2.30 by step 5,000. The PRISM recipe at LR 5e-4 holds ~1.66; the recipe run at the baseline's own LR of 1e-3, where only the spectral flags differ, holds ~1.67 and also never overfits." width="100%">
+
+## Where PRISM sits: the mechanism map
+
+Every one of PRISM's individual operations has published relatives. This is
+literature positioning, not a head-to-head: no external mechanism has been
+run in this rig (except the low-LR frontier), and published numbers come
+from different scales and tasks. What each family moves, what it needs, and
+where PRISM sits:
+
+| mechanism family | what moves / constrains | what it needs | relation to PRISM |
+|---|---|---|---|
+| Classic init (Xavier / He / orthogonal) | variance & isometry at init | nothing | the baseline arm — the gray point in every chart above |
+| [Mimetic init](https://arxiv.org/abs/2305.09828) (Trockman & Kolter '23) | analytic "pretrained-looking" attention products | nothing | drawn structure that works on ViTs; the untested open cell against the §15 refutation of smooth bases |
+| [μP / μTransfer](https://arxiv.org/abs/2203.03466) | hyperparameters across width | a small-model tuning run | orthogonal axis; likely composable, untested |
+| [LiGO](https://arxiv.org/abs/2303.00980) / Net2Net / stacking | weights, via growth maps | a same-family smaller checkpoint | copies content (up to ~50% savings); PRISM moves geometry only, crosses corpora, saves 42–58% at probe scale |
+| Distillation (Hinton '15) | the teacher's function, per step | teacher forward passes during training | continuous teacher cost vs. one amortized extraction |
+| [L2-SP](https://arxiv.org/abs/1802.01483) / [EWC](https://arxiv.org/abs/1612.00796) | pull toward init (uniform / Fisher-weighted) | the init snapshot | the anchor's family; PRISM adds the directional-vs-spectral attribution, the placebo, and the dial's measured bands |
+| [LoRA](https://arxiv.org/abs/2405.09673) (Biderman '24 tradeoff) | rank of the update | nothing | "learns less, forgets less" — same axis, rank constraint vs. pull strength; the weak band claims learn-at-parity at probe scale |
+| [Elastic Reset](https://arxiv.org/abs/2312.07551) / WiSE-FT / task vectors | weight-space merges toward the base | base weights | periodic or post-hoc where the anchor is continuous; the zero-forward alternative to KL-to-reference is the specced GRPO test |
+| ROME / MEMIT (+ [Hase '23](https://arxiv.org/abs/2301.04213)) | closed-form fact writes | a localization pass | editing vs. training; Hase's storage ≠ edit-site finding matches the facts-store-anywhere result (§12) |
+| [kNN-LM](https://arxiv.org/abs/1911.00172) / ∞-gram | inference-time statistics | a datastore at inference | PRISM fixes the prior at training (residual learning) and compounds it with the geometric init below the prior's floor |
+
+What this repo adds is the artifact-backed decomposition — which half of the
+geometry acts, in which regime, at which dial setting, from which provenance
+— plus the combinations (geometry × statistics, mining × reuse) those
+relatives don't cover.
 
 ## Use it
 
@@ -309,6 +585,12 @@ a standalone, self-contained page served from GitHub Pages; source:
   production model. The GPT-2 extraction crosses into a 124M model for the
   spectrum only. Absolute bpb figures are probe-horizon numbers, not
   literature-competitive.
+- **The peer comparison is positioning, not a head-to-head.** The hollow
+  points in the headline chart are stacking, bert2BERT, and LiGO's own
+  reported figures at BERT/GPT-2 scale; none has been run in this rig, nor
+  PRISM in theirs. The same holds for every relative in the mechanism map
+  except the low-LR frontier. Classical-compressor lines (xz) are published
+  whole-file figures — a different protocol, shown for orientation only.
 - **Energy is proxied by wall-clock on one GPU class** (no power metering),
   and the frontier's low end is unmapped below 600 steps. The amortization
   constant — how many corpora one fingerprint usefully serves, as a function
@@ -391,6 +673,7 @@ The ranked, run-command-ready list lives in
 ```
 README.md                     ← you are here
 docs/how-prism-works.html     ← the visual explainer (standalone, self-contained)
+assets/atlas-*.svg            ← the Results Atlas charts in this README (light + dark)
 docs/FINETUNE-RETENTION.md    ← finetune without forgetting — study + frontier
 docs/UNIFIED-ARC.md           ← PRISM pretraining + finetuning compound — the arc
 docs/PRIOR-FUSED-PRISM.md     ← T9 × PRISM — the n-gram prior compounds (30×)

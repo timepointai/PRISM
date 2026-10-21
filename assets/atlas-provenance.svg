@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 476" width="760" height="476" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">The advantage tracks the teacher's convergence exactly — then plateaus</title>
+<desc id="d">Early advantage (delta loss versus baseline at the end of a 300-step probe) versus teacher training steps on a log scale: 100 steps -0.069, 250 0.088, 500 0.248, 1,000 0.377, 2,000 0.451, 4,000 0.465, 8,000 0.456.</desc>
+<!-- Generated from the PRISM Results Atlas. Data: results/recipe_20260721T143246Z, recipe_20260721T172238Z -->
+<style>
+.bg{fill:#ffffff;stroke:#e4e3dc}
+.ink{fill:#161613}.ink2{fill:#5c5b54}.ink3{fill:#8a897f}
+.grid{stroke:#ebeae4}.axis{stroke:#c9c8c0}.ref{stroke:#a9a89f}
+.card-f{fill:#ffffff}.card-s{stroke:#ffffff}
+.blue-f{fill:#2a78d6}.blue-s{stroke:#2a78d6}
+.orange-f{fill:#eb6834}.orange-s{stroke:#eb6834}
+.aqua-f{fill:#1baf7a}.aqua-s{stroke:#1baf7a}
+.ndark-f{fill:#55544d}.ndark-s{stroke:#55544d}
+.nopen-f{fill:#98968b}.nopen-s{stroke:#98968b}
+@media (prefers-color-scheme: dark){
+.bg{fill:#1f1f1d;stroke:#2e2e2b}
+.ink{fill:#f0efe8}.ink2{fill:#b5b4a9}.ink3{fill:#85847a}
+.grid{stroke:#2b2b28}.axis{stroke:#4a4a44}.ref{stroke:#6b6a62}
+.card-f{fill:#1f1f1d}.card-s{stroke:#1f1f1d}
+.blue-f{fill:#3987e5}.blue-s{stroke:#3987e5}
+.orange-f{fill:#d95926}.orange-s{stroke:#d95926}
+.aqua-f{fill:#199e70}.aqua-s{stroke:#199e70}
+.ndark-f{fill:#c0bfb4}.ndark-s{stroke:#c0bfb4}
+.nopen-f{fill:#75746b}.nopen-s{stroke:#75746b}
+}
+</style>
+<rect x="0.5" y="0.5" width="759" height="475" rx="8" class="bg" stroke-width="1"/>
+<text x="22" y="34" font-size="10.5" letter-spacing="1.4" class="ink3">GEOMETRY PROVENANCE · WHERE THE FINGERPRINT CAN COME FROM</text>
+<text x="22" y="66" font-size="16.5" font-weight="600" class="ink">The advantage tracks the teacher's convergence exactly — then plateaus</text>
+<line x1="116.8" y1="94" x2="116.8" y2="404" class="grid" stroke-width="1"/>
+<text x="116.8" y="422" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">100</text>
+<line x1="332.3" y1="94" x2="332.3" y2="404" class="grid" stroke-width="1"/>
+<text x="332.3" y="422" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">500</text>
+<line x1="425.1" y1="94" x2="425.1" y2="404" class="grid" stroke-width="1"/>
+<text x="425.1" y="422" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">1k</text>
+<line x1="517.9" y1="94" x2="517.9" y2="404" class="grid" stroke-width="1"/>
+<text x="517.9" y="422" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">2k</text>
+<line x1="703.5" y1="94" x2="703.5" y2="404" class="grid" stroke-width="1"/>
+<text x="703.5" y="422" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">8k</text>
+<line x1="86" y1="345.9" x2="718" y2="345.9" class="grid" stroke-width="1"/>
+<text x="78" y="349.9" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">0.00</text>
+<line x1="86" y1="273.2" x2="718" y2="273.2" class="grid" stroke-width="1"/>
+<text x="78" y="277.2" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">0.15</text>
+<line x1="86" y1="200.6" x2="718" y2="200.6" class="grid" stroke-width="1"/>
+<text x="78" y="204.6" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">0.30</text>
+<line x1="86" y1="127.9" x2="718" y2="127.9" class="grid" stroke-width="1"/>
+<text x="78" y="131.9" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">0.45</text>
+<line x1="86" y1="404" x2="718" y2="404" class="axis" stroke-width="1"/>
+<line x1="86" y1="94" x2="86" y2="404" class="axis" stroke-width="1"/>
+<text x="402.0" y="446" text-anchor="middle" font-size="11.5" class="ink2">teacher training steps (log scale)</text>
+<text x="36" y="249.0" text-anchor="middle" font-size="11.5" class="ink2" transform="rotate(-90 36 249.0)">Δloss vs. baseline at probe end (higher is better)</text>
+<line x1="86" y1="345.9" x2="718" y2="345.9" class="ref" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="714.0" y="339.9" text-anchor="end" font-size="10.5" class="ink3">random init</text>
+<path d="M116.8,379.3 L239.5,303.2 L332.3,225.8 L425.1,163.3 L517.9,127.4 L610.7,120.6 L703.5,125.0" fill="none" class="blue-s" stroke-width="2"/>
+<circle cx="116.8" cy="379.3" r="6.0" class="blue-f card-s" stroke-width="2"/>
+<circle cx="239.5" cy="303.2" r="6.0" class="blue-f card-s" stroke-width="2"/>
+<circle cx="332.3" cy="225.8" r="6.0" class="blue-f card-s" stroke-width="2"/>
+<circle cx="425.1" cy="163.3" r="6.0" class="blue-f card-s" stroke-width="2"/>
+<circle cx="517.9" cy="127.4" r="6.0" class="blue-f card-s" stroke-width="2"/>
+<circle cx="610.7" cy="120.6" r="6.0" class="blue-f card-s" stroke-width="2"/>
+<circle cx="703.5" cy="125.0" r="6.0" class="blue-f card-s" stroke-width="2"/>
+<text x="140.8" y="399.3" text-anchor="start" font-size="11" class="ink2">100 — worse than random</text>
+<text x="517.9" y="113.4" text-anchor="middle" font-size="11" class="ink2">2k — teacher converges</text>
+<text x="703.5" y="111.0" text-anchor="middle" font-size="11" class="ink2">8k</text>
+</svg>

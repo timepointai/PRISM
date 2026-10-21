@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 516" width="760" height="516" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+<title id="t">Weak anchoring learns like plain training and forgets like an anchor</title>
+<desc id="d">Recall on unseen phrasing or novel cases versus base-domain forgetting. Fact injection (circles): plain 3.31 / 26%, low-LR 2.19 / 59%, anchor 0.0025 1.08 / 25%, anchor 0.01 0.49 / 0%. Scored catalog task (squares): plain 2.91 / 98%, low-LR 2.00 / 88%, anchor 0.0025 0.94 / 97%, anchor 0.01 0.37 / 12%.</desc>
+<!-- Generated from the PRISM Results Atlas. Data: results/finetune_20260727T203023Z, finetune_20260727T230910Z, finetune_20260728T044511Z -->
+<style>
+.bg{fill:#ffffff;stroke:#e4e3dc}
+.ink{fill:#161613}.ink2{fill:#5c5b54}.ink3{fill:#8a897f}
+.grid{stroke:#ebeae4}.axis{stroke:#c9c8c0}.ref{stroke:#a9a89f}
+.card-f{fill:#ffffff}.card-s{stroke:#ffffff}
+.blue-f{fill:#2a78d6}.blue-s{stroke:#2a78d6}
+.orange-f{fill:#eb6834}.orange-s{stroke:#eb6834}
+.aqua-f{fill:#1baf7a}.aqua-s{stroke:#1baf7a}
+.ndark-f{fill:#55544d}.ndark-s{stroke:#55544d}
+.nopen-f{fill:#98968b}.nopen-s{stroke:#98968b}
+@media (prefers-color-scheme: dark){
+.bg{fill:#1f1f1d;stroke:#2e2e2b}
+.ink{fill:#f0efe8}.ink2{fill:#b5b4a9}.ink3{fill:#85847a}
+.grid{stroke:#2b2b28}.axis{stroke:#4a4a44}.ref{stroke:#6b6a62}
+.card-f{fill:#1f1f1d}.card-s{stroke:#1f1f1d}
+.blue-f{fill:#3987e5}.blue-s{stroke:#3987e5}
+.orange-f{fill:#d95926}.orange-s{stroke:#d95926}
+.aqua-f{fill:#199e70}.aqua-s{stroke:#199e70}
+.ndark-f{fill:#c0bfb4}.ndark-s{stroke:#c0bfb4}
+.nopen-f{fill:#75746b}.nopen-s{stroke:#75746b}
+}
+</style>
+<rect x="0.5" y="0.5" width="759" height="515" rx="8" class="bg" stroke-width="1"/>
+<text x="22" y="34" font-size="10.5" letter-spacing="1.4" class="ink3">KNOWLEDGE INJECTION &amp; TASK SPECIALIZATION · THE DIAL</text>
+<text x="22" y="66" font-size="16.5" font-weight="600" class="ink">Weak anchoring learns like plain training and forgets like an anchor</text>
+<circle cx="28.0" cy="88.0" r="5" class="blue-f card-s" stroke-width="2"/>
+<text x="38" y="92" font-size="11.5" class="ink2">weak anchor (the recipe)</text>
+<circle cx="208.3" cy="88.0" r="5" class="orange-f card-s" stroke-width="2"/>
+<text x="218.28" y="92" font-size="11.5" class="ink2">low-LR</text>
+<circle cx="278.9" cy="88.0" r="5" class="ndark-f card-s" stroke-width="2"/>
+<text x="288.85" y="92" font-size="11.5" class="ink2">plain</text>
+<circle cx="343.3" cy="88.0" r="5" class="card-f nopen-s" stroke-width="2"/>
+<text x="353.32500000000005" y="92" font-size="11.5" class="ink2">retention-grade anchor (blocks learning)</text>
+<text x="22" y="112" font-size="11.5" class="ink2">● circles: fact injection (§12)</text>
+<text x="228.94500000000002" y="112" font-size="11.5" class="ink2">■ squares: scored catalog task (§13)</text>
+<line x1="86.0" y1="134" x2="86.0" y2="444" class="grid" stroke-width="1"/>
+<text x="86.0" y="462" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">0</text>
+<line x1="261.6" y1="134" x2="261.6" y2="444" class="grid" stroke-width="1"/>
+<text x="261.6" y="462" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">1</text>
+<line x1="437.1" y1="134" x2="437.1" y2="444" class="grid" stroke-width="1"/>
+<text x="437.1" y="462" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">2</text>
+<line x1="612.7" y1="134" x2="612.7" y2="444" class="grid" stroke-width="1"/>
+<text x="612.7" y="462" text-anchor="middle" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">3</text>
+<line x1="86" y1="432.5" x2="718" y2="432.5" class="grid" stroke-width="1"/>
+<text x="78" y="436.5" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">0</text>
+<line x1="86" y1="360.8" x2="718" y2="360.8" class="grid" stroke-width="1"/>
+<text x="78" y="364.8" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">25</text>
+<line x1="86" y1="289.0" x2="718" y2="289.0" class="grid" stroke-width="1"/>
+<text x="78" y="293.0" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">50</text>
+<line x1="86" y1="217.2" x2="718" y2="217.2" class="grid" stroke-width="1"/>
+<text x="78" y="221.2" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">75</text>
+<line x1="86" y1="145.5" x2="718" y2="145.5" class="grid" stroke-width="1"/>
+<text x="78" y="149.5" text-anchor="end" font-size="11" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" class="ink3">100</text>
+<line x1="86" y1="444" x2="718" y2="444" class="axis" stroke-width="1"/>
+<line x1="86" y1="134" x2="86" y2="444" class="axis" stroke-width="1"/>
+<text x="402.0" y="486" text-anchor="middle" font-size="11.5" class="ink2">forgetting: base-domain val climb (lower is better)</text>
+<text x="36" y="289.0" text-anchor="middle" font-size="11.5" class="ink2" transform="rotate(-90 36 289.0)">recall on unseen phrasing / novel cases (%)</text>
+<circle cx="667.1" cy="357.9" r="6.0" class="ndark-f card-s" stroke-width="2"/>
+<circle cx="470.5" cy="263.2" r="6.0" class="orange-f card-s" stroke-width="2"/>
+<circle cx="275.6" cy="360.8" r="6.0" class="blue-f card-s" stroke-width="2"/>
+<circle cx="172.0" cy="432.5" r="6.0" class="card-f nopen-s" stroke-width="2"/>
+<rect x="591.3" y="145.7" width="11.0" height="11.0" rx="2" class="ndark-f card-s" stroke-width="2"/>
+<rect x="431.6" y="174.4" width="11.0" height="11.0" rx="2" class="orange-f card-s" stroke-width="2"/>
+<rect x="245.5" y="148.6" width="11.0" height="11.0" rx="2" class="blue-f card-s" stroke-width="2"/>
+<rect x="145.4" y="392.6" width="11.0" height="11.0" rx="2" class="card-f nopen-s" stroke-width="2"/>
+<text x="667.1" y="345.9" text-anchor="middle" font-size="11" class="ink2">plain</text>
+<text x="470.5" y="251.2" text-anchor="middle" font-size="11" class="ink2">low-LR</text>
+<text x="275.6" y="348.8" text-anchor="middle" font-size="11" class="ink2">anchor 0.0025</text>
+<text x="196.0" y="420.5" text-anchor="start" font-size="11" class="ink2">anchor 0.01 — blocked</text>
+<text x="596.9" y="169.2" text-anchor="middle" font-size="11" class="ink2">plain</text>
+<text x="437.1" y="197.9" text-anchor="middle" font-size="11" class="ink2">low-LR</text>
+<text x="251.0" y="172.1" text-anchor="middle" font-size="11" class="ink2">anchor 0.0025</text>
+<text x="151.0" y="386.1" text-anchor="middle" font-size="11" class="ink2">anchor 0.01</text>
+</svg>
