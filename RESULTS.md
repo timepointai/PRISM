@@ -48,6 +48,8 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | AH | **Cross-size case 3 (§20)**: head-dim 64→32 — 1.28× in 3/3 | [`dirs_only_20261022T040448Z.json`](results/dirs_only_20261022T040448Z.json) |
 | AI | **Cross-size case 4 (§20)**: GPT-2 124M → byte student — null | [`dirs_only_20261022T043832Z.json`](results/dirs_only_20261022T043832Z.json) |
 | AJ | **FRONT from GPT-2 (§20)**: our re-implementation — far below scratch | [`init_state_20261022T041102Z.json`](results/init_state_20261022T041102Z.json) |
+| AK | **Weight Selection, case 1 (§20)**: 768→384 by index selection — 4.0×, beats the projection | [`init_state_20261022T170647Z.json`](results/init_state_20261022T170647Z.json) |
+| AL | **W2a controls (§19)**: dirs_only / dirs_pure / recipe / spectral_only / mimetic / statmatch vs the tuned baseline; Muon arms | [`*_20261022T15*`, `*_20261022T16*`, `*_20261022T17*`](results/) |
 | — | **W5 run 1 (§21) — VOID** (gather off-by-one; kept as a record) | [`prior_20261022T035740Z.json`](results/prior_20261022T035740Z.json) |
 
 ## 1. Speed: ~12×, resolved (Run C)
@@ -651,21 +653,71 @@ setting that injects forgets like plain; LoRA r=16 learns the task but forgets
 volume `prism-alpha-a`); this section is completed when it lands. Verdicts above
 are catalog-only until then.
 
-## 19. Hardened controls for the core bet (W2a) — running
+## 19. Hardened controls for the core bet (W2a): the geometry survives a tuned baseline under AdamW; under Muon the multiplier shrinks to 1.4×
 
-Tuning (seed 1336; [`sweep_20261022T034021Z`](results/sweep_20261022T034021Z.json)
-baseline modernweb, [`…T034028Z`](results/sweep_20261022T034028Z.json) dirs_only
-modernweb, [`…T034136Z`](results/sweep_20261022T034136Z.json) baseline enwik8,
-[`…T034056Z`](results/sweep_20261022T034056Z.json) dirs_only enwik8, Muon
-[`…T040212Z`](results/sweep_20261022T040212Z.json) / [`…T040253Z`](results/sweep_20261022T040253Z.json)
-baseline, [`…T150053Z`](results/sweep_20261022T150053Z.json) /
-[`…T145919Z`](results/sweep_20261022T145919Z.json) dirs_only): the committed
-baseline recipe (LR 1e-3, σ 0.02, warmup 100) was already within 0.01 nats of the
-best of its 8-point grid on both corpora; the tuned baseline is LR 2e-3 with
-warmup 300 (1.4802 vs 1.4902 on modernweb, 1.3183 vs 1.3272 on enwik8). `dirs_only`
-prefers a lower LR than the baseline (1e-3 on modernweb, 5e-4 on enwik8) and σ 0.02;
-σ 0.01 hurts every arm. Muon: LR 0.01 for baseline and dirs_only on both corpora.
-The 3-seed arms at these settings are running; §19 is written when they land.
+*Alpha-moves W2a, pre-registered 2026-10-21. Every arm tuned on seed 1336 only
+(`results/sweep_20261022T*.json`, 8 settings for baseline and `dirs_only`, 3 for
+Muon LR, 3 for σ_qk); results on seeds 1337–1339, PROBE rig, eval every 10.*
+
+**Tuning.** The committed baseline recipe (LR 1e-3, σ 0.02, warmup 100) was within
+0.01 nats of the best of its 8-point grid on both corpora; the **tuned baseline** is
+LR 2e-3 with warmup 300 (1.4802 vs 1.4902 on modern web, 1.3183 vs 1.3272 on enwik8,
+seed 1336). `dirs_only` prefers LR 1e-3 (modern web) / 5e-4 (enwik8) at σ 0.02;
+σ 0.01 hurts every arm. Muon: LR 0.01 for both arms on both corpora. `small_qk`:
+σ_qk = 1e-5 beat the tuned baseline by 0.008 nats on seed 1336 (3-seed run pending).
+
+**Modern web, AdamW, every arm against the tuned baseline (medians of 3):**
+
+| arm | best loss | steps-to-target vs tuned baseline | artifact |
+|---|---|---|---|
+| tuned baseline (LR 2e-3, warmup 300) | 1.4848 | 1.0× | in-run |
+| **dirs_only** (LR 1e-3, warmup 100) | **1.3809** | **3.3× (2.5–3.5), 3/3** | [`dirs_only_20261022T153244Z`](results/dirs_only_20261022T153244Z.json) |
+| dirs_pure (EigenTransfer onto the fresh spectrum, no imprint) | 1.3865 | 2.45× (2.2–2.7), 3/3 | [`dirs_pure_20261022T153518Z`](results/dirs_pure_20261022T153518Z.json) |
+| recipe (dirs + imprint + mod wheel) | 1.4907 | never (0/3) | [`recipe_20261022T170852Z`](results/recipe_20261022T170852Z.json) |
+| spectral_only | 1.7623 | never | [`spectral_only_20261022T162500Z`](results/spectral_only_20261022T162500Z.json) |
+| mimetic (Trockman & Kolter, char-level values) | 1.5074 | never | [`mimetic_20261022T170532Z`](results/mimetic_20261022T170532Z.json) |
+| statmatch (70 teacher statistics, no directions) | 1.5994 | never | [`statmatch_20261022T162209Z`](results/statmatch_20261022T162209Z.json) |
+
+**enwik8, AdamW:** tuned baseline 1.3294; `dirs_only` 1.2296, **3.1× (2.9–3.1), 3/3**
+([`dirs_only_20261022T153444Z`](results/dirs_only_20261022T153444Z.json));
+statmatch 1.5118, never ([`statmatch_20261022T162239Z`](results/statmatch_20261022T162239Z.json)).
+
+**Muon (LR 0.01, both arms):**
+
+| corpus | Muon baseline best | dirs_only best | steps-to-target | artifact |
+|---|---|---|---|---|
+| modern web | 1.4383 | 1.4060 | **1.4× (1.3–1.5), 3/3** | [`dirs_only_20261022T153457Z`](results/dirs_only_20261022T153457Z.json) |
+| modern web, dirs_pure | 1.4383 | 1.4184 | 1.2× (1.1–1.3), 3/3 | [`dirs_pure_20261022T162246Z`](results/dirs_pure_20261022T162246Z.json) |
+| modern web, spectral_only | 1.4383 | 1.6262 | never | [`spectral_only_20261022T170400Z`](results/spectral_only_20261022T170400Z.json) |
+| enwik8 | 1.3235 | 1.2779 | **1.5× (1.4–1.7), 3/3** | [`dirs_only_20261022T153515Z`](results/dirs_only_20261022T153515Z.json) |
+| enwik8, Muon-trained teacher | 1.3235 | 1.2810 | 1.5× (1.4–1.7), 3/3 | [`dirs_only_20261022T162419Z`](results/dirs_only_20261022T162419Z.json) |
+
+**Verdicts against the pre-registered rules.**
+
+- **The strongest control is the tuned baseline itself.** Every analytic or
+  statistics-matched init ran *below* it: mimetic +0.02 nats, statmatch +0.11 nats
+  (modern web) and +0.18 (enwik8), spectral-only +0.28. The 108-statistic worry
+  (that statistics alone explain init gains) does not reproduce on decoder LMs at
+  this scale with the 70 statistics we matched. So the ratio against the strongest
+  control is the ratio against the tuned baseline: **3.3× / 3.1×, above the 1.2×
+  line on both corpora.** (`small_qk` may yet edge the baseline; its 3-seed run is
+  pending and cannot change the verdict's sign.)
+- **Under Muon the core bet is "AdamW-strong, Muon-weak".** Muon's baseline is
+  0.05 nats better than AdamW's, and `dirs_only` under Muon gains only 0.03 nats and
+  1.4× / 1.5× in steps — above the pre-registered 1.2× line, so the bet is not
+  labelled AdamW-only, but the multiplier is a third of its AdamW value. The
+  teacher's optimizer does not matter (Muon-trained teacher: identical ratio). The
+  imprint matters more under AdamW (3.3× vs 2.45× without it) than under Muon
+  (1.4× vs 1.2×).
+- **The mod wheel is confirmed as a brake on adequate data:** `recipe` never reaches
+  the tuned baseline's best (as in §11, now against a tuned baseline).
+- **Token-equivalent multiplier: refused.** The pre-registered power-law fit
+  tolerance (RMSE ≤ 0.01 nats) is not met on any seed (fit RMSE 0.022–0.029 under
+  AdamW, 0.037–0.049 under Muon; eval noise at 50 eval batches dominates), so
+  `prism_metrics.token_equivalent_multiplier` returns no number, by design. The
+  end-of-training gap carries the same information here: `dirs_only` ends 0.09–0.10
+  nats below the tuned baseline's *best* under AdamW and 0.03–0.05 under Muon.
+- Lineage traces (W6.2) from these runs are in §22.
 
 ## 20. Cross-size SVD projection (Runs AF–AJ): heads and head-dims transfer, width does not
 
@@ -683,6 +735,18 @@ PROBE rig, 3 seeds, overlap traces every 50 steps.*
 | 3 head-dim | 6L/384/6h → 6L/**192**/6h (scratch baseline at 192) | **1.28× (1.24–1.34), 3/3** | 1.5855 vs 1.6384 | 5.36 vs 5.61 | 2.52 vs 2.60 | [`dirs_only_20261022T040448Z`](results/dirs_only_20261022T040448Z.json) |
 | 4 GPT-2 | GPT-2 124M (public weights) → 6L/384/6h bytes, internal matrices only | **1.0× (1/3)** | 1.4900 vs 1.4892 | 5.67 vs 5.65 | 2.57 vs 2.55 | [`dirs_only_20261022T043832Z`](results/dirs_only_20261022T043832Z.json) |
 | 4 FRONT | GPT-2 → same student, 3D-DCT truncation (our re-implementation) | never reaches scratch-best | **2.078 vs 1.4892** | 5.58 vs 5.65 | 2.64 vs 2.55 | [`init_state_20261022T041102Z`](results/init_state_20261022T041102Z.json) |
+| 1 Weight Selection | 12L/768/12h → 6L/384/6h, uniform element selection (our re-implementation of arXiv 2311.18823) | **4.0× (3.2–4.7), 3/3** | **1.4026 vs 1.4892** | **3.80 vs 5.65** | 1.73 vs 2.55 | [`init_state_20261022T170647Z`](results/init_state_20261022T170647Z.json) |
+
+**Weight Selection wins case 1 outright.** Copying evenly-spaced rows and columns
+of the 768-wide teacher's weights into the 384-wide student (content, not
+geometry) reaches scratch-best 4.0× faster in every seed and ends 0.09 nats below
+it — faster than same-size `dirs_only` (3.3×) though not as low (1.4026 vs 1.3794).
+Per the pre-registration this narrows the cross-size claim to the head cells: for
+width, index-space weight transfer beats our basis-level projection at this scale,
+and this is also, as far as we know, the first language-model data point for Weight
+Selection (its paper is vision-only, reported). The GPT-2 case cannot copy weights
+(the vocabularies differ), which is where a geometry-only operator would have to
+earn its place; it did not here.
 
 **Verdict: the pre-registered success criterion FAILS on case 1.** Projecting a
 twice-as-wide teacher's directions through its residual-stream PCA onto the
