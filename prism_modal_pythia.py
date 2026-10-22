@@ -170,6 +170,9 @@ def main(gate: str = "dry", dry: bool = False, only_arm: str = "", only_seed: st
             tag = gate + (f"_{seed_repo.rsplit('-', 1)[-1]}" if seed_repo else "")
             flags = [f"--size={g['size']}", f"--arm={arm}", f"--iters={g['iters']}",
                      f"--eval_every={g['eval_every']}", f"--eval_seqs={g['eval_seqs']}", f"--tag={tag}"]
+            if g["gpu"] == "L4":
+                # 22 GB: the fp32 logits of a 32×2048×50304 micro-batch alone are 12 GB → OOM (dry run, 2026-10-22)
+                flags += ["--micro_bs=4", "--eval_micro=4"]
             if seed_repo:
                 flags.append(f"--student_repo={seed_repo}")
             if g["published_curve"] and arm == "baseline":
