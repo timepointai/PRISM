@@ -248,6 +248,17 @@ which regime the Tier B seeds go to. If β = 0 does not drift measurably in any
 regime (retention within noise of the init, KL(init) small), the honest verdict is
 "low need", not "anchor works".
 
+**Amendment (2026-10-22, after the first probe landed, before any further launch).**
+At TRL's default LR (1e-6) the β=0 / recycle:4 probe did not move the policy in 300
+steps: GSM8K 23.3% → 23.3%, retention flat, KL(π‖π_init) = 0.006, relative weight
+drift 4e-5 ([`rl_beta0_recycle4_s1337_w4_20261022T161944Z.json`](../results/rl_beta0_recycle4_s1337_w4_20261022T161944Z.json)).
+A regime with no drift cannot separate a drift control from nothing, so a second
+wave at **LR 1e-5** (10× the default; a drift regime by construction) is ADDED:
+{β0, KL 0.04, anchor 0.0025} × {recycle:4, stale:4}. The default-LR arms run to
+completion and are reported as "the stacks' default". The rule above applies
+unchanged to every arm; nothing is removed or weakened. Measured cost: 7.3 s/step
+on the A100-40, ≈ $1.3 per 300-step arm, so the whole pilot stays near $20.
+
 **Cost.** ≈ 12 arms × ~1.5 A100-h × $2.10 ≈ $35–40 for the full pilot; launched in
 priority order (on-policy β0 / KL 0.04 / anchor 0.0025, then the recycle:4 cross)
 so the budget can stop it at any point. Under the W4 cap of $100.
