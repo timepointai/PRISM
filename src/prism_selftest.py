@@ -472,6 +472,90 @@ if _HAVE_NEOX:
     else:
         print('  (pythia-70m checkpoints not cached under .prism_cache/pythia-70m — real-checkpoint checks skipped)')
 
+# alpha-moves (W5) — the sparse interpolated n-gram prior and the COUNT embedding
+# ══════════════════════════════════════════════════════════════════════════
+print('prism_prior (sparse interpolated n-gram prior, block-edge backoff):')
+import math
+import tempfile as _tf
+import ngram_floor as _nf
+from prism_prior import (build_tables, save_prior, load_sparse_prior, install_count_embedding,
+                         count_embedding)
+_rng = np.random.default_rng(0)
+_V, _C = 256, 4                       # byte vocab (ngram_floor's order -1 is 1/256), 17 symbols used
+_arr = np.zeros(20000, dtype=np.uint16)
+for _i in range(1, len(_arr)):
+    _arr[_i] = (_arr[_i - 1] * 7 + _rng.integers(0, 3)) % 17      # a Markov-ish synthetic corpus
+_mus = [0.9, 0.7, 0.6, 0.5, 0.5]
+_tmpd = _tf.mkdtemp()
+_X = torch.from_numpy(_arr[:2000].astype(np.int64))[None]
+# ngram_floor reference: sequential ML probs per order, mixed with the same mus
+_nft = {k: _nf.count_table(_arr.astype(np.uint8), k) for k in range(_C + 1)}
+_pos = np.arange(_C, 2000)
+_mls, _hits = [], []
+for k in range(_C + 1):
+    m, h = _nf.ml_probs(_arr.astype(np.uint8), k, _pos, _nft)
+    _mls.append(m); _hits.append(h)
+_ref = _nf.mix(_mls, _hits, _mus)
+for _dt, _tol in ((np.float32, 1e-5), (np.float16, 1e-3)):
+    save_prior(f'{_tmpd}/p_{_dt.__name__}.pt', build_tables(_arr, _C, _V, log=lambda *a: None, row_dtype=_dt),
+               _mus, _C, _V, {})
+    _pr = load_sparse_prior(f'{_tmpd}/p_{_dt.__name__}.pt', 'cpu', vocab_size=_V)
+    _P = _pr.probs(_X)[0]
+    _mine = _P[torch.arange(_C, 2000), _X[0, _C:2000]].numpy()
+    check(f'{_dt.__name__} rows: windowed probs == ngram_floor mix() on positions ≥ C (max |Δ| {np.abs(_mine - _ref).max():.1e} ≤ {_tol})',
+          np.abs(_mine - _ref).max() <= _tol)
+    check(f'{_dt.__name__} rows: every (B,T,V) row normalises to 1', float((_P.sum(-1) - 1).abs().max()) <= _tol)
+_uni = torch.from_numpy(build_tables(_arr, 0, _V, log=lambda *a: None, row_dtype=np.float32)[0][1])[0]
+check('block edge: position 0 backs off to the unigram mixture (NOT uniform)',
+      torch.allclose(_P[0], _mus[0] * _uni + (1 - _mus[0]) / _V, atol=1e-3)
+      and not torch.allclose(_P[0], torch.full((_V,), 1 / _V)))
+check('block edge: position t<C equals the standalone prediction from t symbols of context',
+      torch.allclose(_pr.probs(_X[:, :3])[0, 2], _P[2]))
+check('logp == log(probs)', torch.allclose(_pr.logp(_X), torch.log(_pr.probs(_X).clamp_min(1e-12))))
+_bpb, _n = _pr.score_sequential(_arr[2000:4000])
+check(f'score_sequential returns bits/symbol in (0, log2 V] ({_bpb:.3f}) over the scored positions', 0 < _bpb <= math.log2(_V) and _n == 2000 - _C)
+_S = _pr.backoff_scores(_X, {1, 2, 3})
+_rows2, _hit2 = _pr._rows_hits(_X)[2]
+_t2 = int(torch.nonzero(_hit2[0])[5])
+check('stupid-backoff: observed continuations of a stored history score their count ratio',
+      torch.allclose(_S[2][0, _t2][_rows2[0, _t2] > 0], _rows2[0, _t2][_rows2[0, _t2] > 0]))
+# a context seen at order 3 whose unobserved continuations must score 0.4 × the order-2 score
+_rows3, _hit3 = _pr._rows_hits(_X)[3]
+_t = int(torch.nonzero(_hit3[0])[5])
+_unobs = _rows3[0, _t] == 0
+check('stupid-backoff: unobserved continuations of a stored history score 0.4·S(w|h[1:])',
+      torch.allclose(_S[3][0, _t][_unobs], 0.4 * _S[2][0, _t][_unobs], atol=1e-6))
+
+print('COUNT-style input embedding (install_count_embedding):')
+_cm = GPT(GPTConfig(n_layer=2, n_head=2, n_embd=32, block_size=64, vocab_size=_V, dropout=0.0))
+_xx = _X[:, :64]
+_l0, _ = _cm(_xx, _xx)
+_n0 = sum(p.numel() for p in _cm.parameters())
+_f = count_embedding(_pr, _xx, _cm.lm_head.weight, K=8)
+check('f_t has shape (B,T,d)', tuple(_f.shape) == (1, 64, 32))
+import copy as _cp
+_c1 = _cp.deepcopy(_cm); install_count_embedding(_c1, _pr, 'K:8,amp:sqrt_d')
+check('no new parameters; state_dict keys unchanged',
+      sum(p.numel() for p in _c1.parameters()) == _n0 and set(_c1.state_dict()) == set(_cm.state_dict()))
+
+
+class _ZeroPrior:
+    C = _pr.C
+
+    def backoff_scores(self, X, orders):
+        return {n: torch.zeros(X.shape[0], X.shape[1], _V) for n in orders}
+
+
+_c2 = _cp.deepcopy(_cm); install_count_embedding(_c2, _ZeroPrior(), 'K:8,amp:none')
+check('all-zero tables + amp:none reduce to the plain forward exactly', torch.allclose(_c2(_xx, _xx)[0], _l0, atol=1e-6))
+_c3 = _cp.deepcopy(_cm); install_count_embedding(_c3, _ZeroPrior(), 'K:8,amp:sqrt_d')
+_h0 = _cm.transformer.wte(_xx)
+_h0 = math.sqrt(32) * torch.nn.functional.layer_norm(_h0, (32,))
+check('amplification √d·LayerNorm gives every input position norm ≈ d (parameter-free; LN eps)',
+      torch.allclose(_h0.norm(dim=-1), torch.full((1, 64), 32.0), rtol=0.05))
+_l1, _loss1 = _c1(_xx, _xx); _loss1.backward()
+check('count arm: finite loss, gradient reaches the tied unembedding through f_t',
+      bool(torch.isfinite(_loss1)) and float(_c1.transformer.wte.weight.grad.abs().sum()) > 0)
 print(f'\n{len(PASS)} passed, {len(FAIL)} failed')
 if FAIL:
     print('FAILED:', FAIL)

@@ -107,6 +107,7 @@ prior_sparse = ''            # sparse interpolated n-gram prior (prism_prior.py 
 prior_eval_only = False      # fuse the prior ONLY in estimate_loss: the inference-only-fusion control
 count_embed = False          # COUNT-style parameter-free n-gram input embedding (needs prior_sparse)
 count_embed_cfg = ''         # 'K:8,amp:sqrt_d,orders:1-6'
+eval_at = ''                 # extra eval steps, comma-separated (e.g. epoch boundaries); additive to eval_interval
 # prism direction-transfer knobs (opt-in; defaults reproduce the recipe exactly)
 prism_align_spec = '' # per-group alignment, e.g. 'attention:0.9,ffn_down:0.5'
 prism_align_mode = 'linear' # 'linear' | 'grassmann' | 'subspace'
@@ -521,7 +522,7 @@ def _loss(logits, X, Y, model_loss, training=True):
     """Fused cross-entropy when a prior is active, else the model's own loss.
     `prior_eval_only` fuses only when scoring (training=False); μP-lite applies
     its logit multiplier here. Defaults return model_loss untouched."""
-    prior_on = _prior_logtab is not None or _sparse_prior is not None
+    prior_on = (_prior_logtab is not None or _sparse_prior is not None) and prior_strength > 0
     fuse = prior_on and (not prior_eval_only or not training)
     if not fuse and _logit_mult == 1.0:
         return model_loss
@@ -573,6 +574,8 @@ if wandb_log and master_process:
     import wandb
     wandb.init(project=wandb_project, name=wandb_run_name, config=config)
 
+_eval_at = {int(x) for x in eval_at.split(',') if x.strip()}   # extra eval steps (W5: epoch boundaries)
+
 # training loop
 X, Y = get_batch('train') # fetch the very first batch
 t0 = time.time()
@@ -596,7 +599,7 @@ while True:
     # the first step (captures retention_at_base when resuming a finetune) and the last
     # step, so the eval cadence can be decoupled from the (arbitrary) resume/stop step.
     if (iter_num % eval_interval == 0 or local_iter_num == 0
-            or iter_num == max_iters) and master_process:
+            or iter_num == max_iters or iter_num in _eval_at) and master_process:
         losses = estimate_loss()
         line = f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}"
         if val2_dir:
