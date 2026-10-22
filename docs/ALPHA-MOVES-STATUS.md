@@ -12,10 +12,10 @@ This file is the agent's memory: updated after every workstream.*
 | — | W0 shared infrastructure | **done** (code), golden check identical, selftest 67/67 | Anchor object, Muon/out_eps/μP optimizer builder, metrics, overlap tracker, recall v2, competitor hooks — all default-off. | — |
 | 1 | W1 injection-dial head-to-head | **tuning running** (seed 1336, facts + catalog, Modal) | — | — |
 | 2a | W2a core-bet controls (probe scale) | sweep driver built; sweeps launching | — | — |
-| 2b | W2b Pythia ladder (G1 port, runner) | in progress (worker, branch exp/alpha-w2b) | — | — |
-| 3 | W3 cross-size SVD projection | in progress (worker, branch exp/alpha-w3) | — | — |
+| 2b | W2b Pythia ladder (G1 port, runner) | **built + merged** (prism_neox, pile_mmap, pythia_train, gated runner; 18 selftests); dry run pending; G2+ Tier B | — | — |
+| 3 | W3 cross-size SVD projection | **built + merged** (prism_crosssize, WS/FRONT builders, prism_eval knobs, runner, CROSS-SIZE.md, preprint draft); launching cases 1–4 | — | — |
 | 4 | W4 RL anchor pilot | not started | — | — |
-| 5 | W5 sparse prior / COUNT control | in progress (worker, branch exp/alpha-w5) | — | — |
+| 5 | W5 sparse prior / COUNT control | **built + merged** (prism_prior 5.93 GB enwik8 c6 tables reproduce Act 1 to 1e-4; COUNT embedding; 8-arm harness); launching | — | — |
 | 6 | W6 packaging, lineage decay, prior art | not started | — | — |
 | 7 | W7 cheap mechanism probes | not started | — | — |
 
@@ -81,6 +81,8 @@ method), `--teacher_optim=muon`, `--track_overlap` — all rc 0 with artifacts;
 |---|---|---|---|---|---|---|
 | W1 tuning, facts rig, seed 1336, 21 arms (`prism_modal_alpha.py --rig facts --slot a --tag w1tune`, commit 630f181) | A | L4 | 1.9 | 1.55 | pending | running (ap-nayF5Hz8sMFe4G44aKTnHC) |
 | W1 tuning, catalog rig, seed 1336, 21 arms (`--rig catalog --slot b --tag w1tune`) | A | L4 | 1.9 | 1.55 | pending | running (ap-vRlsFc7SZGjYXLZXJLNAp9) |
+| W1 tuning facts — relaunch after a container preemption at arm lora_r4_t1 (resumes banked arms; runner now clears stale locks) | A | L4 | ~1.2 (remaining) | ~1.0 | pending | running (fc-01M5GVZF7XFXR6PDMWY4H3X1P2) |
+| W2a sweeps (seed 1336): modernweb baseline (ev-a), modernweb dirs_only (ev-b), enwik8 baseline (ev-c), enwik8 dirs_only (ev-d), Muon muon_lr for the baseline on modernweb (ev-e) and enwik8 (ev-f) | A | L4 | 0.9+1.1+0.9+1.1+0.3+0.3 = 4.6 | 3.66 | pending | running |
 
 Modal prices used for estimates (2026-10-21, modal.com/pricing): L4 $0.80/h,
 A10 $1.10/h, L40S $1.95/h, A100-40 $2.10/h, A100-80 $2.50/h, H100 $3.95/h.

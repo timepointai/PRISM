@@ -145,6 +145,56 @@ is < 1.2× under Muon, the core bet is labelled "AdamW-only until shown otherwis
 **Cost.** Sweeps ≈ 4.6 L4-h (≈ $4); the 3-seed arms ≈ 2 corpora × 13 runs × ~0.7 L4-h
 ≈ 18 L4-h (≈ $15). Tier A.
 
+### W3 — cross-size SVD projection (pre-registered 2026-10-21, before any launch)
+
+The full method, cases, baselines and decision rule live in
+[`CROSS-SIZE.md`](CROSS-SIZE.md) §"Pre-registration" (committed before launch):
+four probe-scale cases on modern web, 3 seeds, PROBE rig — (1) width 768→384 with
+a 12L/768/12h teacher, (2) heads 12→6 at width 384, (3) head-dim reduction
+6L/384/6h → 6L/192/6h, (4) GPT-2 124M → the 10.65M byte-level student (internal
+matrices only); baselines scratch (in-run), Weight Selection, FRONT, mimetic, and
+same-size `dirs_only` as the upper reference. **Success = ≥ 1.5× steps-to-target
+vs scratch on case 1 AND > 1× on case 3, in 3 of 3 seeds.** Metrics: `prism_score`,
+end-of-training gap, overlap traces, teacher compute stated. Draft preprint
+(`docs/preprint/cross-size-projection.md`) is NOT to be posted; the user decides.
+
+### W5 — the COUNT control for prior fusion, the Act 2 composition gate (pre-registered 2026-10-21, before any launch)
+
+**Hypothesis.** Fusing a sparse context-6 byte n-gram prior into the logits
+*during training* reaches the baseline's best enwik8 loss in fewer steps than
+fusing the same prior only at inference, and composes multiplicatively with
+geometry-at-init (`dirs_only`).
+
+**Arms** (enwik8, seeds 1337–1339, 2,000-step native teacher, 1,500-step students,
+eval every 10, eval_iters 50, batch 32 × block 256 — the §14 rig; matched
+schedules LR 1e-3 / warmup 100; fusion strength λ = 1.0; prior = orders 0–6 with
+Act 1's μ, counted on the student's training slot, block-edge backoff):
+`baseline`, `dirs_only`, `prior`, `dirs_prior`, `baseline_inffuse`, `dirs_inffuse`
+(trained without the prior, the same prior fused at every validation point),
+`count` (COUNT-style parameter-free input embedding, our re-implementation of
+arXiv 2610.20456 §2; deviations in `docs/alpha/W5-NOTES.md`), `count_dirs`.
+Validation also at every epoch boundary (`eval_at`).
+
+**Primary metric.** Steps-to-baseline-best (compute_score) against the in-run
+plain baseline; secondary: end-of-training loss, token-equivalent multiplier,
+init loss.
+
+**Decision rule.** Logit fusion earns its keep **only if `prior` beats
+`baseline_inffuse` on steps-to-target in 3 of 3 seeds AND `dirs_prior` beats
+`dirs_inffuse` in 3 of 3.** Otherwise COUNT's null (train-time ≈ inference-only)
+is replicated at this scale and README Finding 8 / the 30× caveat say so.
+**Composition gate:** the "composition multiplies" thesis survives only if
+`dirs_prior`'s steps-to-target ratio exceeds `dirs_only`'s by ≥ 1.5× (median);
+below 1.2× it saturates and the Act 2 block above records that before any Pythia
+spend.
+
+**Kill / void.** If `prior` never reaches baseline-best in any seed, or the prior's
+standalone val in the artifact's `prior_info` is not within 0.02 bpb of Act 1's
+1.9061, the run is void and investigated, not interpreted. The two-act framing
+spec binds every sentence written about these arms.
+
+**Cost.** ≈ 3.8 L4-h ≈ $3. Tier A.
+
 ## Status update (2026-07-27): the modern-web probe ran — read it first
 
 [RESULTS §11](../RESULTS.md): byte-level FineWeb-Edu bench (`data/modernweb/`,
