@@ -51,6 +51,13 @@ def _run(vol, branch: str, script: str, flags: str):
         subprocess.run(["git", "-C", REPO, "reset", "--hard", f"origin/{branch}"], check=False)
     print("commit:", subprocess.run(["git", "-C", REPO, "rev-parse", "--short", "HEAD"],
                                     capture_output=True, text=True).stdout.strip(), flush=True)
+    # One launch per slot Volume by construction, so any lock.json left behind by a
+    # preempted/crashed container is stale: clear them so Modal's automatic retry of
+    # the input resumes the banked stages instead of refusing on a fresh heartbeat.
+    import glob
+    for lock in glob.glob(f"{REPO}/.prism_runs/*/lock.json"):
+        os.remove(lock)
+        print("cleared stale lock:", lock, flush=True)
     vol.commit()
     for part in flags.split("&&"):             # several sequential invocations per launch
         cmd = [sys.executable, "-u", script] + shlex.split(part.strip())
