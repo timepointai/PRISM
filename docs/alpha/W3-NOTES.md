@@ -54,25 +54,37 @@ No edits to `train.py` or `prism_init.py` (the W0 hooks `init_state`,
   function in the student's coordinates (LayerNorm); only the SVD directions are
   transplanted. Said in docs/CROSS-SIZE.md.
 
-## Smokes (CPU, tiny: teacher 10 steps, student 10, eval 5, seed 1337, batch 4)
+## Smokes (CPU, tiny: teacher 10 steps, student 10, eval 5, seed 1337, batch 4) — all passed
 
-Recorded in `docs/alpha/W3-NOTES.md` after the second smoke pass (see the
-status table the parent keeps). Each writes a conforming `prism-eval/1`
-artifact with `config.crosssize` / `config.init_builder` / `teacher_dims` /
-`student_dims` populated; smoke artifacts were deleted afterwards.
+Every smoke wrote a complete, conforming `prism-eval/1` artifact with
+`config.crosssize` / `config.init_builder` / `teacher_dims` / `student_dims`
+populated and the knobs folded into the run key; the smoke artifacts were
+deleted afterwards (not evidence). The default run key is unchanged
+(`dirs_only_t10_s10_e5_i2_seeds1337`), so historical runs still resume.
 
-| smoke | status |
+| smoke | result |
 |---|---|
-| dirs_only, crosssize=pca, 4L/128/4h → 2L/64/2h, overlap traces | see run2 log |
-| dirs_only, crosssize=procrustes, same shapes | see run2 log |
-| init_state + init_builder=front / weightsel | see run2 log |
-| mimetic at 2L/64/2h | see run2 log |
-| case-3 shape: 6L/384/6h teacher → 6L/192/6h student | passed in pass 1 (26 direction sets, PCA explains 0.990) |
-| GPT-2 → 2L/64/2h on modernweb (crosssize_hf) + FRONT from GPT-2 | see run2 log |
+| dirs_only, `--crosssize=pca`, 4L/128/4h → 2L/64/2h, `--track_overlap=5` | pass; 10 direction sets; residual PCA explains 0.934 of variance; overlap traces banked |
+| dirs_only, `--crosssize=procrustes`, same shapes | pass; Procrustes relative residual 1.135 (random student — expected near 1) |
+| init_state + `--init_builder=front` / `weightsel` | pass (student 2L/64/2h, both arms) |
+| mimetic at 2L/64/2h | pass |
+| case-3 shape: 6L/384/6h teacher → 6L/192/6h student, `--crosssize=pca` | pass; 26 direction sets; PCA explains 0.990 |
+| GPT-2 → 2L/64/2h on modernweb (`--crosssize_hf=gpt2`) | pass; 8 direction sets (internal matrices; embeddings fresh); PCA explains 0.909 |
+| FRONT from GPT-2 (`--crosssize_hf=gpt2 --init_builder=front`) | pass |
+| golden check (`golden.sh w3` vs main's `.evals`) | **identical** on all four smokes |
+| `prism_selftest.py` | 85/85 (18 new) |
 
-A first pass found and fixed two bugs: the method arm was not receiving the
-student architecture flags (only the baseline was), and a missing `pickle`
-import on the HF path.
+Bugs found and fixed on the way: the method arm was not receiving the student
+architecture flags (only the baseline was — the first two cross-size smokes
+silently ran a 6L/384 student that skipped the mismatched directions); a
+missing module-level `pickle` import on the HF path; the hidden/layer knobs
+were being recorded as `None` on every run (would have changed historical run
+keys).
+
+**Teacher step-time ratio, CPU check:** batch 8, block 256, iters 1–2:
+10.65M model 1.32–1.37 s/step; 12L/768 (85.0M) 4.18–4.87 s/step ⇒ **≈3.4× on
+this CPU**, against **7.6× by FLOP count**. The L4 sits in between (the 10.65M
+model under-utilises it); the runner uses 7.6× as the conservative estimate.
 
 ## Cost table (L4 at $0.80/h; 3 seeds; teachers cached per slot after the first method)
 

@@ -77,6 +77,7 @@ Protocol note (same-data transfer):
 import argparse
 import json
 import os
+import pickle
 import threading
 import re
 import shutil
@@ -1044,8 +1045,8 @@ def main():
         ('sdims', dims_tag(student_dims_of(args)) or None, None),
         ('xsize', args.crosssize, None),
         ('xsize_hf', args.crosssize_hf, None),
-        ('xsize_hidden', args.xsize_hidden if args.crosssize or args.crosssize_hf else None, 'pca'),
-        ('xsize_layers', args.xsize_layers if args.crosssize or args.crosssize_hf else None, 'uniform'),
+        ('xsize_hidden', args.xsize_hidden if (args.crosssize or args.crosssize_hf) and args.xsize_hidden != 'pca' else None, None),
+        ('xsize_layers', args.xsize_layers if (args.crosssize or args.crosssize_hf) and args.xsize_layers != 'uniform' else None, None),
         ('init_builder', args.init_builder, None),
         ('front_r', args.front_r if args.init_builder == 'front' and args.front_r != 1.0 else None, None),
     ]:
