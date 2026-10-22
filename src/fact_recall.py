@@ -21,7 +21,8 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--ckpt', required=True)
     p.add_argument('--meta', required=True, help='meta.pkl with stoi/itos')
-    p.add_argument('--prompts', required=True, help='TSV: kind, prompt, answer')
+    p.add_argument('--prompts', required=True,
+                   help='TSV: kind, prompt, answer (comma-separate several files)')
     p.add_argument('--device', default='cpu',
                    help='cpu is fine: 240 short greedy decodes')
     args = p.parse_args()
@@ -35,8 +36,9 @@ def main():
     model.load_state_dict(sd)
     model.to(args.device).eval()
 
-    rows = [line.rstrip('\n').split('\t') for line in open(args.prompts)
-            if line.strip()]
+    rows = []
+    for path in args.prompts.split(','):            # several TSVs: e.g. v1 + the v2 paraphrases
+        rows += [line.rstrip('\n').split('\t') for line in open(path) if line.strip()]
     out = {'n': {}, 'correct': {}}
     with torch.no_grad():
         for kind, prompt, answer in rows:

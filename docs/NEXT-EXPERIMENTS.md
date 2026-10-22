@@ -39,6 +39,249 @@ consequence of that.
 - Ritual before any GPU: `cd src && python prism_selftest.py` (offline, ~1 min) then a
   tiny `--device=cpu` smoke of your driver → a conforming artifact. Then Modal.
 
+## Status update (2026-10-21): the alpha-moves session — pre-registrations for W1–W5
+
+The 30-day alpha scan ([`reports/PRISM alpha in recent research.md`](../reports/PRISM%20alpha%20in%20recent%20research.md))
+re-ranked the next moves; [`ALPHA-MOVES-BRIEF.md`](ALPHA-MOVES-BRIEF.md) turns them
+into workstreams and [`ALPHA-MOVES-STATUS.md`](ALPHA-MOVES-STATUS.md) tracks them.
+Nothing below weakens an earlier pre-registration; the core-bet decision rule,
+the three-outcome gates and the two-act framing spec bind unchanged. New
+pre-registrations, each committed before its launch:
+
+### W1 — the injection-dial head-to-head (pre-registered 2026-10-21, before any launch)
+
+**Question.** Does one scalar anchor trace the retention ↔ injection frontier
+better than the methods the field now uses, and do hard-projection methods (SST)
+block injection the way PRISM's strong band does?
+
+**Rigs, unchanged from the committed probes:** facts (`prism_modal_facts.py`
+FLAGS: modern-web base, 2,000 base steps, 1,000 finetune steps, LR 3e-4, eval
+every 25) and catalog (`prism_modal_catalog.py` FLAGS). New `--tag`s; every arm
+forks the same base per seed and differs by one change. Seeds 1337–1339 for
+results; **seed 1336 only for tuning**.
+
+**Arms.** Existing: `plain`, `lowlr_b`, `raw_weak` (0.0025), `raw_mid` (0.01),
+`raw_exffn`, `raw_exattn`. Open cells: `raw_0035`, `raw_005`, `lowlr_weak`.
+PRISM variants: `raw_weak_exemb`, `raw_weak_rows_absent`, `raw_weak_adamreset`,
+`raw_weak_adamlerp`, `plain_adamreset`, `raw_aniso`. Controls/competitors
+(re-implementations, `src/prism_baselines.py`, deviations listed there):
+`out_eps` (ε=1e-4 on the tied embedding, fixed per the paper), `sst`,
+`sst_paper` (r=0.99, R100 — the paper's default), `rpsft`, `ewc`, `lora_r4`,
+`lora_r16`, `selfdistill`.
+
+**Tuning parity (criterion written before looking).** Each tunable method gets
+exactly three settings on seed 1336 (`*_t1..t3` arms; LoRA tunes its LR; the
+anisotropic anchor tunes (k, s_top, s_rest)). **Chosen setting = the lowest
+forgetting among settings with seen-recall ≥ 0.90 (the parity band plain and
+raw_weak occupy); if none reaches 0.90, the highest seen-recall; ties → lower
+forgetting.** The same rule on both rigs independently. The chosen settings are
+written into `ARM_SPECS` before the 3-seed launch and recorded in the artifact.
+
+**Metrics.** Forgetting (old-domain val climb), recall seen / unseen / v2
+paraphrases (`data/facts/recall_prompts_v2.tsv`, 3 never-trained templates),
+new-domain val loss, the adaptation-censored guard, per-step wall-clock vs
+`plain` (`[timing]` line), and (facts rig) the `[overlap]` subspace traces.
+Primary display: seen-recall vs forgetting, every arm, both rigs.
+
+**Pre-registered readouts.**
+1. SST (paper default r=0.99): *blocks* if median seen recall is within 10
+   points of `raw_mid`'s; *injects at parity* if within 10 points of `plain`'s.
+   Unseen-phrasing recall is secondary (its seed variance is high).
+2. An arm "beats raw_weak" only if it has BOTH lower forgetting AND higher
+   seen recall in **3 of 3 seeds** (per-seed, same base).
+3. `raw_weak_exemb`, `raw_weak_rows_absent`, `raw_weak_adamreset`,
+   `raw_weak_adamlerp` change forgetting by ≥ 20% (median, vs raw_weak) →
+   part of the retention is not directional; < 20% → it is.
+
+**What changes which claim.** If any competitor beats raw_weak under rule 2 on
+*both* rigs, README Finding 7 drops "the dial traces the frontier" and Honest
+bounds names the winner. If SST injects at parity under rule 1, the brief's
+differentiating hypothesis (projection blocks injection) is refuted and said so.
+
+**Cost.** Tuning: ~2 × 25 arm-runs on seed 1336 (~1.9 L4-h each rig ≈ $3).
+Results: ~2 × 22 arms × 3 seeds (~5.6 L4-h each rig ≈ $9). Tier A.
+
+### W2a — hardened controls for the core bet, probe scale (pre-registered 2026-10-21, before any launch)
+
+**Question.** Does geometry-at-init (`dirs_only`) still beat a *tuned* baseline
+and the analytic / statistics-matched inits the field now expects, under AdamW
+and under Muon, on modern web and enwik8?
+
+**Rig.** The PROBE rig unchanged (`prism_modal_modernweb.py` / `prism_modal_enwik8.py`
+FLAGS: 2,000-step teacher, 1,500-step students, eval every 10, eval_iters 50,
+batch 64×256, seeds 1337–1339). Tuning on **seed 1336 only** via
+`src/prism_sweep.py` (artifacts `results/sweep_*.json`).
+
+**Tuning parity (criterion written before looking).** Baseline grid: LR ∈
+{5e-4, 1e-3, 2e-3} × init σ ∈ {0.01, 0.02} at warmup 100, plus warmup 300 at
+LR ∈ {1e-3, 2e-3} (σ 0.02) — 8 settings; `dirs_only` gets the identical 8. Muon:
+`muon_lr` ∈ {0.01, 0.02, 0.04} for the baseline and for `dirs_only` (AdamW
+groups at the tuned AdamW LR). **Chosen setting = lowest best val loss within
+the 1,500-step horizon on seed 1336**, per corpus, per arm. `small_qk` sweeps
+σ_qk ∈ {1e-5, 1e-3, 1e-2} on 1336 by the same rule; `mimetic` and `statmatch`
+have one setting each (paper values; the stated statistic list).
+
+**Arms (3 seeds, both corpora).** AdamW at the tuned schedule: tuned baseline,
+`small_qk`, `mimetic`, `statmatch`, `spectral_only`, `recipe`, `dirs_only`,
+`dirs_pure` (EigenTransfer onto the fresh spectrum, no imprint). Muon: baseline,
+`dirs_only`, `dirs_pure`, `spectral_only`; plus `dirs_only` from a Muon-trained
+teacher. Every run records `optim` and `teacher_optim` and banks `[overlap]`
+traces every 50 steps.
+
+**Metrics.** `prism_score` of each arm vs its in-run baseline; the steps-to-target
+ratio of `dirs_only` against the **strongest control** (= the control arm with the
+lowest median best val among tuned baseline / small_qk / mimetic / statmatch, per
+corpus, computed cross-artifact with `prism_metrics.steps_to_target_ratio` at the
+control's best); the token-equivalent multiplier (fit on the strongest control's
+curve, RMSE tolerance 0.01 nats, refused otherwise); the end-of-training gap; the
+overlap traces (does Muon erase the imprint faster than the transplanted
+directions?).
+
+**Pre-registered rules (unchanged from the brief).** If `dirs_only`'s
+steps-to-target ratio against the strongest control is **< 1.2× on either
+corpus**, that goes into README "Honest bounds" **before any scale spend**. If it
+is < 1.2× under Muon, the core bet is labelled "AdamW-only until shown otherwise".
+
+**Cost.** Sweeps ≈ 4.6 L4-h (≈ $4); the 3-seed arms ≈ 2 corpora × 13 runs × ~0.7 L4-h
+≈ 18 L4-h (≈ $15). Tier A.
+
+### W3 — cross-size SVD projection (pre-registered 2026-10-21, before any launch)
+
+The full method, cases, baselines and decision rule live in
+[`CROSS-SIZE.md`](CROSS-SIZE.md) §"Pre-registration" (committed before launch):
+four probe-scale cases on modern web, 3 seeds, PROBE rig — (1) width 768→384 with
+a 12L/768/12h teacher, (2) heads 12→6 at width 384, (3) head-dim reduction
+6L/384/6h → 6L/192/6h, (4) GPT-2 124M → the 10.65M byte-level student (internal
+matrices only); baselines scratch (in-run), Weight Selection, FRONT, mimetic, and
+same-size `dirs_only` as the upper reference. **Success = ≥ 1.5× steps-to-target
+vs scratch on case 1 AND > 1× on case 3, in 3 of 3 seeds.** Metrics: `prism_score`,
+end-of-training gap, overlap traces, teacher compute stated. Draft preprint
+(`docs/preprint/cross-size-projection.md`) is NOT to be posted; the user decides.
+
+### W5 — the COUNT control for prior fusion, the Act 2 composition gate (pre-registered 2026-10-21, before any launch)
+
+**Hypothesis.** Fusing a sparse context-6 byte n-gram prior into the logits
+*during training* reaches the baseline's best enwik8 loss in fewer steps than
+fusing the same prior only at inference, and composes multiplicatively with
+geometry-at-init (`dirs_only`).
+
+**Arms** (enwik8, seeds 1337–1339, 2,000-step native teacher, 1,500-step students,
+eval every 10, eval_iters 50, batch 32 × block 256 — the §14 rig; matched
+schedules LR 1e-3 / warmup 100; fusion strength λ = 1.0; prior = orders 0–6 with
+Act 1's μ, counted on the student's training slot, block-edge backoff):
+`baseline`, `dirs_only`, `prior`, `dirs_prior`, `baseline_inffuse`, `dirs_inffuse`
+(trained without the prior, the same prior fused at every validation point),
+`count` (COUNT-style parameter-free input embedding, our re-implementation of
+arXiv 2610.20456 §2; deviations in `docs/alpha/W5-NOTES.md`), `count_dirs`.
+Validation also at every epoch boundary (`eval_at`).
+
+**Primary metric.** Steps-to-baseline-best (compute_score) against the in-run
+plain baseline; secondary: end-of-training loss, token-equivalent multiplier,
+init loss.
+
+**Decision rule.** Logit fusion earns its keep **only if `prior` beats
+`baseline_inffuse` on steps-to-target in 3 of 3 seeds AND `dirs_prior` beats
+`dirs_inffuse` in 3 of 3.** Otherwise COUNT's null (train-time ≈ inference-only)
+is replicated at this scale and README Finding 8 / the 30× caveat say so.
+**Composition gate:** the "composition multiplies" thesis survives only if
+`dirs_prior`'s steps-to-target ratio exceeds `dirs_only`'s by ≥ 1.5× (median);
+below 1.2× it saturates and the Act 2 block above records that before any Pythia
+spend.
+
+**Kill / void.** If `prior` never reaches baseline-best in any seed, or the prior's
+standalone val in the artifact's `prior_info` is not within 0.02 bpb of Act 1's
+1.9061, the run is void and investigated, not interpreted. The two-act framing
+spec binds every sentence written about these arms.
+
+**Cost.** ≈ 3.8 L4-h ≈ $3. Tier A.
+
+**Run 1 VOID (2026-10-22, `results/prior_20261022T035740Z.json`, kept as a record).**
+The kill condition fired: `prior` never reached baseline-best in any seed, and its
+step-0 loss (6.41 nats) sat *above uniform* (5.55). Investigation found the sparse
+prior's in-window gather built each position's context from the symbols *before*
+it, so the fused logits carried a confident prediction of the **current** byte
+instead of the next one (the dense `_prior_logp` includes the current byte; the
+alignment selftest now pins the convention: 1.28 bits on the next symbol vs 5.5 on
+the current, on a synthetic corpus). The standalone sequential score was right all
+along (1.927 bpb, within the 0.02 bpb of Act 1 the rule allows), which is why the
+build check passed. Fixed in `prism_prior.py`; the run is repeated unchanged
+under tag `w5b`. Nothing in the pre-registration above changes.
+
+### W4 — the RL anchor where RL drifts: single-seed pilot (pre-registered 2026-10-22, before any launch)
+
+**Why.** TRL GRPO defaults β = 0.0 and loads no reference model; prime-rl has no
+reference KL; verl defaults `use_kl_loss = False` (all verified 2026-10-21). The
+pitch is therefore *drift control at zero forward-pass cost in regimes that drift*,
+not cutting a cost most recipes already removed.
+
+**Rig.** TRL 1.16.0 `GRPOTrainer`, Qwen2.5-0.5B-Instruct, GSM8K train prompts,
+exact-match reward on `#### <answer>`, 300 optimizer steps, 32 completions/step
+(8 per prompt, 256 tokens), LR 1e-6, DAPO loss, one A100-40GB per arm
+(`prism_modal_rl.py`, driver `src/prism_rl_pilot.py`). Seed 1337 only: every run
+is a **probe**; 3-seed confirmations are Tier B.
+
+**Arms.** `beta0`; `kl:β` for β ∈ {0.01, 0.04, 0.1} (swept on the on-policy regime
+only — budget); the fixed-W₀ anchor `anchor:s` at s ∈ {0.0025, 0.01, 0.02}; the EMA
+anchor `anchor_ema:0.0025:0.01`; WARP-style `warp:0.0025:0.01:0.7` (EMA anchor +
+LITI η = 0.7); `anchor_adam:0.0025` (anchor + Adam-moment lerp).
+
+**Drift regimes** (each crossed with β = 0, the best KL and the best anchor):
+on-policy (`num_iterations=1`); recycled rollouts `recycle:4` (each batch reused 4
+times); stale generation `stale:4` (one generation batch serves 4 optimizer
+steps); zero-RL fine-tunability: after RL, LoRA r=8 SFT on IMDB for 200 steps,
+then re-score GSM8K (arXiv 2609.33898's protocol).
+
+**Metrics.** GSM8K accuracy (300 held-out test problems, greedy) before/after;
+retention on a pinned lm-eval 0.4.13 suite (hellaswag, arc_easy, winogrande;
+300 examples each; `acc_norm`); KL(π_θ ‖ π_init) on 32 held-out prompts with
+completions sampled from the init model; weight drift, principal-mask overlap
+(arXiv 2511.08567's metric, α = 5%, rank-256 reconstruction) and top-k subspace
+energy of the update; mean optimizer-step wall-clock; the anchor callback's own
+cost; the reference-forward share = (KL-arm step − β0 step)/KL-arm step on the
+same regime.
+
+**Pre-registered rule (unchanged from the brief).** The anchor earns its keep in
+a regime only if, in 3 of 3 seeds (Tier B), it (i) matches the best KL's retention
+within noise at no reward cost AND (ii) beats β = 0 on retention. The single-seed
+pilot can only *indicate*; it is written up as a probe (RESULTS §23) and decides
+which regime the Tier B seeds go to. If β = 0 does not drift measurably in any
+regime (retention within noise of the init, KL(init) small), the honest verdict is
+"low need", not "anchor works".
+
+**Amendment (2026-10-22, after the first probe landed, before any further launch).**
+At TRL's default LR (1e-6) the β=0 / recycle:4 probe did not move the policy in 300
+steps: GSM8K 23.3% → 23.3%, retention flat, KL(π‖π_init) = 0.006, relative weight
+drift 4e-5 ([`rl_beta0_recycle4_s1337_w4_20261022T161944Z.json`](../results/rl_beta0_recycle4_s1337_w4_20261022T161944Z.json)).
+A regime with no drift cannot separate a drift control from nothing, so a second
+wave at **LR 1e-5** (10× the default; a drift regime by construction) is ADDED:
+{β0, KL 0.04, anchor 0.0025} × {recycle:4, stale:4}. The default-LR arms run to
+completion and are reported as "the stacks' default". The rule above applies
+unchanged to every arm; nothing is removed or weakened. Measured cost: 7.3 s/step
+on the A100-40, ≈ $1.3 per 300-step arm, so the whole pilot stays near $20.
+
+**Cost.** ≈ 12 arms × ~1.5 A100-h × $2.10 ≈ $35–40 for the full pilot; launched in
+priority order (on-policy β0 / KL 0.04 / anchor 0.0025, then the recycle:4 cross)
+so the budget can stop it at any point. Under the W4 cap of $100.
+
+### Landed (2026-10-22, written after the runs)
+
+- **W2a** — landed; RESULTS §19. The strongest control is the tuned baseline itself
+  (mimetic, statmatch, spectral-only and recipe all sit below it); `dirs_only` keeps
+  3.3× / 3.1× under AdamW and 1.4× / 1.5× under Muon (above the 1.2× line, so the
+  bet is not labelled AdamW-only). The token-equivalent multiplier is refused at the
+  pre-registered RMSE tolerance on every seed (eval noise), by design.
+- **W3** — landed; RESULTS §20, `docs/CROSS-SIZE.md`. Success criterion FAILS on
+  width (1.0×); passes on heads (3.7×) and head-dim (1.28×); Weight Selection wins the
+  width cell at 4.0×. Preprint draft narrowed accordingly, not posted.
+- **W6.2 lineage** — RESULTS §22 (enwik8; modern-web and unrelated-teacher runs pending).
+- **W5** — run 1 void (above); run 2 landed on seeds 1337–1338 at the time of writing,
+  RESULTS §21 carries the verdict when seed 1339 lands. Note for the record: the
+  pre-registered primary target (baseline-best) sits above the step-0 loss of every
+  prior-fused arm (the Act-1 dot), so steps-to-target cannot separate them; the
+  secondary readouts (end loss; steps to `dirs_only`-best as a post-hoc, labelled
+  target) carry the comparison.
+- **W1 facts, W4 10× wave** — pending at the time of writing.
+
 ## Status update (2026-07-27): the modern-web probe ran — read it first
 
 [RESULTS §11](../RESULTS.md): byte-level FineWeb-Edu bench (`data/modernweb/`,

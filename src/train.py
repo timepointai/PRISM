@@ -81,6 +81,34 @@ prism_anchor_refresh = 25 # spectral/shuffled: rebuild the target every N steps
 # e.g. 'mlp.' pins attention+embeddings but frees every FFN — the fact-storage
 # substrate — so retention and injection can coexist instead of trading off.
 prism_anchor_exclude = ''
+# ── alpha-moves knobs (docs/ALPHA-MOVES-BRIEF.md, W0). ALL default off: a run with
+# none of them set is byte-identical to the historical train.py (golden-run check).
+optim = 'adamw'              # 'adamw' | 'muon' — Muon on the hidden 2-D matrices, AdamW elsewhere
+muon_lr = 0.02               # Muon LR (its own scale; the cosine schedule scales it proportionally)
+muon_momentum = 0.95
+muon_adjust_lr = ''          # '' = torch default ('original') | 'match_rms_adamw' | 'spectral_unclamped'
+out_eps = 0.0                # Adam eps override for the embedding/head group ONLY (0 = off; arXiv 2610.09835)
+mup_base_width = 0           # μP-lite: hidden LR mult, hidden init std, logit mult scale by base/width (0 = off)
+init_std = 0.02              # rescale the fresh init's Linear/Embedding std (0.02 = nanoGPT default = no-op)
+init_mode = 'default'        # 'default' | 'small_qk:<sigma>' | 'mimetic[:a1,b1,a2,b2]' | 'statmatch' (prism_inits.py)
+init_mode_teacher = ''       # teacher ckpt.pt whose statistics 'statmatch' imposes
+init_state = ''              # a state_dict .pt loaded into the fresh model (cross-size / weight-selection / FRONT inits)
+prism_imprint = True         # False = EigenTransfer only: rotate directions, keep the fresh init's own spectrum
+prism_anchor_adam = 'keep'   # resume path: 'keep' the base's Adam moments | 'reset' them | 'lerp' them with the anchor
+prism_anchor_rows = ''       # '' | 'absent' | 'present' — anchor only those token rows of the tied embedding
+prism_anchor_aniso = ''      # 'k:s_top:s_rest' — anisotropic pull against W0's top-k subspaces (raw mode)
+prism_anchor_target = 'fixed'  # 'fixed' | 'ema:<beta>' | 'refresh:<N>' — what the raw anchor pulls toward over time
+prism_anchor_device = 'cpu'  # 'cpu' (targets moved per step, historical) | 'auto' (kept on the training device)
+prism_track_overlap = 0      # every N steps print [overlap] subspace lines (prism_track.py); 0 = off
+prism_track_k = 16           # top-k subspace size for the overlap tracker
+prism_track_ref = ''         # directions.pt to use as the tracker's reference (default: the transplanted teacher / W0)
+ft_method = ''               # '' | 'sst' | 'rpsft' | 'ewc' | 'lora' | 'selfdistill' — competitor finetune methods (prism_baselines.py)
+ft_method_cfg = ''           # 'k:v,k:v' hyper-parameters for ft_method (see prism_baselines.py docstring)
+prior_sparse = ''            # sparse interpolated n-gram prior (prism_prior.py build); overrides prior_table
+prior_eval_only = False      # fuse the prior ONLY in estimate_loss: the inference-only-fusion control
+count_embed = False          # COUNT-style parameter-free n-gram input embedding (needs prior_sparse)
+count_embed_cfg = ''         # 'K:8,amp:sqrt_d,orders:1-6'
+eval_at = ''                 # extra eval steps, comma-separated (e.g. epoch boundaries); additive to eval_interval
 # prism direction-transfer knobs (opt-in; defaults reproduce the recipe exactly)
 prism_align_spec = '' # per-group alignment, e.g. 'attention:0.9,ffn_down:0.5'
 prism_align_mode = 'linear' # 'linear' | 'grassmann' | 'subspace'
@@ -254,6 +282,16 @@ if block_size < model.config.block_size:
     model_args['block_size'] = block_size # so that the checkpoint will have the right value
 model.to(device)
 
+# Init controls (W2a/W3): rescaled std, μP-lite init, an externally built state
+# dict (cross-size / weight-selection / FRONT), and the analytic init modes. All
+# are no-ops at their defaults and run BEFORE any Prism geometry is applied.
+if init_from == 'scratch' and (init_std != 0.02 or init_state or init_mode != 'default'
+                               or mup_base_width):
+    from prism_inits import apply_init_knobs
+    apply_init_knobs(model, init_std=init_std, init_state=init_state, init_mode=init_mode,
+                     teacher_ckpt=init_mode_teacher, mup_base_width=mup_base_width,
+                     device=device, get_batch=lambda: get_batch('train'))
+
 # Prism spectral initialization (after model creation, before compile)
 if prism_init and init_from == 'scratch':
     from prism_init import apply_prism
@@ -266,7 +304,7 @@ if prism_init and init_from == 'scratch':
                 align_topk=prism_align_topk,
                 align_depth_gamma=prism_align_depth_gamma,
                 per_layer_spectra_path=prism_per_layer_spectra or None,
-                n_layer=n_layer)
+                n_layer=n_layer, imprint=prism_imprint)
     print("Prism init complete.")
     # Capture spectral targets for modulation (before compile changes the model)
     if prism_mod > 0:
@@ -275,6 +313,7 @@ if prism_init and init_from == 'scratch':
                          if param.dim() >= 2}
         print(f"[prism] Captured {len(prism_targets)} spectral targets for modulation "
               f"(strength={prism_mod}, decay={prism_mod_decay})")
+
 
 # Prism self-anchor on RESUME — engage the mod wheel during FINETUNING. The scratch
 # path above captures targets from a fresh Prism-shaped model; here we instead
@@ -314,6 +353,46 @@ elif prism_mod > 0 and init_from == 'resume':
           + (f", refresh={prism_anchor_refresh}" if prism_anchor_mode != 'raw' else '')
           + (f", exclude={prism_anchor_exclude}" if _anchor_excl else '') + ')')
 
+# The anchor object (prism_anchor.py) replaces the historical inline lerp loop.
+# With every extension at its default it performs the identical operation
+# (param.data.lerp_(target.to(device), mod)) in the identical order.
+prism_anchor_obj = None
+if 'prism_targets' in dir():
+    from prism_anchor import Anchor, parse_aniso
+    _row_masks = None
+    if prism_anchor_rows:
+        assert init_from == 'resume', 'prism_anchor_rows is a resume-path knob'
+        _present = np.unique(np.array(np.memmap(os.path.join(data_dir, 'train.bin'),
+                                                dtype=np.uint16, mode='r')))
+        _all = np.arange(model_args['vocab_size'])
+        _rows = (np.setdiff1d(_all, _present) if prism_anchor_rows == 'absent'
+                 else np.intersect1d(_all, _present))
+        _row_masks = {n: _rows for n in prism_targets if n.endswith('wte.weight')}
+        print(f"[prism] row-masked anchor on the tied embedding: {prism_anchor_rows} rows "
+              f"= {len(_rows)}/{len(_all)} tokens")
+    prism_anchor_obj = Anchor(model.named_parameters(), prism_targets,
+                              device=(device if prism_anchor_device == 'auto' else None),
+                              target_mode=prism_anchor_target,
+                              aniso=parse_aniso(prism_anchor_aniso),
+                              row_masks=_row_masks)
+    if (prism_anchor_aniso or prism_anchor_rows or prism_anchor_target != 'fixed'
+            or prism_anchor_device != 'cpu'):
+        print(f"[prism] anchor: {prism_anchor_obj.describe()}")
+
+# Competitor finetune methods (W1): SST / RP-SFT / EWC / LoRA / self-distillation,
+# re-implemented in prism_baselines.py and attached at four hook points below
+# (model wrap, loss penalty, pre/post optimizer step, checkpoint export).
+ftm = None
+if ft_method:
+    assert init_from == 'resume', 'ft_method is a finetune (resume-path) knob'
+    from prism_baselines import make_ft_method
+    ftm = make_ft_method(ft_method, ft_method_cfg, model, device=device,
+                         old_batch_fn=(lambda: get_batch('val2')) if val2_dir else None,
+                         new_batch_fn=lambda: get_batch('train'))
+    assert not (prism_mod > 0 and ftm.wraps_model), 'LoRA-style ft_method cannot be combined with the anchor here (use lora_delta_pull)'
+    model = ftm.wrap(model)
+    print(f"[ftm] {ftm.describe()}")
+
 # Prism CKA representational regularizer (opt-in) — pull student block activations
 # toward a frozen teacher's. Set up before compile so hooks fire on the raw model.
 cka_matcher = None
@@ -330,10 +409,71 @@ if prism_cka > 0 and prism_cka_teacher:
 scaler = torch.cuda.amp.GradScaler(enabled=(dtype == 'float16'))
 
 # optimizer
-optimizer = model.configure_optimizers(weight_decay, learning_rate, (beta1, beta2), device_type)
+_plain_optimizer = (optim == 'adamw' and out_eps <= 0 and not mup_base_width and ftm is None)
+if _plain_optimizer:
+    optimizer = model.configure_optimizers(weight_decay, learning_rate, (beta1, beta2), device_type)
+else:
+    from prism_optim import build_optimizer
+    optimizer = build_optimizer(model, weight_decay, learning_rate, (beta1, beta2), device_type,
+                                optim=optim, out_eps=out_eps, muon_lr=muon_lr,
+                                muon_momentum=muon_momentum, muon_adjust_lr=muon_adjust_lr or None,
+                                mup_base_width=mup_base_width, n_embd=model_args['n_embd'])
+adam_anchor = None
 if init_from == 'resume':
-    optimizer.load_state_dict(checkpoint['optimizer'])
+    if prism_anchor_adam == 'reset':
+        print("[prism] Adam moments RESET on resume (fresh optimizer state)")
+    elif _plain_optimizer and prism_anchor_adam == 'keep':
+        optimizer.load_state_dict(checkpoint['optimizer'])
+    else:
+        from prism_optim import load_state_by_name
+        _nl, _nf = load_state_by_name(optimizer, model, checkpoint['optimizer'], device,
+                                      saved_names=checkpoint.get('optimizer_param_names'))
+        print(f"[optim] resumed Adam state by parameter identity: {_nl} loaded, {_nf} fresh")
+    if prism_anchor_adam == 'lerp':
+        from prism_anchor import AdamMomentAnchor
+        from prism_optim import base_moments
+        assert prism_anchor_obj is not None, 'prism_anchor_adam=lerp needs an active anchor (prism_mod>0)'
+        _bm = base_moments(checkpoint['optimizer'], model, list(prism_anchor_obj.targets),
+                           saved_names=checkpoint.get('optimizer_param_names'))
+        adam_anchor = AdamMomentAnchor(optimizer, model.named_parameters(), _bm)
+        print(f"[prism] Adam-moment anchor on {len(_bm)} parameters (lerp with the weight pull)")
+# non-default optimizers record their flat parameter-name order so a later resume
+# can map moments by name whatever the grouping (plain checkpoints are unchanged)
+_opt_param_names = None
+if not _plain_optimizer:
+    from prism_optim import flat_param_names
+    _opt_param_names = flat_param_names(optimizer, model)
 checkpoint = None # free up memory
+
+# Online geometry tracking (W0.5): principal-angle overlap of each weight group's
+# top-k subspaces against the init and against the transplanted reference.
+tracker = None
+if prism_track_overlap > 0:
+    from prism_track import OverlapTracker
+    _ref_dirs = _ref_w = None
+    if prism_track_ref:
+        _ref_dirs = torch.load(prism_track_ref, map_location='cpu', weights_only=False)
+    elif init_from == 'scratch' and prism_init and prism_directions:
+        _ref_dirs = torch.load(prism_directions, map_location='cpu', weights_only=False)
+    elif init_from == 'resume':
+        _ref_w = (prism_anchor_obj.targets if prism_anchor_obj is not None else
+                  {n: p.data.clone().cpu() for n, p in model.named_parameters() if p.dim() >= 2})
+    tracker = OverlapTracker(model, k=prism_track_k, ref_dirs=_ref_dirs, ref_weights=_ref_w)
+    print(f"[overlap] tracking {len(tracker.names)} matrices every {prism_track_overlap} steps "
+          f"(k={prism_track_k}, ref={('explicit dirs ' + prism_track_ref) if prism_track_ref else ('teacher dirs' if _ref_dirs else ('W0' if _ref_w else 'none'))})")
+
+# Sparse n-gram prior / COUNT embedding (W5): built by prism_prior.py. Installed
+# before compile so the forward replacement is what gets compiled.
+_sparse_prior = None
+if prior_sparse:
+    from prism_prior import load_sparse_prior
+    _sparse_prior = load_sparse_prior(prior_sparse, device, vocab_size=model_args['vocab_size'])
+    print(f"[prior] sparse n-gram prior: {_sparse_prior.describe()}"
+          + (" — fused in EVAL ONLY (inference-only-fusion control)" if prior_eval_only else ''))
+    if count_embed:
+        from prism_prior import install_count_embedding
+        install_count_embedding(model, _sparse_prior, count_embed_cfg)
+        print(f"[count] COUNT-style input embedding installed ({count_embed_cfg or 'defaults'})")
 
 # compile the model
 if compile:
@@ -378,12 +518,28 @@ def _prior_logp(X):
     return lp
 
 
-def _loss(logits, X, Y, model_loss):
-    """Fused cross-entropy when a prior is active, else the model's own loss."""
-    if _prior_logtab is None:
+_logit_mult = (float(mup_base_width) / model_args['n_embd']) if mup_base_width else 1.0
+
+
+def _loss(logits, X, Y, model_loss, training=True):
+    """Fused cross-entropy when a prior is active, else the model's own loss.
+    `prior_eval_only` fuses only when scoring (training=False); μP-lite applies
+    its logit multiplier here. Defaults return model_loss untouched."""
+    prior_on = (_prior_logtab is not None or _sparse_prior is not None) and prior_strength > 0
+    fuse = prior_on and (not prior_eval_only or not training)
+    if not fuse and _logit_mult == 1.0:
         return model_loss
-    fused = _cur_gate * logits + prior_strength * _prior_logp(X)
-    return F.cross_entropy(fused.view(-1, fused.size(-1)), Y.view(-1), ignore_index=-1)
+    z = logits if _logit_mult == 1.0 else logits * _logit_mult
+    if fuse:
+        lp = _sparse_prior.logp(X) if _sparse_prior is not None else _prior_logp(X)
+        z = _cur_gate * z + prior_strength * lp
+    return F.cross_entropy(z.view(-1, z.size(-1)), Y.view(-1), ignore_index=-1)
+
+
+def _model_sd():
+    """The state dict a checkpoint saves: merged for LoRA-style methods so the
+    file always loads into a plain GPT (fact_recall, prism_extract)."""
+    return ftm.export_state_dict(raw_model) if ftm is not None else raw_model.state_dict()
 
 
 # helps estimate an arbitrarily accurate loss over either split using many batches
@@ -397,7 +553,7 @@ def estimate_loss():
             X, Y = get_batch(split)
             with ctx:
                 logits, loss = model(X, Y)
-            losses[k] = _loss(logits, X, Y, loss).item()
+            losses[k] = _loss(logits, X, Y, loss, training=False).item()
         out[split] = losses.mean()
     model.train()
     return out
@@ -421,9 +577,12 @@ if wandb_log and master_process:
     import wandb
     wandb.init(project=wandb_project, name=wandb_run_name, config=config)
 
+_eval_at = {int(x) for x in eval_at.split(',') if x.strip()}   # extra eval steps (W5: epoch boundaries)
+
 # training loop
 X, Y = get_batch('train') # fetch the very first batch
 t0 = time.time()
+_t_loop0 = t0
 local_iter_num = 0 # number of iterations in the lifetime of this process
 raw_model = model.module if ddp else model # unwrap DDP container if needed
 running_mfu = -1.0
@@ -432,7 +591,7 @@ while True:
     # determine and set the learning rate for this iteration
     lr = get_lr(iter_num) if decay_lr else learning_rate
     for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
+        param_group['lr'] = lr * param_group.get('lr_mult', 1.0)
 
     # logit gate: ramp the model's contribution 0 → 1 (updated before the eval below, so
     # the step-0 eval reflects the pure prior). Only meaningful when a prior is fused.
@@ -443,7 +602,7 @@ while True:
     # the first step (captures retention_at_base when resuming a finetune) and the last
     # step, so the eval cadence can be decoupled from the (arbitrary) resume/stop step.
     if (iter_num % eval_interval == 0 or local_iter_num == 0
-            or iter_num == max_iters) and master_process:
+            or iter_num == max_iters or iter_num in _eval_at) and master_process:
         losses = estimate_loss()
         line = f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}"
         if val2_dir:
@@ -461,20 +620,22 @@ while True:
             best_val_loss = losses['val']
             if iter_num > 0:
                 checkpoint = {
-                    'model': raw_model.state_dict(),
+                    'model': _model_sd(),
                     'optimizer': optimizer.state_dict(),
                     'model_args': model_args,
                     'iter_num': iter_num,
                     'best_val_loss': best_val_loss,
                     'config': config,
                 }
+                if _opt_param_names is not None:
+                    checkpoint['optimizer_param_names'] = _opt_param_names
                 print(f"saving checkpoint to {out_dir}")
                 torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
         # matched-quality early stop: bank the checkpoint the moment val reaches the
         # target and stop, so bases trained by different methods can be compared at
         # equal old-domain quality (the arc / base-interaction control).
         if stop_val_target > 0 and losses['val'] <= stop_val_target and iter_num > 0:
-            ckpt = {'model': raw_model.state_dict(), 'optimizer': optimizer.state_dict(),
+            ckpt = {'model': _model_sd(), 'optimizer': optimizer.state_dict(),
                     'model_args': model_args, 'iter_num': iter_num,
                     'best_val_loss': float(min(best_val_loss, losses['val'])), 'config': config}
             torch.save(ckpt, os.path.join(out_dir, 'ckpt.pt'))
@@ -483,6 +644,8 @@ while True:
             break
     if iter_num == 0 and eval_only:
         break
+    if tracker is not None and iter_num % prism_track_overlap == 0 and master_process:
+        tracker.measure(raw_model, iter_num)
 
     # forward backward update, with optional gradient accumulation to simulate larger batch size
     # and using the GradScaler if data type is float16
@@ -504,6 +667,11 @@ while True:
                 cka = cka_matcher.loss(X)
                 if cka is not None:
                     loss = loss + (prism_cka * cka) / gradient_accumulation_steps
+            # competitor-method loss terms (RP-SFT penalty, EWC penalty, self-distillation KL)
+            if ftm is not None:
+                pen = ftm.penalty(raw_model, X, Y, logits)
+                if pen is not None:
+                    loss = loss + pen / gradient_accumulation_steps
         # immediately async prefetch next batch while model is doing the forward pass on the GPU
         X, Y = get_batch('train')
         # backward pass, with gradient scaling if training in fp16
@@ -512,15 +680,19 @@ while True:
     if grad_clip != 0.0:
         scaler.unscale_(optimizer)
         torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip)
+    if ftm is not None:
+        ftm.pre_step(raw_model)
     # step the optimizer and scaler if training in fp16
     scaler.step(optimizer)
     scaler.update()
     # flush the gradients as soon as we can, no need for this memory anymore
     optimizer.zero_grad(set_to_none=True)
+    if ftm is not None:
+        ftm.post_step(raw_model, iter_num)
 
     # spectral modulation — pull weights toward spectral targets (the "mod wheel")
     # Two-phase ADSR: attack phase (strong, fast decay) → sustain phase (gentle, slow decay)
-    if prism_mod > 0 and 'prism_targets' in dir():
+    if prism_mod > 0 and prism_anchor_obj is not None:
         if prism_mod_transition > 0 and iter_num >= prism_mod_transition:
             # Sustain phase
             steps_in_sustain = iter_num - prism_mod_transition
@@ -529,21 +701,15 @@ while True:
             # Attack phase
             current_mod = prism_mod * (prism_mod_decay ** iter_num)
         if current_mod > 1e-6:
-            raw_model = model.module if ddp else model
-            with torch.no_grad():
-                for name, param in raw_model.named_parameters():
-                    if name in prism_targets:
-                        param.data.lerp_(prism_targets[name].to(param.device), current_mod)
+            prism_anchor_obj.apply(current_mod, iter_num)     # W <- lerp(W, target, mod)
+            if adam_anchor is not None:
+                adam_anchor.apply(current_mod)                # Adam moments follow (TVD-style)
 
     # spectral unfolding — re-extract targets from current model
-    if prism_unfold > 0 and 'prism_targets' in dir() and iter_num > 0 and iter_num % prism_unfold == 0:
-        raw_model = model.module if ddp else model
-        with torch.no_grad():
-            prism_targets = {name: param.data.clone().cpu()
-                             for name, param in raw_model.named_parameters()
-                             if param.dim() >= 2}
+    if prism_unfold > 0 and prism_anchor_obj is not None and iter_num > 0 and iter_num % prism_unfold == 0:
+        prism_anchor_obj.refresh_from_model()
         if master_process:
-            print(f"[prism] Unfolded: re-extracted {len(prism_targets)} spectral targets at step {iter_num}")
+            print(f"[prism] Unfolded: re-extracted {len(prism_anchor_obj.targets)} spectral targets at step {iter_num}")
 
     # spectral-anchor refresh — rebuild each target as (current directions × base
     # spectrum), so the finetune's U/V stay free while the spectral shape is held to
@@ -551,12 +717,11 @@ while True:
     if (prism_anchor_mode in ('spectral', 'shuffled') and 'prism_base_sv' in dir()
             and prism_anchor_refresh > 0 and iter_num > 0
             and iter_num % prism_anchor_refresh == 0):
-        raw_model = model.module if ddp else model
         with torch.no_grad():
             for name, param in raw_model.named_parameters():
                 if name in prism_base_sv:
-                    prism_targets[name] = _spectral_target(
-                        param.data, prism_base_sv[name].to(param.device)).cpu()
+                    prism_anchor_obj.set_target(name, _spectral_target(
+                        param.data, prism_base_sv[name].to(param.device)).cpu())
 
     # timing and logging
     t1 = time.time()
@@ -576,6 +741,12 @@ while True:
     # termination conditions
     if iter_num > max_iters:
         break
+
+# per-step wall-clock (a new line; harnesses bank it for the overhead column)
+if master_process and local_iter_num > 1:
+    _ms = (time.time() - _t_loop0) * 1000.0 / local_iter_num
+    print(f"[timing] steps {local_iter_num} mean_step_ms {_ms:.2f}"
+          + (f" ftm_overhead_ms {ftm.overhead_ms():.2f}" if ftm is not None else ''))
 
 if ddp:
     destroy_process_group()

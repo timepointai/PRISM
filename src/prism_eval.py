@@ -77,6 +77,7 @@ Protocol note (same-data transfer):
 import argparse
 import json
 import os
+import pickle
 import threading
 import re
 import shutil
@@ -374,7 +375,8 @@ def stream_train(cmd, label, max_step, timeout=TRAIN_TIMEOUT):
 
 
 def train_teacher(steps, seed, eval_iters, device, label, cache_tag='eval',
-                  batch_size=None, n_dct=8, per_layer=False):
+                  batch_size=None, n_dct=8, per_layer=False, teacher_optim='adamw',
+                  muon_lr=None, teacher_dims=None):
     """Train teacher model and extract fingerprint. One teacher per (seed, data,
     steps). Cached by the presence of directions.pt, so a resumed run skips it.
     cache_tag separates teachers trained on different data (e.g. the same-data
@@ -382,7 +384,9 @@ def train_teacher(steps, seed, eval_iters, device, label, cache_tag='eval',
     the path too, so changing teacher_steps can't silently reuse a stale one."""
     # n_dct / per_layer change the fingerprint, so they're in the cache path — a
     # 16-coeff extract must never silently reuse an 8-coeff one.
-    sfx = ('' if n_dct == 8 else f'_dct{n_dct}') + ('_pl' if per_layer else '')
+    sfx = ('' if n_dct == 8 else f'_dct{n_dct}') + ('_pl' if per_layer else '') \
+        + ('' if teacher_optim == 'adamw' else f'_{teacher_optim}') \
+        + (dims_tag(teacher_dims) if teacher_dims else '')
     cache = f'.prism_cache/{cache_tag}_teacher_s{seed}_t{steps}{sfx}'
     if os.path.exists(f'{cache}/directions.pt'):
         log(f'[resume] teacher (seed {seed}) already trained — using cached '
@@ -398,7 +402,10 @@ def train_teacher(steps, seed, eval_iters, device, label, cache_tag='eval',
         f'--out_dir=out-eval-teacher-s{seed}',
         '--always_save_checkpoint=True',
         '--compile=False', '--prism_init=False', '--wandb_log=False',
-    ] + ([f'--batch_size={batch_size}'] if batch_size else []),
+    ] + ([f'--batch_size={batch_size}'] if batch_size else [])
+      + ([f'--optim={teacher_optim}'] + ([f'--muon_lr={muon_lr}'] if muon_lr else [])
+         if teacher_optim != 'adamw' else [])
+      + dims_flags(teacher_dims),
         f'{label} teacher', steps)
 
     if rc != 0:
@@ -418,6 +425,76 @@ def train_teacher(steps, seed, eval_iters, device, label, cache_tag='eval',
     log(f'fingerprint saved to {cache}.', 2)
 
     return cache
+
+
+def dims_tag(dims):
+    """'_L6d384h6' for a {'n_layer','n_embd','n_head'} dict (None entries skipped)."""
+    if not dims or all(v is None for v in dims.values()):
+        return ''
+    return ('_L' + str(dims.get('n_layer', '')) + 'd' + str(dims.get('n_embd', ''))
+            + 'h' + str(dims.get('n_head', ''))).replace('None', 'x')
+
+
+def dims_flags(dims):
+    return [f'--{k}={v}' for k, v in (dims or {}).items() if v is not None]
+
+
+def crosssize_fingerprint(teacher_ckpt, student_dims, align, hidden, layer_select, calib_dir,
+                          out_dir, device, hf=None, calib_text=None):
+    """Build (once) the projected fingerprint prism_crosssize.py writes; returns out_dir.
+    student_dims may hold None entries → the config's 6L/384/6h."""
+    if os.path.exists(os.path.join(out_dir, 'directions.pt')):
+        log(f'[resume] cross-size fingerprint cached at {out_dir}.', 2)
+        return out_dir
+    sd = {'n_layer': student_dims.get('n_layer') or 6, 'n_embd': student_dims.get('n_embd') or 384,
+          'n_head': student_dims.get('n_head') or 6}
+    cmd = [sys.executable, 'prism_crosssize.py', f'--student_n_layer={sd["n_layer"]}',
+           f'--student_n_embd={sd["n_embd"]}', f'--student_n_head={sd["n_head"]}',
+           f'--out={out_dir}', f'--align={align}', f'--hidden={hidden}',
+           f'--layer_select={layer_select}', f'--device={device}', '--student_block=256']
+    if hf:
+        cmd += [f'--teacher_hf={hf}', f'--calib_text={calib_text}',
+                f'--student_vocab={pickle.load(open(os.path.join(calib_dir, "meta.pkl"), "rb"))["vocab_size"]}']
+    else:
+        if not os.path.exists(teacher_ckpt):
+            raise RuntimeError(f'cross-size needs the teacher checkpoint {teacher_ckpt}; the '
+                               f'fingerprint cache survived but the ckpt did not — delete the '
+                               f'teacher cache dir to retrain it.')
+        cmd += [f'--teacher_ckpt={teacher_ckpt}', f'--calib={calib_dir}']
+    log(f'Building cross-size fingerprint ({align}, hidden={hidden}, layers={layer_select}) → {out_dir}', 2)
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
+    if r.returncode != 0:
+        raise RuntimeError(f'prism_crosssize failed:\n{r.stdout[-1500:]}\n{r.stderr[-2500:]}')
+    for line in r.stdout.splitlines():
+        if line.startswith('[xsize]'):
+            log(line, 4)
+    return out_dir
+
+
+def build_init_state(teacher_ckpt, builder, student_dims, out_path, device, hf=None, calib_dir=None,
+                     front_r=1.0):
+    """Build (once) a Weight-Selection / FRONT init_state .pt; returns its path."""
+    if os.path.exists(out_path):
+        log(f'[resume] init_state ({builder}) cached at {out_path}.', 2)
+        return out_path
+    sd = {'n_layer': student_dims.get('n_layer') or 6, 'n_embd': student_dims.get('n_embd') or 384,
+          'n_head': student_dims.get('n_head') or 6}
+    cmd = [sys.executable, 'prism_crosssize.py', f'--student_n_layer={sd["n_layer"]}',
+           f'--student_n_embd={sd["n_embd"]}', f'--student_n_head={sd["n_head"]}',
+           f'--builder={builder}', f'--out_state={out_path}', f'--front_r={front_r}',
+           f'--device={device}', '--student_block=256']
+    if hf:
+        cmd += [f'--teacher_hf={hf}',
+                f'--student_vocab={pickle.load(open(os.path.join(calib_dir, "meta.pkl"), "rb"))["vocab_size"]}']
+    else:
+        if not os.path.exists(teacher_ckpt):
+            raise RuntimeError(f'init builder needs the teacher checkpoint {teacher_ckpt}')
+        cmd += [f'--teacher_ckpt={teacher_ckpt}', f'--calib={calib_dir}']
+    log(f'Building init_state ({builder}) → {out_path}', 2)
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
+    if r.returncode != 0:
+        raise RuntimeError(f'prism_crosssize --builder failed:\n{r.stdout[-1500:]}\n{r.stderr[-2500:]}')
+    return out_path
 
 
 def run_training(name, extra_args, seed, steps, eval_every, eval_iters, device,
@@ -454,7 +531,7 @@ def run_training(name, extra_args, seed, steps, eval_every, eval_iters, device,
     log(f'{name} done: best={best:.4f} @{best_step}, @{steps}={at_end:.4f}, '
         f'{wall / 60:.1f}m', 2)
 
-    return {
+    r = {
         'curve': {str(k): v for k, v in sorted(curve.items())},
         'best': best,
         'best_step': best_step,
@@ -462,6 +539,28 @@ def run_training(name, extra_args, seed, steps, eval_every, eval_iters, device,
         'wall_sec': round(wall, 1),
         'overfits': at_end > best * 1.05,
     }
+    r.update(parse_extras(out))          # additive: [overlap] / [timing] lines, when present
+    return r
+
+
+def parse_extras(stdout):
+    """Bank the NEW train.py log lines (alpha-moves W0) when they are present:
+    `[overlap] …` subspace traces and `[timing] steps N mean_step_ms X`. Returns
+    {} for a plain run, so historical artifacts and readers are unchanged."""
+    extras = {}
+    m = re.search(r'\[timing\] steps (\d+) mean_step_ms ([\d.]+)(?: ftm_overhead_ms ([\d.]+))?', stdout)
+    if m:
+        extras['step_ms'] = float(m.group(2))
+        if m.group(3) is not None:
+            extras['ftm_overhead_ms'] = float(m.group(3))
+    try:
+        from prism_track import parse_overlap, overlap_for_artifact
+        ov = parse_overlap(stdout)
+        if ov:
+            extras['overlap'] = overlap_for_artifact(ov)
+    except ImportError:
+        pass
+    return extras
 
 
 def compute_score(baseline, method, eval_every):
@@ -520,16 +619,38 @@ def method_args_for(method, cache, lr, warmup, knobs=None, seed=None):
         f'--learning_rate={lr}', f'--warmup_iters={warmup}',
     ]
     dirs = [f'--prism_directions={cache}/directions.pt']
+    # Control arms (alpha-moves W2a/W3): the SAME schedule as the method arm but NO
+    # Prism geometry — a tuned/analytic/statistics-matched init in its place.
+    ctrl = ['--prism_init=False', f'--learning_rate={lr}', f'--warmup_iters={warmup}']
+    k = knobs or {}
     base = {
         'recipe':        common + ['--prism_align=0.75'] + dirs + ['--prism_mod=0.01', '--prism_mod_decay=0.9999'],
         'marathon':      common + ['--prism_align=0.75'] + dirs + ['--prism_mod=0.01', '--prism_mod_decay=0.9999'],
         'sprint':        common + ['--prism_align=0.75'] + dirs + ['--prism_mod=0.005', '--prism_mod_decay=0.999'],
         'spectral_only': common + ['--prism_align=0.0', '--prism_mod=0.01', '--prism_mod_decay=0.9999'],
         'dirs_only':     common + ['--prism_align=0.75'] + dirs,
+        # pure directions: EigenTransfer onto the fresh init's OWN spectrum, no imprint
+        'dirs_pure':     common + ['--prism_align=0.75'] + dirs + ['--prism_imprint=False'],
+        'small_qk':      ctrl + [f"--init_mode=small_qk:{k.get('qk_sigma', 1e-5)}"],
+        'mimetic':       ctrl + ['--init_mode=mimetic' + (f":{k['mimetic']}" if k.get('mimetic') else '')],
+        'statmatch':     ctrl + ['--init_mode=statmatch', f'--init_mode_teacher={cache}/../teacher_ckpt.pt'],
+        'init_state':    ctrl + [f"--init_state={k.get('init_state', '')}"],
+        'tuned':         ctrl,                                   # the baseline recipe at the method's (tuned) schedule
     }[method]
+    if method == 'statmatch' and seed is not None:
+        base = ctrl + ['--init_mode=statmatch', f'--init_mode_teacher=out-eval-teacher-s{seed}/ckpt.pt']
 
-    k = knobs or {}
     extra = []
+    if k.get('method_init_std') is not None:
+        extra.append(f"--init_std={k['method_init_std']}")
+    if k.get('optim') is not None:
+        extra.append(f"--optim={k['optim']}")
+    if k.get('muon_lr') is not None:
+        extra.append(f"--muon_lr={k['muon_lr']}")
+    if k.get('track_overlap') is not None:
+        extra += [f"--prism_track_overlap={k['track_overlap']}"]
+    if k.get('track_ref'):
+        extra += [f"--prism_track_ref={k['track_ref']}"]     # e.g. an UNRELATED teacher's directions
     if k.get('per_layer'):
         extra.append(f'--prism_per_layer_spectra={cache}/spectra_per_layer.json')
     if k.get('align_mode') is not None:
@@ -554,6 +675,30 @@ def method_args_for(method, cache, lr, warmup, knobs=None, seed=None):
         if k.get('cka_layers') is not None:
             extra.append(f'--prism_cka_layers={k["cka_layers"]}')
     return base + extra
+
+
+def shared_extra(args):
+    """train.py flags BOTH arms share (optimizer, baseline init std, tracking) —
+    the comparison stays one-variable because they are applied identically."""
+    out = []
+    if args.optim != 'adamw':
+        out.append(f'--optim={args.optim}')
+        if args.muon_lr is not None:
+            out.append(f'--muon_lr={args.muon_lr}')
+    if args.init_std is not None:
+        out.append(f'--init_std={args.init_std}')
+    if args.track_overlap:
+        out.append(f'--prism_track_overlap={args.track_overlap}')
+    out += dims_flags(student_dims_of(args))      # both arms: the STUDENT's architecture
+    return out
+
+
+def student_dims_of(args):
+    return {'n_layer': args.student_n_layer, 'n_embd': args.student_n_embd, 'n_head': args.student_n_head}
+
+
+def teacher_dims_of(args):
+    return {'n_layer': args.teacher_n_layer, 'n_embd': args.teacher_n_embd, 'n_head': args.teacher_n_head}
 
 
 def _stats(vals):
@@ -729,7 +874,8 @@ def main():
     p.add_argument('--seeds', type=str, default='1337,1338,1339',
                    help='comma-separated seeds; a single seed is not publishable')
     p.add_argument('--method', type=str, default='recipe',
-                   choices=['recipe', 'spectral_only', 'dirs_only', 'sprint', 'marathon'])
+                   choices=['recipe', 'spectral_only', 'dirs_only', 'sprint', 'marathon',
+                            'dirs_pure', 'small_qk', 'mimetic', 'statmatch', 'init_state', 'tuned'])
     p.add_argument('--device', type=str, default=None,
                    help="cuda | mps | cpu (default: best available)")
     # Student-schedule knobs. The default recipe lowers the LR vs the baseline,
@@ -815,6 +961,45 @@ def main():
                    help="weight on the (1-CKA) representational-distance loss (needs teacher ckpt)")
     p.add_argument('--cka_layers', type=str, default=None,
                    help="comma block indices for the CKA match (default: all)")
+    # ── alpha-moves (W2a/W3) knobs ──
+    p.add_argument('--optim', type=str, default='adamw', choices=['adamw', 'muon'],
+                   help="optimizer for BOTH arms (muon: torch.optim.Muon on hidden matrices)")
+    p.add_argument('--muon_lr', type=str, default=None, help="Muon LR (both arms); tune on seed 1336")
+    p.add_argument('--teacher_optim', type=str, default='adamw', choices=['adamw', 'muon'],
+                   help="optimizer the TEACHER is trained with (recorded; own fingerprint cache)")
+    p.add_argument('--init_std', type=str, default=None,
+                   help="init std for BOTH arms' fresh models (the tuned-baseline setting; default 0.02)")
+    p.add_argument('--method_init_std', type=str, default=None,
+                   help="init std for the METHOD arm only (its own tuning sweep)")
+    p.add_argument('--qk_sigma', type=str, default=None, help="small_qk control: Q/K init std")
+    p.add_argument('--mimetic', type=str, default=None,
+                   help="mimetic control: 'a1,b1,a2,b2' (default paper char-level values)")
+    p.add_argument('--init_state', type=str, default=None,
+                   help="init_state control: path to a state_dict .pt built by prism_crosssize.py etc.")
+    p.add_argument('--track_ref', type=str, default=None,
+                   help="directions.pt used as the tracker reference for BOTH arms (an unrelated "
+                        "teacher's fingerprint — the W6.2 lineage-decay control)")
+    p.add_argument('--track_overlap', type=int, default=None,
+                   help="every N steps bank [overlap] subspace traces (both arms)")
+    # ── alpha-moves W3: cross-size projection ──
+    p.add_argument('--teacher_n_layer', type=int, default=None, help='teacher depth (default: config)')
+    p.add_argument('--teacher_n_embd', type=int, default=None, help='teacher width (default: config)')
+    p.add_argument('--teacher_n_head', type=int, default=None, help='teacher heads (default: config)')
+    p.add_argument('--student_n_layer', type=int, default=None, help='student depth, BOTH arms (default: config)')
+    p.add_argument('--student_n_embd', type=int, default=None, help='student width, BOTH arms (default: config)')
+    p.add_argument('--student_n_head', type=int, default=None, help='student heads, BOTH arms (default: config)')
+    p.add_argument('--crosssize', type=str, default=None, choices=['pca', 'procrustes'],
+                   help="project the teacher's SVD subspaces into the student's coordinates "
+                        "(prism_crosssize.py) and use that as the method's fingerprint")
+    p.add_argument('--crosssize_hf', type=str, default=None,
+                   help="HF teacher (e.g. gpt2) for the cross-size projection — no teacher is "
+                        "trained; internal matrices only; calibration text = the corpus's text file")
+    p.add_argument('--xsize_hidden', type=str, default='pca', choices=['pca', 'svd'])
+    p.add_argument('--xsize_layers', type=str, default='uniform', choices=['uniform', 'average', 'first'])
+    p.add_argument('--init_builder', type=str, default=None, choices=['weightsel', 'front'],
+                   help="run --method=init_state with a Weight-Selection / FRONT init built "
+                        "from the teacher (prism_crosssize.py builders)")
+    p.add_argument('--front_r', type=float, default=1.0, help='FRONT low-frequency ratio r')
     p.add_argument('--report', action='store_true', help='print the last artifact')
     args = p.parse_args()
     device = args.device or default_device()
@@ -852,9 +1037,35 @@ def main():
         ('mod_sustain', args.mod_sustain, None),
         ('cka', args.cka, None),
         ('cka_layers', args.cka_layers, None),
+        ('optim', args.optim if args.optim != 'adamw' else None, None),
+        ('muon_lr', args.muon_lr, None),
+        ('teacher_optim', args.teacher_optim if args.teacher_optim != 'adamw' else None, None),
+        ('init_std', args.init_std, None),
+        ('method_init_std', args.method_init_std, None),
+        ('qk_sigma', args.qk_sigma, None),
+        ('mimetic', args.mimetic, None),
+        ('init_state', os.path.basename(args.init_state) if args.init_state else None, None),
+        ('track_overlap', args.track_overlap, None),
+        ('track_ref', os.path.basename(os.path.dirname(args.track_ref)) if args.track_ref else None, None),
+        ('tdims', dims_tag(teacher_dims_of(args)) or None, None),
+        ('sdims', dims_tag(student_dims_of(args)) or None, None),
+        ('xsize', args.crosssize, None),
+        ('xsize_hf', args.crosssize_hf, None),
+        ('xsize_hidden', args.xsize_hidden if (args.crosssize or args.crosssize_hf) and args.xsize_hidden != 'pca' else None, None),
+        ('xsize_layers', args.xsize_layers if (args.crosssize or args.crosssize_hf) and args.xsize_layers != 'uniform' else None, None),
+        ('init_builder', args.init_builder, None),
+        ('front_r', args.front_r if args.init_builder == 'front' and args.front_r != 1.0 else None, None),
     ]:
         if v != default:
             method_knobs[k] = v
+    if args.init_builder and args.method != 'init_state':
+        raise SystemExit('--init_builder requires --method=init_state')
+    if args.crosssize_hf and args.crosssize:
+        raise SystemExit('--crosssize_hf replaces --crosssize (the HF teacher is projected with pca)')
+    if args.init_state:
+        method_knobs['init_state'] = args.init_state   # full path for the flag; basename in the key
+    if args.track_ref:
+        method_knobs['track_ref'] = args.track_ref
     if args.n_dct is not None:
         method_knobs['n_dct'] = args.n_dct
     if args.far_corpus:
@@ -908,7 +1119,8 @@ def main():
         'batch_size': args.batch_size,
         'teacher_data_equals_student_data': (overlaps is None
                                              and not args.cross_teacher
-                                             and not args.fingerprint),
+                                             and not args.fingerprint
+                                             and not args.crosssize_hf),
         'cross_teacher': args.cross_teacher,
         'corpus': args.corpus,
         'fingerprint': args.fingerprint,
@@ -919,6 +1131,12 @@ def main():
         'schedule_matched': (args.method_lr == (args.baseline_lr or '1e-3')
                              and args.method_warmup == (args.baseline_warmup or 100)),
         'n_dct': n_dct,
+        'optim': args.optim,
+        'teacher_optim': args.teacher_optim,
+        'teacher_dims': teacher_dims_of(args),
+        'student_dims': student_dims_of(args),
+        'crosssize': args.crosssize or (f'hf:{args.crosssize_hf}' if args.crosssize_hf else None),
+        'init_builder': args.init_builder,
         'method_knobs': method_knobs,
         'far_corpus': args.far_corpus,
         'far_val': args.far_val,
@@ -1012,6 +1230,7 @@ def main():
                     base_extra.append(f'--learning_rate={args.baseline_lr}')
                 if args.baseline_warmup is not None:
                     base_extra.append(f'--warmup_iters={args.baseline_warmup}')
+                base_extra += shared_extra(args)
                 baseline = cached_stage(run_dir, f's{seed}_baseline', lambda:
                     run_training('baseline', base_extra, seed, args.student_steps,
                                  args.eval_every, args.eval_iters, device,
@@ -1031,7 +1250,8 @@ def main():
                         run_training(args.method,
                                      method_args_for(args.method, cache,
                                                      args.method_lr, args.method_warmup,
-                                                     knobs=method_knobs, seed=seed),
+                                                     knobs=method_knobs, seed=seed)
+                                     + dims_flags(student_dims_of(args)),
                                      seed, args.student_steps, args.eval_every,
                                      args.eval_iters, device, lbl, batch_size=bs))
                     runs.append({
@@ -1080,21 +1300,60 @@ def main():
                 lbl = f's{seed}{osfx}'
 
                 stage[0] += 1
+                sdims = student_dims_of(args)
                 if args.fingerprint:
                     log(f'[stage {stage[0]}/{total_stages}] teacher SKIPPED — using '
                         f'pre-extracted fingerprint {args.fingerprint}', 2)
                     cache = args.fingerprint
+                elif args.crosssize_hf:
+                    log(f'[stage {stage[0]}/{total_stages}] teacher SKIPPED — HF teacher '
+                        f'{args.crosssize_hf} projected cross-size', 2)
+                    base_dir = f'data/{args.corpus}' if args.corpus else 'data/shakespeare_char'
+                    text = {'modernweb': 'data/modernweb/modern.txt',
+                            'shakespeare_char': 'data/shakespeare_char/input.txt'}.get(
+                        args.corpus or 'shakespeare_char', f'{base_dir}/input.txt')
+                    xdir = (f'.prism_cache/xsize_hf_{args.crosssize_hf.replace("/", "_")}_pca'
+                            f'_{args.xsize_hidden}_{args.xsize_layers}{dims_tag(sdims) or "_L6d384h6"}')
+                    cache = crosssize_fingerprint(None, sdims, 'pca', args.xsize_hidden,
+                                                  args.xsize_layers, base_dir, xdir, device,
+                                                  hf=args.crosssize_hf, calib_text=text)
+                    if args.init_builder:
+                        method_knobs['init_state'] = build_init_state(
+                            None, args.init_builder, sdims,
+                            f'{xdir}/init_{args.init_builder}_r{args.front_r:g}.pt', device,
+                            hf=args.crosssize_hf, calib_dir=base_dir, front_r=args.front_r)
                 else:
                     log(f'[stage {stage[0]}/{total_stages}] teacher (seed {seed})', 2)
                     cache = train_teacher(args.teacher_steps, seed, args.eval_iters,
                                           device, lbl, cache_tag=tag, batch_size=bs,
-                                          n_dct=n_dct, per_layer=args.per_layer)
+                                          n_dct=n_dct, per_layer=args.per_layer,
+                                          teacher_optim=args.teacher_optim, muon_lr=args.muon_lr,
+                                          teacher_dims=teacher_dims_of(args))
+                    if args.crosssize:
+                        xdir = (f'{cache}/xsize_{args.crosssize}_{args.xsize_hidden}_'
+                                f'{args.xsize_layers}{dims_tag(sdims) or "_L6d384h6"}')
+                        cache = crosssize_fingerprint(f'out-eval-teacher-s{seed}/ckpt.pt', sdims,
+                                                      args.crosssize, args.xsize_hidden,
+                                                      args.xsize_layers, 'data/shakespeare_teacher',
+                                                      xdir, device)
+                    if args.init_builder:
+                        method_knobs['init_state'] = build_init_state(
+                            f'out-eval-teacher-s{seed}/ckpt.pt', args.init_builder, sdims,
+                            f'{cache}/init_{args.init_builder}_r{args.front_r:g}{dims_tag(sdims) or "_L6d384h6"}.pt',
+                            device, calib_dir='data/shakespeare_teacher', front_r=args.front_r)
 
                 baseline_extra = ['--prism_init=False']
                 if args.baseline_lr:
                     baseline_extra.append(f'--learning_rate={args.baseline_lr}')
                 if args.baseline_warmup is not None:
                     baseline_extra.append(f'--warmup_iters={args.baseline_warmup}')
+                baseline_extra += shared_extra(args)
+                if args.track_overlap and cache and os.path.exists(os.path.join(cache, 'directions.pt')):
+                    # lineage tracing (W6.2): the baseline's distance to the SAME teacher's
+                    # directions is the chance-level reference for the PRISM student's decay
+                    baseline_extra.append(f'--prism_track_ref={cache}/directions.pt')
+                if args.track_ref:
+                    baseline_extra.append(f'--prism_track_ref={args.track_ref}')
 
                 stage[0] += 1
                 log(f'[stage {stage[0]}/{total_stages}] baseline (seed {seed}{osfx})', 2)
@@ -1109,7 +1368,8 @@ def main():
                     run_training(args.method,
                                  method_args_for(args.method, cache,
                                                  args.method_lr, args.method_warmup,
-                                                 knobs=method_knobs, seed=seed),
+                                                 knobs=method_knobs, seed=seed)
+                                 + dims_flags(student_dims_of(args)),   # the STUDENT's architecture
                                  seed, args.student_steps, args.eval_every,
                                  args.eval_iters, device, lbl, batch_size=bs))
 

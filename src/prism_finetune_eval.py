@@ -53,7 +53,7 @@ import numpy as np
 
 from prism_eval import (provenance, parse_curve, stream_train, acquire_lock,
                         _stats, _token_js, _encode_corpus, log, default_device,
-                        RESULTS_DIR, RUNS_DIR, SRC_DIR)
+                        parse_extras, RESULTS_DIR, RUNS_DIR, SRC_DIR)
 
 SHAKE = 'data/shakespeare_char'      # OLD domain (retention); --old_corpus overrides.
 FT = 'data/sherlock_ft'              # NEW-domain working slot. built from far_corpus.
@@ -81,6 +81,57 @@ ARM_SPECS = {
     'spectral':        dict(resume=True,  mod=0.01,  mode='spectral', refresh=25),    # the PRISM claim
     'shuffled':        dict(resume=True,  mod=0.01,  mode='shuffled', refresh=25),    # placebo
     'scratch_ceiling': dict(resume=False),                                           # adapt ceiling
+    # ── alpha-moves W1: the injection-dial head-to-head (docs/ALPHA-MOVES-BRIEF.md) ──
+    # Open cells of the dial, and the low-LR × weak-anchor combination.
+    'raw_0035':        dict(resume=True,  mod=0.0035, mode='raw'),
+    'raw_005':         dict(resume=True,  mod=0.005,  mode='raw'),
+    'lowlr_weak':      dict(resume=True,  mod=0.0025, mode='raw', lr='1e-4'),
+    # PRISM variants that test whether part of the retention is NOT directional:
+    # embedding excluded (tied wte == lm_head), absent-token rows only, Adam moments.
+    'raw_weak_exemb':  dict(resume=True,  mod=0.0025, mode='raw', exclude='wte'),
+    'raw_weak_rows_absent': dict(resume=True, mod=0.0025, mode='raw',
+                                 extra=['--prism_anchor_rows=absent']),
+    'raw_weak_adamreset': dict(resume=True, mod=0.0025, mode='raw',
+                               extra=['--prism_anchor_adam=reset']),
+    'raw_weak_adamlerp': dict(resume=True, mod=0.0025, mode='raw',
+                              extra=['--prism_anchor_adam=lerp']),
+    'plain_adamreset': dict(resume=True,  mod=0.0,   extra=['--prism_anchor_adam=reset']),
+    # Anisotropic pull: strong on W0's top-k directions, weak elsewhere. Three
+    # settings tuned on seed 1336 (tuning parity); 'raw_aniso' is set to the winner.
+    'raw_aniso_t1':    dict(resume=True,  mod=1.0, mode='raw', extra=['--prism_anchor_aniso=32:0.01:0.0025']),
+    'raw_aniso_t2':    dict(resume=True,  mod=1.0, mode='raw', extra=['--prism_anchor_aniso=32:0.02:0.0']),
+    'raw_aniso_t3':    dict(resume=True,  mod=1.0, mode='raw', extra=['--prism_anchor_aniso=96:0.01:0.0025']),
+    'raw_aniso':       dict(resume=True,  mod=1.0, mode='raw', extra=['--prism_anchor_aniso=32:0.01:0.0025']),
+    # Adam-eps control (arXiv 2610.09835): raised eps on the embedding/head group only.
+    'out_eps':         dict(resume=True,  mod=0.0,   extra=['--out_eps=1e-4']),
+    # Competitors — re-implementations in prism_baselines.py (see its docstring for
+    # every deviation). Tuning arms (_t1.._t3) run on seed 1336 only; the bare name
+    # is set to the chosen setting before the 3-seed launch.
+    'sst_t1':          dict(resume=True,  mod=0.0, extra=['--ft_method=sst', '--ft_method_cfg=r:0.5,refresh:100']),
+    'sst_t2':          dict(resume=True,  mod=0.0, extra=['--ft_method=sst', '--ft_method_cfg=r:0.9,refresh:100']),
+    'sst_t3':          dict(resume=True,  mod=0.0, extra=['--ft_method=sst', '--ft_method_cfg=r:0.99,refresh:100']),
+    'sst':             dict(resume=True,  mod=0.0, extra=['--ft_method=sst', '--ft_method_cfg=r:0.9,refresh:100']),
+    'sst_paper':       dict(resume=True,  mod=0.0, extra=['--ft_method=sst', '--ft_method_cfg=r:0.99,refresh:100']),  # the paper's default r
+    'rpsft_t1':        dict(resume=True,  mod=0.0, extra=['--ft_method=rpsft', '--ft_method_cfg=k:64,lam:0.1']),
+    'rpsft_t2':        dict(resume=True,  mod=0.0, extra=['--ft_method=rpsft', '--ft_method_cfg=k:64,lam:1.0']),
+    'rpsft_t3':        dict(resume=True,  mod=0.0, extra=['--ft_method=rpsft', '--ft_method_cfg=k:64,lam:10.0']),
+    'rpsft':           dict(resume=True,  mod=0.0, extra=['--ft_method=rpsft', '--ft_method_cfg=k:64,lam:1.0']),
+    'ewc_t1':          dict(resume=True,  mod=0.0, extra=['--ft_method=ewc', '--ft_method_cfg=lam:0.1,n_fisher:32']),
+    'ewc_t2':          dict(resume=True,  mod=0.0, extra=['--ft_method=ewc', '--ft_method_cfg=lam:1.0,n_fisher:32']),
+    'ewc_t3':          dict(resume=True,  mod=0.0, extra=['--ft_method=ewc', '--ft_method_cfg=lam:10.0,n_fisher:32']),
+    'ewc':             dict(resume=True,  mod=0.0, extra=['--ft_method=ewc', '--ft_method_cfg=lam:1.0,n_fisher:32']),
+    'lora_r4_t1':      dict(resume=True,  mod=0.0, lr='3e-4', extra=['--ft_method=lora', '--ft_method_cfg=r:4']),
+    'lora_r4_t2':      dict(resume=True,  mod=0.0, lr='1e-3', extra=['--ft_method=lora', '--ft_method_cfg=r:4']),
+    'lora_r4_t3':      dict(resume=True,  mod=0.0, lr='3e-3', extra=['--ft_method=lora', '--ft_method_cfg=r:4']),
+    'lora_r4':         dict(resume=True,  mod=0.0, lr='1e-3', extra=['--ft_method=lora', '--ft_method_cfg=r:4']),
+    'lora_r16':        dict(resume=True,  mod=0.0, lr='1e-3', extra=['--ft_method=lora', '--ft_method_cfg=r:16']),
+    'lora_r16_t1':     dict(resume=True,  mod=0.0, lr='3e-4', extra=['--ft_method=lora', '--ft_method_cfg=r:16']),
+    'lora_r16_t2':     dict(resume=True,  mod=0.0, lr='1e-3', extra=['--ft_method=lora', '--ft_method_cfg=r:16']),
+    'lora_r16_t3':     dict(resume=True,  mod=0.0, lr='3e-3', extra=['--ft_method=lora', '--ft_method_cfg=r:16']),
+    'selfdistill_t1':  dict(resume=True,  mod=0.0, extra=['--ft_method=selfdistill', '--ft_method_cfg=alpha:0.3']),
+    'selfdistill_t2':  dict(resume=True,  mod=0.0, extra=['--ft_method=selfdistill', '--ft_method_cfg=alpha:1.0']),
+    'selfdistill_t3':  dict(resume=True,  mod=0.0, extra=['--ft_method=selfdistill', '--ft_method_cfg=alpha:3.0']),
+    'selfdistill':     dict(resume=True,  mod=0.0, extra=['--ft_method=selfdistill', '--ft_method_cfg=alpha:1.0']),
 }
 
 
@@ -237,6 +288,9 @@ def run_arm(arm, seed, base_ckpt, a, device, run_dir):
                 cmd.append(f'--prism_anchor_refresh={spec["refresh"]}')
             if spec.get('exclude'):
                 cmd.append(f'--prism_anchor_exclude={spec["exclude"]}')
+        cmd += list(spec.get('extra', []))   # alpha-moves knobs / competitor methods
+        if a.track_overlap:
+            cmd += [f'--prism_track_overlap={a.track_overlap}']
     else:   # scratch_ceiling: best NEW-domain loss reachable fresh in ft_steps
         cmd += ['--init_from=scratch', '--prism_init=False',
                 f'--max_iters={a.ft_steps}', f'--warmup_iters={a.ft_warmup}',
@@ -274,6 +328,7 @@ def run_arm(arm, seed, base_ckpt, a, device, run_dir):
     if a.recall_prompts:
         r['recall'] = run_recall(f'{out}/ckpt.pt', a, device)
         log(f'arm "{arm}" recall: {r["recall"]["acc"]}', 2)
+    r.update(parse_extras(stdout))        # additive: step_ms / ftm overhead / overlap traces
     json.dump(r, open(meta_f, 'w'), indent=2)
     return r
 
@@ -295,10 +350,14 @@ def score_seed(arms):
                'adapt_at_end': v['adapt_at_end'], 'adapt_overfits': v['adapt_overfits']}
         if 'recall' in v:
             rec['recall_acc'] = v['recall']['acc']
+        if 'step_ms' in v:
+            rec['step_ms'] = v['step_ms']
         if plain:
             pf = plain['retain_at_end'] - rb
             rec['forgetting_ratio_vs_plain'] = round(pf / f, 3) if abs(f) > 1e-6 else None
             rec['adaptation_cost_vs_plain'] = round(v['adapt_best'] / plain['adapt_best'], 4)
+            if 'step_ms' in v and 'step_ms' in plain and plain['step_ms'] > 0:
+                rec['step_overhead_vs_plain'] = round(v['step_ms'] / plain['step_ms'], 4)
         per_arm[k] = rec
     m = {'retention_at_base': rb, 'arms': per_arm}
     if 'scratch_ceiling' in arms:
@@ -369,7 +428,16 @@ def main():
     p.add_argument('--tag', default='',
                    help='disambiguator folded into the run key / artifact (use a '
                         'distinct tag when a new arm set shares a prior run schedule)')
+    p.add_argument('--track_overlap', type=int, default=0,
+                   help='every N steps bank [overlap] subspace traces for every arm (0 = off)')
+    p.add_argument('--arm_overrides', default='',
+                   help="'name:spec_arm,name:spec_arm' — run arm NAME with the spec of SPEC_ARM "
+                        "(the tuning-parity winner chosen on seed 1336, per rig); recorded in arm_specs")
     a = p.parse_args()
+    for pair in [x for x in a.arm_overrides.split(',') if x.strip()]:
+        name, spec_arm = pair.split(':')
+        assert name in ARM_SPECS and spec_arm in ARM_SPECS, f'unknown arm in override {pair}'
+        ARM_SPECS[name] = dict(ARM_SPECS[spec_arm], tuned_from=spec_arm)
     global SHAKE
     SHAKE = f'data/{a.old_corpus}'
     a.seeds = [int(s) for s in a.seeds.split(',') if s.strip()]
@@ -454,7 +522,12 @@ def _persist(stamp, key, a, dist, device, arms, per_seed, metrics, complete):
                 'overfits_any': any(g['adapt_overfits'] for g in got),
                 'recall_seen': _agg([g.get('recall_acc', {}).get('seen') for g in got]),
                 'recall_unseen': _agg([g.get('recall_acc', {}).get('unseen') for g in got]),
+                'step_overhead_vs_plain': _agg([g.get('step_overhead_vs_plain') for g in got]),
             }
+            # every other recall kind (the v2 paraphrase templates: v2a/v2b/v2c …)
+            kinds = sorted({k for g in got for k in g.get('recall_acc', {})} - {'seen', 'unseen'})
+            for kd in kinds:
+                arm_summ[name][f'recall_{kd}'] = _agg([g.get('recall_acc', {}).get(kd) for g in got])
         summary = {
             'n_seeds': len(metrics),
             'retention_at_base': _agg([m['retention_at_base'] for m in metrics]),
@@ -481,6 +554,8 @@ def _persist(stamp, key, a, dist, device, arms, per_seed, metrics, complete):
             'old_corpus': a.old_corpus,
             'ft_val_corpus': a.ft_val_corpus,
             'recall_prompts': a.recall_prompts,
+            'track_overlap': a.track_overlap,
+            'arm_overrides': a.arm_overrides,
             'base_steps': a.base_steps, 'ft_steps': a.ft_steps,
             'ft_warmup': a.ft_warmup, 'eval_every': a.eval_every,
             'eval_iters': a.eval_iters, 'seeds': a.seeds, 'arms': arms,

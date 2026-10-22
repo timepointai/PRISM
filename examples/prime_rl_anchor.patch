@@ -1,0 +1,16 @@
+# Two-line patch for prime-rl's RL trainer (src/prime_rl/trainer/rl/train.py, read 2026-10-21).
+# Re-check the anchor line before applying: the call is
+#     optimizer, gradient_manager = setup_optimizer(config.optim, list(model.named_parameters()), parallel_dims, ...)
+--- a/src/prime_rl/trainer/rl/train.py
++++ b/src/prime_rl/trainer/rl/train.py
+@@
+     optimizer, gradient_manager = setup_optimizer(
+         config.optim,
+         list(model.named_parameters()),
+         parallel_dims,
+         offload=config.model.offload,
+         model=model,
+         full_offload_dtype_policy=(...),
+     )
++    from prime_rl_anchor import attach_anchor          # PRISM: post-step weight-space anchor (PRISM_ANCHOR_S)
++    attach_anchor(optimizer, model)
