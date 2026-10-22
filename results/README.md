@@ -50,6 +50,38 @@ Eval artifacts. **This directory is the evidence.** Committed runs:
   Shakespeare. Scores ≥9–10× at every overlap (left-censored at this probe's
   resolution). The head start is structural, and it transfers across domains.
 
+### Alpha-moves artifacts (2026-10-22; `docs/ALPHA-MOVES-STATUS.md`)
+
+- `finetune_20261022T024927Z.json` / `…T024917Z.json` — W1 **tuning records**, seed 1336
+  only (catalog / facts rigs): three settings per competitor; the chosen setting is
+  recorded per arm as `arm_specs[*].tuned_from` in the 3-seed artifacts. Not results.
+- `finetune_20261022T043049Z.json` — W1 catalog head-to-head, 3 seeds, 23 arms
+  (RESULTS §18). New additive keys: per-arm `step_ms`, `ftm_overhead_ms`, `overlap`
+  (the `[overlap]`/`[trace]` lineage lines), `recall_v2a/b/c` (held-out paraphrase
+  templates, facts rig), `step_overhead_vs_plain`; `config.arm_overrides`.
+- `sweep_20261022T*.json` — schema **`prism-sweep/1`** (`src/prism_sweep.py`): a
+  one-seed tuning-parity grid; `settings[]` carry every curve, `chosen` the winner by
+  the pre-registered criterion. Four of them are reconstructed from banked stages
+  (noted in `config.note`).
+- `dirs_only_20261022T0{35754,40349,40448,43832}Z.json`, `init_state_20261022T041102Z.json`
+  — W3 cross-size cases 1–4 and FRONT (RESULTS §20); `config.crosssize`,
+  `teacher_dims`, `student_dims`, `init_builder` are the new keys.
+- `dirs_only_20261022T15*.json`, `dirs_pure_*`, `statmatch_*`, `spectral_only_*`,
+  `small_qk_*`, `mimetic_*` — W2a controls at the tuned baseline schedule
+  (RESULTS §19); `config.optim`, `teacher_optim`, `init_std`, `baseline_lr/warmup`
+  record the schedule; both arms carry `overlap`.
+- `prior_20261022T035740Z.json` — W5 run 1, **VOID** (kept as a record; RESULTS §21).
+  `prior_*_w5b` is the valid rerun. New keys: `config.prior_info`, `config.eval_at`,
+  per-arm `token_equivalent`, `arm_spec`, `step_ms`.
+- `rl_*.json` — schema **`prism-rl/1`** (`src/prism_rl_pilot.py`): one GRPO arm per
+  file, single seed, `probe: true`; `rl_table_*.json` joins them.
+- `pythia_*.json` — schema **`prism-pythia/1`** (`src/pythia_train.py`): one ladder arm
+  per file; `ratio_reportable` is false until the baseline reproduces the published
+  checkpoints within the stated tolerance.
+
+Every existing `prism-*/1` reader keeps working: all additions are new keys or new
+schemas.
+
 See [RESULTS.md](../RESULTS.md) for the full comparison and what remains open.
 
 Every file here is written by `src/prism_eval.py` and contains, for each seed:
