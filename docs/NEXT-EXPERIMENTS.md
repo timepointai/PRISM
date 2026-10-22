@@ -195,6 +195,51 @@ spec binds every sentence written about these arms.
 
 **Cost.** ≈ 3.8 L4-h ≈ $3. Tier A.
 
+### W4 — the RL anchor where RL drifts: single-seed pilot (pre-registered 2026-10-22, before any launch)
+
+**Why.** TRL GRPO defaults β = 0.0 and loads no reference model; prime-rl has no
+reference KL; verl defaults `use_kl_loss = False` (all verified 2026-10-21). The
+pitch is therefore *drift control at zero forward-pass cost in regimes that drift*,
+not cutting a cost most recipes already removed.
+
+**Rig.** TRL 1.16.0 `GRPOTrainer`, Qwen2.5-0.5B-Instruct, GSM8K train prompts,
+exact-match reward on `#### <answer>`, 300 optimizer steps, 32 completions/step
+(8 per prompt, 256 tokens), LR 1e-6, DAPO loss, one A100-40GB per arm
+(`prism_modal_rl.py`, driver `src/prism_rl_pilot.py`). Seed 1337 only: every run
+is a **probe**; 3-seed confirmations are Tier B.
+
+**Arms.** `beta0`; `kl:β` for β ∈ {0.01, 0.04, 0.1} (swept on the on-policy regime
+only — budget); the fixed-W₀ anchor `anchor:s` at s ∈ {0.0025, 0.01, 0.02}; the EMA
+anchor `anchor_ema:0.0025:0.01`; WARP-style `warp:0.0025:0.01:0.7` (EMA anchor +
+LITI η = 0.7); `anchor_adam:0.0025` (anchor + Adam-moment lerp).
+
+**Drift regimes** (each crossed with β = 0, the best KL and the best anchor):
+on-policy (`num_iterations=1`); recycled rollouts `recycle:4` (each batch reused 4
+times); stale generation `stale:4` (one generation batch serves 4 optimizer
+steps); zero-RL fine-tunability: after RL, LoRA r=8 SFT on IMDB for 200 steps,
+then re-score GSM8K (arXiv 2609.33898's protocol).
+
+**Metrics.** GSM8K accuracy (300 held-out test problems, greedy) before/after;
+retention on a pinned lm-eval 0.4.13 suite (hellaswag, arc_easy, winogrande;
+300 examples each; `acc_norm`); KL(π_θ ‖ π_init) on 32 held-out prompts with
+completions sampled from the init model; weight drift, principal-mask overlap
+(arXiv 2511.08567's metric, α = 5%, rank-256 reconstruction) and top-k subspace
+energy of the update; mean optimizer-step wall-clock; the anchor callback's own
+cost; the reference-forward share = (KL-arm step − β0 step)/KL-arm step on the
+same regime.
+
+**Pre-registered rule (unchanged from the brief).** The anchor earns its keep in
+a regime only if, in 3 of 3 seeds (Tier B), it (i) matches the best KL's retention
+within noise at no reward cost AND (ii) beats β = 0 on retention. The single-seed
+pilot can only *indicate*; it is written up as a probe (RESULTS §23) and decides
+which regime the Tier B seeds go to. If β = 0 does not drift measurably in any
+regime (retention within noise of the init, KL(init) small), the honest verdict is
+"low need", not "anchor works".
+
+**Cost.** ≈ 12 arms × ~1.5 A100-h × $2.10 ≈ $35–40 for the full pilot; launched in
+priority order (on-policy β0 / KL 0.04 / anchor 0.0025, then the recycle:4 cross)
+so the budget can stop it at any point. Under the W4 cap of $100.
+
 ## Status update (2026-07-27): the modern-web probe ran — read it first
 
 [RESULTS §11](../RESULTS.md): byte-level FineWeb-Edu bench (`data/modernweb/`,
