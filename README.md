@@ -506,7 +506,7 @@ where PRISM sits:
 | [Residual-over-n-gram LMs](https://arxiv.org/pdf/2210.14431) (Li et al. '22) | the network learns the residual over a fixed n-gram prior fused at the logits | an n-gram model | the canonical form of Prior-Fused PRISM's logit fusion; PRISM's addition is the geometric init stacked on top, scored by time-to-target |
 | [Spectral Warmup null](https://arxiv.org/abs/2604.22778) (Apr '26) | correct spectra with random directions | a spectrum | trained 42.7% worse than standard init (reported); independently matches PRISM's spectrum-only null (§11) |
 | [CrossGMN](https://arxiv.org/abs/2610.01649) (Oct '26) | a learned cross-architecture init operator | a model zoo (≤210k-param nets) | reports 0.74× on attention-dim and 0.86× on head-count reduction; PRISM's analytic projection gets 1.28× and 3.7× on the analogous cells at 10.65M (§20) |
-| [108-statistic init](https://openreview.net/forum?id=DzLzZYD84Y) (ICLR'27 sub.) | layerwise scalar statistics imposed on a random init | a reference model's statistics | the W2a `statmatch` control imposes 70 teacher statistics with no directions; below the baseline on both corpora so far (§19) |
+| [108-statistic init](https://openreview.net/forum?id=DzLzZYD84Y) (ICLR'27 sub.) | layerwise scalar statistics imposed on a random init | a reference model's statistics | the W2a `statmatch` control imposes 70 teacher statistics with no directions; below the tuned baseline on both corpora, 3/3 seeds (§19) |
 
 What this repo adds is the artifact-backed decomposition — which half of the
 geometry acts, in which regime, at which dial setting, from which provenance
@@ -633,7 +633,7 @@ a standalone, self-contained page served from GitHub Pages; source:
   Projecting a 768-wide teacher onto a 384-wide student, or GPT-2 124M onto the
   byte-level student, gives an early head start and no endpoint gain (1.0×). Only
   the head cells transfer: head count 12→6 (3.7×) and head dimension 64→32 (1.28×).
-- **Under Muon the init advantage shrinks from 3.3× to 1.4× (§19, interim).**
+- **Under Muon the init advantage shrinks from 3.3× to 1.4× (§19).**
   Against a tuned AdamW baseline (LR 2e-3, warmup 300) `dirs_only` keeps 3.3×
   (modern web) and 3.1× (enwik8); with Muon on both arms the ratio is 1.4× / 1.5×,
   above the pre-registered 1.2× line but a different claim. The imprint is worth

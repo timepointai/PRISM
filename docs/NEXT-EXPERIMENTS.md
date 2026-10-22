@@ -263,6 +263,25 @@ on the A100-40, ≈ $1.3 per 300-step arm, so the whole pilot stays near $20.
 priority order (on-policy β0 / KL 0.04 / anchor 0.0025, then the recycle:4 cross)
 so the budget can stop it at any point. Under the W4 cap of $100.
 
+### Landed (2026-10-22, written after the runs)
+
+- **W2a** — landed; RESULTS §19. The strongest control is the tuned baseline itself
+  (mimetic, statmatch, spectral-only and recipe all sit below it); `dirs_only` keeps
+  3.3× / 3.1× under AdamW and 1.4× / 1.5× under Muon (above the 1.2× line, so the
+  bet is not labelled AdamW-only). The token-equivalent multiplier is refused at the
+  pre-registered RMSE tolerance on every seed (eval noise), by design.
+- **W3** — landed; RESULTS §20, `docs/CROSS-SIZE.md`. Success criterion FAILS on
+  width (1.0×); passes on heads (3.7×) and head-dim (1.28×); Weight Selection wins the
+  width cell at 4.0×. Preprint draft narrowed accordingly, not posted.
+- **W6.2 lineage** — RESULTS §22 (enwik8; modern-web and unrelated-teacher runs pending).
+- **W5** — run 1 void (above); run 2 landed on seeds 1337–1338 at the time of writing,
+  RESULTS §21 carries the verdict when seed 1339 lands. Note for the record: the
+  pre-registered primary target (baseline-best) is reached AT INIT by every
+  prior-fused arm (the Act-1 dot), so steps-to-target cannot separate them; the
+  secondary readouts (end loss; steps to `dirs_only`-best as a post-hoc, labelled
+  target) carry the comparison.
+- **W1 facts, W4 10× wave** — pending at the time of writing.
+
 ## Status update (2026-07-27): the modern-web probe ran — read it first
 
 [RESULTS §11](../RESULTS.md): byte-level FineWeb-Edu bench (`data/modernweb/`,
