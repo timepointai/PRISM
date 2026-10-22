@@ -276,7 +276,7 @@ so the budget can stop it at any point. Under the W4 cap of $100.
 - **W6.2 lineage** — RESULTS §22 (enwik8; modern-web and unrelated-teacher runs pending).
 - **W5** — run 1 void (above); run 2 landed on seeds 1337–1338 at the time of writing,
   RESULTS §21 carries the verdict when seed 1339 lands. Note for the record: the
-  pre-registered primary target (baseline-best) is reached AT INIT by every
+  pre-registered primary target (baseline-best) sits above the step-0 loss of every
   prior-fused arm (the Act-1 dot), so steps-to-target cannot separate them; the
   secondary readouts (end loss; steps to `dirs_only`-best as a post-hoc, labelled
   target) carry the comparison.
