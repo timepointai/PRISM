@@ -112,6 +112,35 @@ and the teacher's compute stated (6·N·D; for GPT-2, "donor = public weights").
 - Tier A: cases 1–4 at probe scale (~$11 total, table in W3-NOTES). Tier B
   (prepared, not launched): Pythia-1B/2.8B → 160M/410M on the W2b NeoX harness.
 
+## Results (2026-10-22; RESULTS §20; artifacts in `results/`)
+
+| case | teacher → student | steps-to-target vs scratch (median, range, seeds reached) | best loss (method vs scratch) | step-100 loss | artifact |
+|---|---|---|---|---|---|
+| 1 width | 12L/768/12h → 6L/384/6h | **1.0× (1/3 reached)** | 1.4924 vs 1.4892 | 2.25 vs 2.55 | `dirs_only_20261022T035754Z` |
+| 2 heads | 6L/384/12h → 6L/384/6h | **3.7× (2.9–3.9), 3/3** | 1.3827 vs 1.4892 | 1.78 vs 2.55 | `dirs_only_20261022T040349Z` |
+| 3 head-dim | 6L/384/6h → 6L/192/6h | **1.28× (1.24–1.34), 3/3** | 1.5855 vs 1.6384 | 2.52 vs 2.60 | `dirs_only_20261022T040448Z` |
+| 4 GPT-2 | GPT-2 124M → 6L/384/6h (internal matrices) | **1.0× (1/3)** | 1.4900 vs 1.4892 | 2.57 vs 2.55 | `dirs_only_20261022T043832Z` |
+| 4 FRONT | GPT-2 → same student (3D-DCT truncation, r=1) | never | 2.078 vs 1.4892 | 2.64 vs 2.55 | `init_state_20261022T041102Z` |
+| ref | same-size dirs_only (Run R) | 3.3× (2.9–3.9) | 1.3794 vs 1.4892 | — | `dirs_only_20260727T154359Z` |
+
+**Verdict against the pre-registration: FAIL on case 1, PASS on case 3.** The
+width projection buys a real early head start (−0.31 nats at step 100, every seed)
+that the student gives back by the horizon; the GPT-2 projection does nothing;
+FRONT's truncated GPT-2 weights are far below scratch. The two cells that transfer
+are the head cells: halving the head count at fixed width recovers the full
+same-size effect (3.7× vs 3.3×; 112% of the reference), and halving the head
+dimension gives 1.28× in every seed — CrossGMN's reported failure cell (0.74×,
+reported by arXiv 2610.01649 at ~210k params, different task).
+
+The overlap traces show the operator imposed the directions in every case
+(step-0 overlap with the projected reference 0.58–0.93 against chance ≈ 0.03) and
+that the student *keeps* them only in the head cases (case 2 FFN-up overlap rises
+from 0.65 to 0.81 during training; cases 1 and 4 decay to 0.16 and 0.07). The
+transplant works; the residual-coordinate map across widths does not carry
+useful geometry at this scale. Weight-Selection baselines for cases 1–3 are
+running; Procrustes and mimetic are prepared. Honest bounds: probe scale, one
+corpus, one calibration slice, uniform depth selection only, no μP arm run yet.
+
 ## Deliverables
 
 - `RESULTS.md` §20 (verdict in the title), `docs/CROSS-SIZE.md` (this file,

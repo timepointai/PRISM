@@ -27,8 +27,14 @@ head count, head dimension — where learned cross-architecture operators fail �
 and GPT-2 124M into a 10.65M byte-level model) against scratch, Weight
 Selection, FRONT's frequency-domain operator and mimetic initialization, with
 steps-to-target, token-equivalent multipliers and subspace-overlap traces.
-[RESULTS: TODO — fill from `results/dirs_only_*` / `results/init_state_*` /
-`results/mimetic_*` artifacts of the W3 launches.]
+At 10.65M parameters on byte-level web text (3 seeds): projecting a 12-head
+teacher onto a 6-head student keeps the full same-size effect (3.7× to the
+scratch baseline's best loss, −0.11 nats at the end), and halving the head
+dimension gives 1.28× in every seed — the cell where the learned CrossGMN
+operator reports 0.74×. Projecting across width (768 → 384) or from GPT-2 124M
+buys an early head start that is gone by the horizon (1.0×); FRONT's truncated
+GPT-2 weights trail scratch by 0.59 nats. The pre-registered width criterion
+(≥ 1.5×) therefore fails and the head criteria pass.
 
 ## 1. Introduction
 
@@ -52,7 +58,7 @@ steps-to-target, token-equivalent multipliers and subspace-overlap traces.
   the head-dimension case where the learned operator fails; (iii) the
   same-rig comparison against index-space transfer (Weight Selection, FRONT)
   and analytic init (mimetic), none of which had been run against an SVD-space
-  method. [TODO: state the headline number once measured.]
+  method. The headline number is the head-count cell: 3.7× (2.9–3.9) against scratch, and the width cell is a reported null.
 
 ## 2. Method
 
@@ -115,18 +121,25 @@ fitted baseline curve (refused when the fit RMSE exceeds 0.01), subspace-overlap
 traces of the student's top-16 directions against the projected teacher
 directions, donor compute (6·N·D).
 
-### 3.1 Results — TODO
-| case | method | prism_score (median, range) | end gap | token-equiv. ×  | artifact |
+### 3.1 Results (3 seeds each; medians, ranges)
+| case | method | prism_score (median, range; seeds reached) | best loss vs scratch | step-100 loss vs scratch | artifact |
 |---|---|---|---|---|---|
-| 1 | xsize (pca) | TODO | TODO | TODO | `results/dirs_only_<stamp>.json` |
-| 1 | xsize (procrustes) | TODO | | | |
-| 1 | weight selection | TODO | | | `results/init_state_<stamp>.json` |
-| 1 | FRONT | TODO | | | |
-| 1 | mimetic | TODO | | | `results/mimetic_<stamp>.json` |
-| 2 | … | | | | |
-| 3 | … | | | | |
-| 4 | xsize (pca, GPT-2) | TODO | | | |
-| ref | same-size dirs_only | 3.3× (2.9–3.9) | −0.110 nats | — | `dirs_only_20260727T154359Z.json` |
+| 1 | xsize (pca), 12L/768/12h → 6L/384/6h | 1.0× (1/3) | 1.4924 vs 1.4892 | 2.25 vs 2.55 | `results/dirs_only_20261022T035754Z.json` |
+| 1 | xsize (procrustes) | prepared, not run | | | |
+| 1 | weight selection | running | | | |
+| 1 | FRONT | prepared | | | |
+| 1 | mimetic | prepared | | | |
+| 2 | xsize (pca), heads 12 → 6 at width 384 | **3.7× (2.9–3.9; 3/3)** | **1.3827 vs 1.4892** | 1.78 vs 2.55 | `results/dirs_only_20261022T040349Z.json` |
+| 3 | xsize (pca), head-dim 64 → 32 (6L/384/6h → 6L/192/6h) | **1.28× (1.24–1.34; 3/3)** | 1.5855 vs 1.6384 | 2.52 vs 2.60 | `results/dirs_only_20261022T040448Z.json` |
+| 4 | xsize (pca, GPT-2 124M → bytes, internal matrices) | 1.0× (1/3) | 1.4900 vs 1.4892 | 2.57 vs 2.55 | `results/dirs_only_20261022T043832Z.json` |
+| 4 | FRONT (GPT-2, r = 1.0) | never reaches scratch-best | 2.078 vs 1.4892 | 2.64 vs 2.55 | `results/init_state_20261022T041102Z.json` |
+| ref | same-size dirs_only | 3.3× (2.9–3.9) | 1.3794 vs 1.4892 | — | `results/dirs_only_20260727T154359Z.json` |
+
+Subspace-overlap traces (top-16, mean cos², chance ≈ 0.03): at step 0 the
+students carry the projected directions in every case (0.58–0.93); in case 2 the
+FFN-up overlap rises during training (0.65 → 0.81), in cases 1 and 4 it decays to
+0.16 and 0.07. The transplant is faithful; the width map is not useful at this
+scale.
 
 Pre-registered success: ≥1.5× on case 1 and >1× on case 3, in 3/3 seeds.
 
