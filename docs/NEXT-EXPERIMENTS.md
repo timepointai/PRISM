@@ -39,6 +39,68 @@ consequence of that.
 - Ritual before any GPU: `cd src && python prism_selftest.py` (offline, ~1 min) then a
   tiny `--device=cpu` smoke of your driver → a conforming artifact. Then Modal.
 
+## Status update (2026-10-21): the alpha-moves session — pre-registrations for W1–W5
+
+The 30-day alpha scan ([`reports/PRISM alpha in recent research.md`](../reports/PRISM%20alpha%20in%20recent%20research.md))
+re-ranked the next moves; [`ALPHA-MOVES-BRIEF.md`](ALPHA-MOVES-BRIEF.md) turns them
+into workstreams and [`ALPHA-MOVES-STATUS.md`](ALPHA-MOVES-STATUS.md) tracks them.
+Nothing below weakens an earlier pre-registration; the core-bet decision rule,
+the three-outcome gates and the two-act framing spec bind unchanged. New
+pre-registrations, each committed before its launch:
+
+### W1 — the injection-dial head-to-head (pre-registered 2026-10-21, before any launch)
+
+**Question.** Does one scalar anchor trace the retention ↔ injection frontier
+better than the methods the field now uses, and do hard-projection methods (SST)
+block injection the way PRISM's strong band does?
+
+**Rigs, unchanged from the committed probes:** facts (`prism_modal_facts.py`
+FLAGS: modern-web base, 2,000 base steps, 1,000 finetune steps, LR 3e-4, eval
+every 25) and catalog (`prism_modal_catalog.py` FLAGS). New `--tag`s; every arm
+forks the same base per seed and differs by one change. Seeds 1337–1339 for
+results; **seed 1336 only for tuning**.
+
+**Arms.** Existing: `plain`, `lowlr_b`, `raw_weak` (0.0025), `raw_mid` (0.01),
+`raw_exffn`, `raw_exattn`. Open cells: `raw_0035`, `raw_005`, `lowlr_weak`.
+PRISM variants: `raw_weak_exemb`, `raw_weak_rows_absent`, `raw_weak_adamreset`,
+`raw_weak_adamlerp`, `plain_adamreset`, `raw_aniso`. Controls/competitors
+(re-implementations, `src/prism_baselines.py`, deviations listed there):
+`out_eps` (ε=1e-4 on the tied embedding, fixed per the paper), `sst`,
+`sst_paper` (r=0.99, R100 — the paper's default), `rpsft`, `ewc`, `lora_r4`,
+`lora_r16`, `selfdistill`.
+
+**Tuning parity (criterion written before looking).** Each tunable method gets
+exactly three settings on seed 1336 (`*_t1..t3` arms; LoRA tunes its LR; the
+anisotropic anchor tunes (k, s_top, s_rest)). **Chosen setting = the lowest
+forgetting among settings with seen-recall ≥ 0.90 (the parity band plain and
+raw_weak occupy); if none reaches 0.90, the highest seen-recall; ties → lower
+forgetting.** The same rule on both rigs independently. The chosen settings are
+written into `ARM_SPECS` before the 3-seed launch and recorded in the artifact.
+
+**Metrics.** Forgetting (old-domain val climb), recall seen / unseen / v2
+paraphrases (`data/facts/recall_prompts_v2.tsv`, 3 never-trained templates),
+new-domain val loss, the adaptation-censored guard, per-step wall-clock vs
+`plain` (`[timing]` line), and (facts rig) the `[overlap]` subspace traces.
+Primary display: seen-recall vs forgetting, every arm, both rigs.
+
+**Pre-registered readouts.**
+1. SST (paper default r=0.99): *blocks* if median seen recall is within 10
+   points of `raw_mid`'s; *injects at parity* if within 10 points of `plain`'s.
+   Unseen-phrasing recall is secondary (its seed variance is high).
+2. An arm "beats raw_weak" only if it has BOTH lower forgetting AND higher
+   seen recall in **3 of 3 seeds** (per-seed, same base).
+3. `raw_weak_exemb`, `raw_weak_rows_absent`, `raw_weak_adamreset`,
+   `raw_weak_adamlerp` change forgetting by ≥ 20% (median, vs raw_weak) →
+   part of the retention is not directional; < 20% → it is.
+
+**What changes which claim.** If any competitor beats raw_weak under rule 2 on
+*both* rigs, README Finding 7 drops "the dial traces the frontier" and Honest
+bounds names the winner. If SST injects at parity under rule 1, the brief's
+differentiating hypothesis (projection blocks injection) is refuted and said so.
+
+**Cost.** Tuning: ~2 × 25 arm-runs on seed 1336 (~1.9 L4-h each rig ≈ $3).
+Results: ~2 × 22 arms × 3 seeds (~5.6 L4-h each rig ≈ $9). Tier A.
+
 ## Status update (2026-07-27): the modern-web probe ran — read it first
 
 [RESULTS §11](../RESULTS.md): byte-level FineWeb-Edu bench (`data/modernweb/`,
