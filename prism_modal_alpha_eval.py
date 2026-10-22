@@ -29,7 +29,7 @@ image = (
 WORK = "/work"
 REPO = f"{WORK}/nanogpt-prism"
 REPO_URL = "https://github.com/timepointai/PRISM.git"
-SLOTS = ["a", "b", "c", "d", "e", "f"]
+SLOTS = ["a", "b", "c", "d", "e", "f", "g", "h"]
 VOLS = {s: modal.Volume.from_name(f"prism-alpha-ev-{s}", create_if_missing=True) for s in SLOTS}
 SEC_PER_STEP = 0.27          # measured: 10.65M model, batch 64×256, dense eval, L4
 L4_USD_PER_H = 0.80
@@ -107,7 +107,17 @@ def run_slot_f(branch: str, script: str, flags: str):
     _run(VOLS["f"], branch, script, flags)
 
 
-FNS = {"a": run_slot_a, "b": run_slot_b, "c": run_slot_c, "d": run_slot_d, "e": run_slot_e, "f": run_slot_f}
+@app.function(image=image, gpu="L4", volumes={WORK: VOLS["g"]}, timeout=24 * 3600)
+def run_slot_g(branch: str, script: str, flags: str):
+    _run(VOLS["g"], branch, script, flags)
+
+
+@app.function(image=image, gpu="L4", volumes={WORK: VOLS["h"]}, timeout=24 * 3600)
+def run_slot_h(branch: str, script: str, flags: str):
+    _run(VOLS["h"], branch, script, flags)
+
+
+FNS = {"a": run_slot_a, "b": run_slot_b, "c": run_slot_c, "d": run_slot_d, "e": run_slot_e, "f": run_slot_f, "g": run_slot_g, "h": run_slot_h}
 
 
 @app.local_entrypoint()
