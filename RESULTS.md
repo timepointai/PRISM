@@ -49,6 +49,9 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | AI | **Cross-size case 4 (§20)**: GPT-2 124M → byte student — null | [`dirs_only_20261022T043832Z.json`](results/dirs_only_20261022T043832Z.json) |
 | AJ | **FRONT from GPT-2 (§20)**: our re-implementation — far below scratch | [`init_state_20261022T041102Z.json`](results/init_state_20261022T041102Z.json) |
 | AK | **Weight Selection, case 1 (§20)**: 768→384 by index selection — 4.0×, beats the projection | [`init_state_20261022T170647Z.json`](results/init_state_20261022T170647Z.json) |
+| AN | **W1 facts rig (§18)**: 23 arms × seeds 1337–1338 (partial) | [`finetune_20261022T143128Z.json`](results/finetune_20261022T143128Z.json) |
+| AO | **W5 run 2 (§21)**: 8 arms × seeds 1337–1338 (partial) | [`prior_20261022T170423Z.json`](results/prior_20261022T170423Z.json) |
+| AP | **W4 GRPO probe (§23)**: β0 / KL 0.04 / anchor, recycle:4, seed 1337 | [`rl_*_recycle4_s1337_w4_*.json`](results/) |
 | AM | **Lineage decay (§22)**: PRISM vs baseline students traced against the teacher's directions, enwik8 | [`dirs_only_20261022T172455Z.json`](results/dirs_only_20261022T172455Z.json) |
 | AL | **W2a controls (§19)**: dirs_only / dirs_pure / recipe / spectral_only / mimetic / statmatch vs the tuned baseline; Muon arms | [`*_20261022T15*`, `*_20261022T16*`, `*_20261022T17*`](results/) |
 | — | **W5 run 1 (§21) — VOID** (gather off-by-one; kept as a record) | [`prior_20261022T035740Z.json`](results/prior_20261022T035740Z.json) |
@@ -585,7 +588,7 @@ and this gate result is what authorizes spending on it (needs the sparse
 gather + block-edge backoff in `train.py`'s `_prior_logp`, then
 `prism_prior_eval` arms on enwik8).
 
-## 18. The injection-dial head-to-head (Runs AB–AE) — catalog rig landed; facts rig pending
+## 18. The injection-dial head-to-head (Runs AB–AE, AN) — catalog rig landed; facts rig on 2 of 3 seeds
 
 *Alpha-moves W1 ([`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md) pre-registration
 of 2026-10-21). Competitors are our re-implementations (`src/prism_baselines.py`,
@@ -650,9 +653,53 @@ hurts injection (58%) and is dominated by the anchor alone; RP-SFT at the one
 setting that injects forgets like plain; LoRA r=16 learns the task but forgets
 *more* than full finetuning at this LR.
 
-**Facts rig, 3 seeds:** running at the time of writing (`finetune_*_w1` on
-volume `prism-alpha-a`); this section is completed when it lands. Verdicts above
-are catalog-only until then.
+**Facts rig, seeds 1337–1338 complete, seed 1339 at 19 of 24 arms when the Modal
+workspace hit its spend limit** ([`finetune_20261022T143128Z.json`](results/finetune_20261022T143128Z.json),
+`partial: true`; 120 synthetic facts, 2,000 + 1,000 steps; forgetting = modernweb val
+climb; seen = the trained template, held-out = the v1 held-out template, v2a/b/c = three
+further held-out paraphrase templates per fact, never trained; medians of 2):
+
+| arm | forgetting ↓ | ×less than plain | seen ↑ | held-out ↑ | v2a ↑ | step time vs plain |
+|---|---|---|---|---|---|---|
+| plain | 3.38 | 1.0× | 100% | 41% | 61% | 1.00 |
+| **weak anchor 0.0025** | **1.10** | **3.1×** | 98% | **90%** | **79%** | 1.06 |
+| mid anchor 0.01 | 0.52 | 6.6× | 4% | 3% | 0% | 1.06 |
+| anisotropic anchor (t2) | 1.90 | 1.8× | 100% | 75% | **98%** | 1.14 |
+| SST (tuned, r 0.99) | 1.51 | 2.3× | **5%** | 3% | 3% | 1.06 |
+| SST (paper default) | 1.58 | 2.2× | 3% | 2% | 1% | 1.06 |
+| RP-SFT (t2) | 2.60 | 1.4× | 100% | 67% | 69% | 1.03 |
+| EWC (t1) | 0.74 | 5.1× | 8% | 2% | 2% | 1.01 |
+| LoRA r=4 (t3) | 2.84 | 1.2× | 20% | 7% | 6% | 1.36 |
+| LoRA r=16 (t3) | 4.18 | 0.8× | 100% | 79% | 75% | 1.43 |
+| self-distillation (t2) | 0.57 | 6.2× | 100% | 25% | 33% | 1.06 |
+| Adam-ε control (out_eps) | 3.34 | 1.0× | 100% | 41% | 67% | 1.01 |
+| weak anchor, embedding excluded | 1.33 | 2.6× | 98% | 88% | 74% | 1.06 |
+| weak anchor, absent rows only | 1.29 | 2.7× | 98% | 87% | 76% | 1.06 |
+| weak anchor + Adam reset | 1.15 | 2.9× | 99% | 88% | 43% | 1.07 |
+| plain + Adam reset | 3.42 | 1.0× | 100% | 31% | 44% | 1.00 |
+
+**Readouts against the pre-registered rules (2 of 3 seeds, so none is a verdict yet):**
+
+1. **SST blocks injection on the facts rig too** (seen recall 5% and 3%, within 10 points
+   of the mid anchor's 4%, both seeds). EWC and LoRA r=4 block as well. Same picture as
+   the catalog rig.
+2. **Self-distillation does NOT beat the weak anchor on this rig.** It wins forgetting
+   (0.57 vs 1.10) and ties on the trained template (100% vs 98%), but its held-out
+   recall is 25% against the anchor's 90% and its v2 paraphrase recall 33% against 79%.
+   It memorises the training phrasing. The catalog verdict (self-distillation wins both
+   axes) therefore does not transfer to facts; the two rigs disagree, which is the
+   honest state of the head-to-head.
+3. **The weak anchor more than doubles held-out recall over plain finetuning** (90% vs
+   41%; 79% vs 61% on the never-trained v2a templates), in both seeds. This was not a
+   pre-registered axis; it is reported as an observation. The anisotropic anchor pushes
+   v2a to 98% at the cost of forgetting 1.8× instead of 3.1× less.
+4. **Directionality controls:** excluding the embedding changes forgetting by +20.3%
+   (on the 20% bar exactly; the third seed decides), absent-row anchoring +17%, Adam
+   reset +4%, Adam-moment lerp −4%; the Adam-ε control is 1.0× again. Adam reset
+   alone does not touch forgetting but drops v2a recall (44% vs 61%).
+
+The remaining five arms of seed 1339 are banked up to `rpsft` on volume `prism-alpha-a`;
+relaunching the same command completes the artifact for about one L4-hour.
 
 ## 19. Hardened controls for the core bet (W2a): the geometry survives a tuned baseline under AdamW; under Muon the multiplier shrinks to 1.4×
 
@@ -774,18 +821,58 @@ Procrustes and Weight-Selection baselines for cases 1–3 are running as this is
 written). The draft preprint in `docs/preprint/` is NOT to be posted; it will
 be revised to lead with the head/head-dim result and the width null.
 
-## 21. Prior fusion against the COUNT control (W5) — run 1 void, run 2 running
+## 21. Prior fusion against the COUNT control (W5) — run 1 void; run 2 on 2 of 3 seeds
 
 [`prior_20261022T035740Z.json`](results/prior_20261022T035740Z.json) is kept as a
 record and is **void**: its own kill condition fired (`prior` never reached
 baseline-best; its step-0 loss sat above uniform). The cause was an off-by-one in
 the sparse prior's in-window gather, which fed the logits a confident prediction
 of the *current* byte (details in [`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md),
-W5 block). Fixed and selftested; the identical run is repeating under tag `w5b`.
-No claim is drawn from the void run beyond the two readouts that do not depend on
-the fusion path: the standalone sparse prior reproduces Act 1 (1.927 bpb on the
-student's slot vs 1.906 on the full training bytes), and `dirs_only` reproduces §14
-on this rig (4.2× to baseline-best, 1.90 bpb).
+W5 block). Fixed and selftested; the identical run repeated under tag `w5b`.
+
+**Run 2** ([`prior_20261022T170423Z.json`](results/prior_20261022T170423Z.json),
+`partial: true`, seeds 1337–1338; seed 1339 did not start before the workspace spend
+limit). enwik8, exact context-6 sparse prior (standalone 1.927 bpb on the student's
+slot), 2,000-step teacher, 1,500-step students, eval every 10; medians of 2:
+
+| arm | init loss | best loss (nats) | best bpb | steps to baseline-best | steps to `dirs_only`-best |
+|---|---|---|---|---|---|
+| baseline | 5.65 | 1.5103 | 2.179 | 1,490 / 1,500 | never |
+| dirs_only | 4.21 | 1.3173 | 1.900 | 370 / 360 (**4.2×**) | 1,490 / 1,480 |
+| prior (train-time fusion) | **1.40** | 1.2904 | 1.862 | 0 (at init) | 470 / 410 |
+| **dirs_prior** | 1.42 | **1.2736** | **1.837** | 0 (at init) | **80 / 60** |
+| baseline + prior at inference only | 1.40 | 1.4015 | 2.022 | 0 (at init) | never |
+| dirs_only + prior at inference only | 1.42 | 1.4114 | 2.036 | 0 (at init) | never |
+| COUNT embedding | 4.62 | 1.3957 | 2.014 | 370 / 360 (4.2×) | never |
+| COUNT embedding + dirs | 4.66 | 1.3915 | 2.008 | 300 / 260 (5.8×) | never |
+
+**Readouts (2 of 3 seeds; the pre-registered rules need 3/3):**
+
+1. **The pre-registered primary target is degenerate here.** Every arm that fuses the
+   prior starts at 1.40 nats, below the baseline's best at step 1,500 — the Act-1 dot
+   again, now on enwik8 with an exact prior. Steps-to-baseline-best is 0 for all of
+   them and cannot rank them. The table therefore also reports steps to
+   `dirs_only`-best, a post-hoc target chosen after the fact and labelled as such.
+2. **Train-time fusion beats inference-only fusion in both seeds**, by 0.11 nats
+   (prior vs baseline + prior at inference) and 0.13–0.15 nats (dirs_prior vs its
+   inference-only twin). The inference-only curves *rise* during training (1.40 → 1.65
+   at step 500 → 1.55 at the end): the plain student learns the n-gram statistics
+   itself and the late fusion double-counts them. Fusing at train time lets the network
+   learn the residual. This is the mechanism claim of `docs/PRIOR-FUSED-PRISM.md`,
+   now with a control.
+3. **Composition saturates.** dirs_prior ends 0.016–0.018 nats below prior alone and
+   0.04–0.05 below dirs_only; in speed to `dirs_only`-best it is 6–7× faster than the
+   prior alone (80 vs 470 steps). The pre-registered composition gate (≥ 1.5× over the
+   stronger single ingredient) passes on the speed reading and fails on the endpoint
+   reading; the 30× of the Shakespeare probe does not reappear as a multiplier of
+   endpoints. The honest summary is "the prior sets the floor, the directions set the
+   speed to it".
+4. **COUNT's input-embedding form is weaker than fusion at this scale.** It speeds the
+   baseline 4.2× (same as directions) but ends 0.08 nats *above* dirs_only, and adding
+   directions to it gains speed (5.8×) at an endpoint still 0.07 nats above dirs_only.
+   Logit-space fusion of the same counts (the `prior` arm) is 0.1 nats better.
+
+Seed 1339 completes this run for about one L4-hour.
 
 ## 22. Lineage decay: how long a student carries its teacher's signature (Run AM)
 
@@ -834,6 +921,36 @@ baseline's plateau or below it, and what counts as "initialization using a pre-t
 model" under the EU GPAI compute-counting guidance are for the user and counsel. The
 modern-web lineage run and the unrelated-teacher control complete this section when
 they land.
+
+## 23. The anchor inside GRPO: a probe in TRL's default regime (W4, single seed)
+
+*Alpha-moves W4. Qwen2.5-0.5B-Instruct, TRL 1.16 `GRPOTrainer` on GSM8K, 300 optimizer
+steps, seed 1337, A100-40GB; `src/prism_rl_anchor.py` is the callback (W₀ captured at
+`on_train_begin`, lerp at `on_optimizer_step`), `src/prism_rl_pilot.py` the driver.
+Pre-registered 2026-10-21 with the single-seed status stated in advance: a probe, not a
+result. The amended 10× learning-rate wave (six arms) was launched and killed by the
+workspace spend limit before any arm finished; it is not reported.*
+
+| arm (recycle:4 — each batch of rollouts reused four times) | GSM8K before → after | KL to the start policy | relative weight drift | step time | drift-control cost per step |
+|---|---|---|---|---|---|
+| β = 0 (TRL default; no reference model) | 23.3% → 23.3% | 0.006 | 4.4e-5 | 7.3 s | 0 |
+| KL penalty β = 0.04 (reference forward) | 23.3% → 26.0% | 0.005 | 4.3e-5 | 10.9 s | **+3.6 s (33%)** |
+| anchor s = 0.0025 (lerp, no reference) | 23.3% → 24.3% | 0.007 | 4.8e-5 | 8.4 s | **7 ms (0.1%)** |
+
+[`rl_beta0_recycle4_s1337_w4_20261022T161944Z.json`](results/rl_beta0_recycle4_s1337_w4_20261022T161944Z.json),
+[`rl_kl_recycle4_s1337_w4_20261022T161954Z.json`](results/rl_kl_recycle4_s1337_w4_20261022T161954Z.json),
+[`rl_anchor_recycle4_s1337_w4_20261022T171645Z.json`](results/rl_anchor_recycle4_s1337_w4_20261022T171645Z.json).
+
+**Reading.** At TRL's default learning rate (1e-6) the policy does not move in 300
+steps even when rollouts are recycled four times: KL to the start policy is below
+0.01 and the weights drift by a few parts in 10⁵ in every arm, so there is nothing for
+either drift control to control, and the 2.7-point GSM8K spread is within the noise of
+a 300-problem evaluation. The one number that *is* measured cleanly is cost: the
+reference-model forward that the KL penalty needs adds a third to each step; the
+anchor adds 7 ms. The pre-registered honest verdict for this regime is "low need":
+the anchor's case rests on regimes that drift (higher LR, stale or long off-policy
+runs, zero-RL fine-tuning), and those arms did not complete. No retention claim is
+made for RL from this probe.
 
 ## What this does NOT establish
 

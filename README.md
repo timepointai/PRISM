@@ -638,9 +638,14 @@ a standalone, self-contained page served from GitHub Pages; source:
   (modern web) and 3.1× (enwik8); with Muon on both arms the ratio is 1.4× / 1.5×,
   above the pre-registered 1.2× line but a different claim. The imprint is worth
   3.3× vs 2.45× (directions-only).
-- **Prior fusion is unre-earned.** The W5 control run was voided by its own kill
-  rule (a gather off-by-one in the sparse prior); the repeat is running (§21). Until
-  it lands, the 30× stays a single-seed Shakespeare probe and nothing more.
+- **Prior fusion is half re-earned (§21, 2 of 3 seeds).** The W5 control run was
+  voided by its own kill rule (a gather off-by-one in the sparse prior); the fixed
+  repeat shows, on enwik8 with an exact context-6 prior, that fusing the prior at
+  train time ends 0.11 nats below fusing it at inference only (whose curve *rises*
+  during training), and that directions + prior reach `dirs_only`'s best in 60–80
+  steps instead of 1,480 but end only 0.016 nats below the prior alone. The prior
+  sets the floor; the directions set the speed to it. The 30× of the Shakespeare
+  probe is a speed-to-a-low-target number, not an endpoint multiplier.
 
 ## Reproduce it
 
