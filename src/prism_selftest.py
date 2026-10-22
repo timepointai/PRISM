@@ -556,6 +556,110 @@ check('amplification √d·LayerNorm gives every input position norm ≈ d (para
 _l1, _loss1 = _c1(_xx, _xx); _loss1.backward()
 check('count arm: finite loss, gradient reaches the tied unembedding through f_t',
       bool(torch.isfinite(_loss1)) and float(_c1.transformer.wte.weight.grad.abs().sum()) > 0)
+# alpha-moves W3 — cross-size SVD projection and the baseline init builders
+# ══════════════════════════════════════════════════════════════════════════
+from prism_crosssize import (teacher_from_model, project_teacher, write_fingerprint, weight_selection,
+                             front, select_layers, pca_axes, procrustes, _uniform_idx, project_layer,
+                             collect_activations)
+
+print('prism_crosssize (cross-size projection):')
+xt_conf = GPTConfig(n_layer=4, n_head=4, n_embd=64, block_size=32, vocab_size=65, dropout=0.0, bias=False)
+torch.manual_seed(11)
+xT = GPT(xt_conf).eval()
+with torch.no_grad():
+    for p_ in xT.parameters():
+        if p_.dim() >= 2:
+            p_.mul_(3.0)
+xteacher = teacher_from_model(xT, 'selftest-teacher')
+xbatches = [torch.randint(0, 65, (4, 32)) for _ in range(3)]
+with contextlib.redirect_stdout(io.StringIO()):
+    same, info_same = project_teacher(xteacher, xt_conf, xbatches)
+tp = dict(xT.named_parameters())
+ok = True
+for nm_ in ['transformer.h.1.mlp.c_fc.weight', 'transformer.h.2.mlp.c_proj.weight', 'transformer.wte.weight']:
+    Ut = torch.linalg.svd(tp[nm_].data.float(), full_matrices=False)[0][:, :16]
+    Up = torch.linalg.svd(same[nm_], full_matrices=False)[0][:, :16]
+    ok = ok and subspace_alignment(Ut, Up) > 0.999
+check('same-size PCA projection reproduces the teacher directions (MLP, embeddings)', ok)
+# attention: the per-head circuit products are reproduced at equal size
+d_ = 64; hd_ = 16
+W_t = tp['transformer.h.0.attn.c_attn.weight'].data; Wo_t = tp['transformer.h.0.attn.c_proj.weight'].data
+W_s = same['transformer.h.0.attn.c_attn.weight']; Wo_s = same['transformer.h.0.attn.c_proj.weight']
+circ_ok = True
+for h_ in range(4):
+    sl_ = slice(h_ * hd_, (h_ + 1) * hd_)
+    Mt = W_t[0:d_][sl_].T @ W_t[d_:2 * d_][sl_]; Ms = W_s[0:d_][sl_].T @ W_s[d_:2 * d_][sl_]
+    Ot = W_t[2 * d_:][sl_].T @ Wo_t[:, sl_].T; Os = W_s[2 * d_:][sl_].T @ Wo_s[:, sl_].T
+    circ_ok = circ_ok and torch.allclose(Mt, Ms, atol=1e-3 * Mt.abs().max()) and torch.allclose(Ot, Os, atol=1e-3 * Ot.abs().max())
+check('same-size projection preserves every head\'s QK and OV circuit product', circ_ok)
+xs_conf = GPTConfig(n_layer=2, n_head=2, n_embd=32, block_size=32, vocab_size=65, dropout=0.0, bias=False)
+with contextlib.redirect_stdout(io.StringIO()):
+    small, info_small = project_teacher(xteacher, xs_conf, xbatches)
+check('projected matrices have the student shapes',
+      small['transformer.h.0.attn.c_attn.weight'].shape == (96, 32)
+      and small['transformer.h.1.mlp.c_fc.weight'].shape == (128, 32)
+      and small['transformer.h.1.mlp.c_proj.weight'].shape == (32, 128)
+      and small['transformer.wte.weight'].shape == (65, 32))
+check('head selection keeps exactly the student head count, from the teacher heads',
+      all(len(h) == 2 and all(0 <= i < 4 for i in h) for h in info_small['heads_kept_per_layer']))
+check('uniform layer selection 4→2 picks layers [0, 2]', info_small['layer_groups'] == [[0], [2]]
+      and select_layers(12, 6) == [[i] for i in range(0, 12, 2)] and select_layers(4, 2, 'average') == [[0, 1], [2, 3]])
+fp_dir = os.path.join(tmp, 'xsize_fp')
+with contextlib.redirect_stdout(io.StringIO()):
+    write_fingerprint(small, xteacher, fp_dir, info_small)
+dirs_ = torch.load(os.path.join(fp_dir, 'directions.pt'), weights_only=False)
+check('fingerprint directions are orthonormal in student shapes',
+      all(orthonormal_cols(d_['U']) and orthonormal_cols(d_['Vt'].T) for d_ in dirs_.values())
+      and dirs_['transformer.h.0.attn.c_attn.weight']['shape'] == [96, 32])
+sp_ = json.load(open(os.path.join(fp_dir, 'spectra.json')))
+check('fingerprint spectra cover all five groups with 8 DCT coefficients',
+      set(sp_) == {'attention', 'attn_proj', 'ffn_up', 'ffn_down', 'embedding'} and all(len(v) == 8 for v in sp_.values()))
+xS = GPT(xs_conf)
+with contextlib.redirect_stdout(io.StringIO()):
+    n_ = apply_prism(xS, align_strength=0.75, spectra_path=os.path.join(fp_dir, 'spectra.json'),
+                     directions_path=os.path.join(fp_dir, 'directions.pt'), verbose=False)
+check('apply_prism consumes the cross-size fingerprint (all 10 student matrices shaped, finite)',
+      n_ == 10 and all(torch.isfinite(p_).all() for p_ in xS.parameters()))
+with contextlib.redirect_stdout(io.StringIO()):
+    proc, info_proc = project_teacher(xteacher, xs_conf, xbatches, align='procrustes')
+check('procrustes alignment runs and reports a relative residual in [0, 2]',
+      0.0 <= info_proc['procrustes_residual'] <= 2.0 and proc['transformer.h.0.mlp.c_fc.weight'].shape == (128, 32))
+A_ = torch.randn(50, 8); R0 = torch.linalg.qr(torch.randn(8, 8))[0]
+check('procrustes recovers a known rotation', torch.allclose(procrustes(A_, A_ @ R0), R0, atol=1e-4))
+check('pca_axes returns the identity when no reduction is needed', torch.equal(pca_axes(torch.randn(100, 16), 16)[0], torch.eye(16)))
+# head-dim reduction (case 3 shape): 4 heads at 64 → 4 heads at 32
+xs3 = GPTConfig(n_layer=4, n_head=4, n_embd=32, block_size=32, vocab_size=65, dropout=0.0, bias=False)
+with contextlib.redirect_stdout(io.StringIO()):
+    p3, _ = project_teacher(xteacher, xs3, xbatches)
+check('head-dim reduction keeps all heads at the smaller head dim', p3['transformer.h.3.attn.c_attn.weight'].shape == (96, 32))
+
+print('prism_crosssize (baseline init builders):')
+ws_same = weight_selection(xteacher, xt_conf)
+check('weight selection at equal size copies the teacher exactly',
+      all(torch.equal(ws_same[k_], tp[k_].data) for k_ in ws_same))
+ws = weight_selection(xteacher, xs_conf)
+check('weight selection: student shapes, first-N layers, consistent evenly spaced indices',
+      ws['transformer.h.0.attn.c_attn.weight'].shape == (96, 32) and ws['transformer.h.0.ln_1.weight'].shape == (32,)
+      and torch.equal(ws['transformer.h.1.mlp.c_fc.weight'], tp['transformer.h.1.mlp.c_fc.weight'].data[::2][:, ::2])
+      and list(_uniform_idx(6, 3)) == [0, 2, 4])
+fr_same = front(xteacher, xt_conf)
+check('FRONT at equal size is the identity (orthonormal 3D-DCT round trip)',
+      max((fr_same[k_] - tp[k_].data).abs().max().item() for k_ in fr_same) < 1e-5)
+fr = front(xteacher, xs_conf)
+check('FRONT: student shapes for the four stacked weight types, embeddings left fresh',
+      fr['transformer.h.0.attn.c_attn.weight'].shape == (96, 32) and fr['transformer.h.1.mlp.c_proj.weight'].shape == (32, 128)
+      and 'transformer.wte.weight' not in fr and len(fr) == 8)
+fr_r = front(xteacher, xs_conf, r=0.25)      # r=0.5 would coincide with this 2× shrink's own truncation
+check('FRONT learngene ratio r<1 changes the result (high frequencies masked)',
+      not torch.allclose(fr_r['transformer.h.0.mlp.c_fc.weight'], fr['transformer.h.0.mlp.c_fc.weight']))
+from prism_inits import load_init_state
+sp_path = os.path.join(tmp, 'front_init.pt'); torch.save({'model': fr}, sp_path)
+xS2 = GPT(xs_conf)
+with contextlib.redirect_stdout(io.StringIO()):
+    load_init_state(xS2, sp_path)
+check('train.py init_state loader takes a builder state dict (missing embeddings stay fresh)',
+      torch.equal(dict(xS2.named_parameters())['transformer.h.0.mlp.c_fc.weight'].data, fr['transformer.h.0.mlp.c_fc.weight']))
+
 print(f'\n{len(PASS)} passed, {len(FAIL)} failed')
 if FAIL:
     print('FAILED:', FAIL)
