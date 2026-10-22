@@ -49,6 +49,7 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | AI | **Cross-size case 4 (§20)**: GPT-2 124M → byte student — null | [`dirs_only_20261022T043832Z.json`](results/dirs_only_20261022T043832Z.json) |
 | AJ | **FRONT from GPT-2 (§20)**: our re-implementation — far below scratch | [`init_state_20261022T041102Z.json`](results/init_state_20261022T041102Z.json) |
 | AK | **Weight Selection, case 1 (§20)**: 768→384 by index selection — 4.0×, beats the projection | [`init_state_20261022T170647Z.json`](results/init_state_20261022T170647Z.json) |
+| AM | **Lineage decay (§22)**: PRISM vs baseline students traced against the teacher's directions, enwik8 | [`dirs_only_20261022T172455Z.json`](results/dirs_only_20261022T172455Z.json) |
 | AL | **W2a controls (§19)**: dirs_only / dirs_pure / recipe / spectral_only / mimetic / statmatch vs the tuned baseline; Muon arms | [`*_20261022T15*`, `*_20261022T16*`, `*_20261022T17*`](results/) |
 | — | **W5 run 1 (§21) — VOID** (gather off-by-one; kept as a record) | [`prior_20261022T035740Z.json`](results/prior_20261022T035740Z.json) |
 
@@ -785,6 +786,54 @@ No claim is drawn from the void run beyond the two readouts that do not depend o
 the fusion path: the standalone sparse prior reproduces Act 1 (1.927 bpb on the
 student's slot vs 1.906 on the full training bytes), and `dirs_only` reproduces §14
 on this rig (4.2× to baseline-best, 1.90 bpb).
+
+## 22. Lineage decay: how long a student carries its teacher's signature (Run AM)
+
+*Alpha-moves W6.2. The two metrics of the weight-lineage method of arXiv 2608.07786,
+computed online by `src/prism_track.py` every 25 steps: subspace alignment (here the
+mean squared cosine of the principal angles between a weight group's top-16 singular
+subspaces and the teacher's, averaged over left and right sides; chance = k/d) and the
+spectral-energy "trace" (per-group Frobenius norm, with the teacher's beside it).
+enwik8, tuned-baseline schedule, 3 seeds:
+[`dirs_only_20261022T172455Z.json`](results/dirs_only_20261022T172455Z.json). Both arms
+are traced against the SAME teacher's directions: the PRISM student was initialised
+from them, the baseline student never saw them.*
+
+| group | PRISM student ↔ teacher, steps 0 / 100 / 250 / 500 / 1000 / 1500 | baseline student ↔ same teacher | chance |
+|---|---|---|---|
+| attention | 0.827 / 0.817 / 0.826 / 0.829 / 0.803 / 0.779 | 0.047 / 0.116 / 0.211 / 0.257 / 0.259 / 0.249 | 0.028 |
+| attn_proj | 0.947 / 0.754 / 0.7 / 0.701 / 0.679 / 0.648 | 0.048 / 0.119 / 0.185 / 0.213 / 0.229 / 0.222 | 0.042 |
+| ffn_up | 0.588 / 0.643 / 0.689 / 0.741 / 0.789 / 0.801 | 0.046 / 0.147 / 0.353 / 0.416 / 0.389 / 0.359 | 0.026 |
+| ffn_down | 0.93 / 0.833 / 0.835 / 0.835 / 0.807 / 0.783 | 0.029 / 0.188 / 0.288 / 0.356 / 0.374 / 0.362 | 0.026 |
+| embedding | 0.769 / 0.821 / 0.853 / 0.891 / 0.914 / 0.904 | 0.114 / 0.263 / 0.472 / 0.594 / 0.602 / 0.601 | 0.052 |
+
+**Three readings.**
+
+1. **The transplanted signature decays slowly and never approaches chance.** After
+   1,500 steps (the full probe horizon, 1.4× the teacher's own training in tokens) the
+   PRISM student's attention subspaces still overlap the teacher's at ~0.78 against a
+   chance level of 0.03; the FFN groups at 0.6–0.8. A student initialised this way is
+   trivially identifiable as such by the published lineage detector for the whole of
+   this horizon — the IP question the alpha scan raised is real at probe scale, and
+   the fingerprint is the *directions*, not the 40-number spectrum.
+2. **The baseline student converges toward the teacher's geometry on its own.** From
+   chance (0.03–0.05) it climbs to 0.2–0.3 by step 500 and plateaus — two models trained
+   from different inits on the same data share a quarter of their top-16 subspace. That
+   plateau is the floor any lineage claim must beat, and the PRISM student sits 0.5
+   above it at every step.
+3. **Norms grow toward the teacher's; the student does not shrink back to its init.**
+   Attention Frobenius norm 13.302 → 18.598 (teacher 22.421); the baseline
+   reaches 30.267 by the same step. The trace metric alone would NOT separate the
+   two students (both ascend the same curve); the subspace metric does.
+
+Implications are stated as open questions, not conclusions: whether a PRISM student's
+detectability survives a full training run (ours covers 1,500 steps), whether the
+"unrelated teacher" reference (a run with the enwik8 teacher's directions as the
+reference for modern-web students is in flight on the same volume) sits at the
+baseline's plateau or below it, and what counts as "initialization using a pre-trained
+model" under the EU GPAI compute-counting guidance are for the user and counsel. The
+modern-web lineage run and the unrelated-teacher control complete this section when
+they land.
 
 ## What this does NOT establish
 
