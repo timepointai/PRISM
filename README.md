@@ -621,6 +621,26 @@ a standalone, self-contained page served from GitHub Pages; source:
   the dial's shape between 0.0025 and 0.01 unmapped.
 - **Finetune-retention shows old-domain retention**, not new-domain overfit
   prevention, and trades a little late adaptation for it.
+- **The dial does not own the retention↔injection frontier (2026-10-22, catalog
+  rig, 3 seeds, pre-registered).** A self-distillation baseline (KL to the frozen
+  base, α = 1) beats the weak anchor on *both* axes in 3 of 3 seeds — 7.6× less
+  forgetting than plain at 98% task recall vs the anchor's 3.1× at 93%
+  ([`RESULTS.md`](RESULTS.md) §18). It pays one base forward pass per step, the cost
+  the anchor avoids; the anchor remains the cheapest *weight-space* control, and
+  hard-projection methods (SST, EWC, LoRA r=4) block injection like its strong band.
+  The facts-rig replication is in progress.
+- **Cross-size projection fails across width (pre-registered criterion, §20).**
+  Projecting a 768-wide teacher onto a 384-wide student, or GPT-2 124M onto the
+  byte-level student, gives an early head start and no endpoint gain (1.0×). Only
+  the head cells transfer: head count 12→6 (3.7×) and head dimension 64→32 (1.28×).
+- **Under Muon the init advantage shrinks from 3.3× to 1.4× (§19, interim).**
+  Against a tuned AdamW baseline (LR 2e-3, warmup 300) `dirs_only` keeps 3.3×
+  (modern web) and 3.1× (enwik8); with Muon on both arms the ratio is 1.4× / 1.5×,
+  above the pre-registered 1.2× line but a different claim. The imprint is worth
+  3.3× vs 2.45× (directions-only).
+- **Prior fusion is unre-earned.** The W5 control run was voided by its own kill
+  rule (a gather off-by-one in the sparse prior); the repeat is running (§21). Until
+  it lands, the 30× stays a single-seed Shakespeare probe and nothing more.
 
 ## Reproduce it
 
@@ -661,21 +681,26 @@ regardless of how good this page looks.
 The ranked, run-command-ready list lives in
 [`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md). Highlights:
 
-1. **Cross-size directional projection** — with the spectrum priced as
-   universal-but-weak and analytic directions refuted, the universal init
-   worth building projects a *large trained model's* subspaces down to a
-   small one. The most differentiated payoff on the board.
-2. **The dial's production test** — the weight-space anchor as a
-   zero-forward-pass alternative to KL-to-reference in RL post-training
-   (specced at ~$500 on a 9B with prime-rl), plus the low-LR × weak-anchor
-   combination cell.
-3. **The reach-at-init moonshot** — a context-4+ sparse n-gram prior below
-   baseline at init; the path from the 30× hybrid toward passing the eval
-   before training starts.
-4. **A truly far modality** — the byte-level benches cover code and other
-   languages; find where structural transfer degrades.
-5. **Frontier bookkeeping** — the sub-600-step low end, the wheel 2×2 mirror
-   cell, a second amortization distance, and per-run power metering.
+1. **The Pythia ladder, gated** — the G1 port exists (`src/prism_neox.py`,
+   `src/pythia_train.py`, `prism_modal_pythia.py`): G2 at 70M (~$60–75, kill if
+   < 1.2×) is one command away and needs the user's Tier B authorization
+   ([`docs/ALPHA-MOVES-STATUS.md`](docs/ALPHA-MOVES-STATUS.md)). The
+   same-codebase tuned baseline and the Muon arm now exist at probe scale (§19).
+2. **Cross-size: the head cells** — width projection failed its pre-registered
+   bar (§20); head-count and head-dimension projection passed. The next cell is
+   a μP-native teacher/student pair and per-layer alignment for width, and
+   Pythia-1B → 160M/410M on the NeoX harness (prepared, Tier B).
+3. **The frontier against self-distillation** — self-distillation dominated the
+   weak anchor on the catalog rig (§18); the composition (anchor + self-distillation,
+   or the anisotropic anchor + self-distillation) and the facts-rig replication
+   decide whether the dial survives as a *cheap* point or as a point at all.
+4. **The RL anchor where RL drifts** — the W4 pilot (TRL GRPO, Qwen2.5-0.5B) is
+   running: default-LR arms do not drift at all in 300 steps; the 10× LR wave is
+   the first regime with something to control (§23 when it lands).
+5. **Prior fusion, re-earned or retired** — the voided W5 run is repeating; the
+   decision rule is train-time fusion vs inference-only fusion in 3/3 seeds (§21).
+6. **A truly far modality** and **frontier bookkeeping** (the sub-600-step low
+   end, the wheel 2×2 mirror cell, power metering) — unchanged from before.
 
 ## Repo map
 
