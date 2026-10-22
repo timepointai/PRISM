@@ -10,12 +10,12 @@ This file is the agent's memory: updated after every workstream.*
 | Move | Workstream | Status | Verdict (one sentence) | Artifacts |
 |---|---|---|---|---|
 | — | W0 shared infrastructure | **done** (code), golden check identical, selftest 67/67 | Anchor object, Muon/out_eps/μP optimizer builder, metrics, overlap tracker, recall v2, competitor hooks — all default-off. | — |
-| 1 | W1 injection-dial head-to-head | catalog tuning **done**; catalog 3-seed **running**; facts tuning running | (pending) | `results/finetune_20261022T024927Z.json` (catalog tuning, seed 1336) |
-| 2a | W2a core-bet controls (probe scale) | sweep driver built; sweeps launching | — | — |
-| 2b | W2b Pythia ladder (G1 port, runner) | **built + merged** (prism_neox, pile_mmap, pythia_train, gated runner; 18 selftests); dry run pending; G2+ Tier B | — | — |
-| 3 | W3 cross-size SVD projection | **built + merged** (prism_crosssize, WS/FRONT builders, prism_eval knobs, runner, CROSS-SIZE.md, preprint draft); launching cases 1–4 | — | — |
-| 4 | W4 RL anchor pilot | code built (`prism_rl_anchor.py`, `prism_rl_pilot.py`, `prism_modal_rl.py`); CPU smoke pending (TRL venv installing) | — | — |
-| 5 | W5 sparse prior / COUNT control | **built + merged** (prism_prior 5.93 GB enwik8 c6 tables reproduce Act 1 to 1e-4; COUNT embedding; 8-arm harness); launching | — | — |
+| 1 | W1 injection-dial head-to-head | catalog 3-seed **done** (RESULTS §18); facts 3-seed running | Catalog: SST (paper default) blocks injection like the 0.01 anchor (3%); embedding/Adam controls move forgetting <20% (directional); **self-distillation beats the weak anchor on both axes in 3/3 seeds** — the dial does not own the frontier on this rig. | `finetune_20261022T043049Z.json`; tuning `…T024927Z` (catalog), `…T024917Z` (facts) |
+| 2a | W2a core-bet controls (probe scale) | sweeps **done** (8 artifacts); 3-seed arms landing (RESULTS §19 interim) | Against the tuned baseline (LR 2e-3, warmup 300): dirs_only 3.3× (modernweb) / 3.1× (enwik8) under AdamW — the geometry survives tuning; under Muon the ratio falls to 1.4× / 1.5× (above the 1.2× line, barely); the no-imprint arm keeps 2.45×; statmatch and spectral_only sit below the baseline (1 seed so far). | `sweep_20261022T*`, `dirs_only_20261022T15{3244,3444,3457,3515}Z`, `dirs_pure_20261022T153518Z` |
+| 2b | W2b Pythia ladder (G1 port, runner) | **built + merged**; dry run attempt 1 OOM'd on the L4 at micro-batch 32 (fixed: micro-batch 4 for the dry gate); attempt 2 running; G2+ Tier B (prepared only) | — | — |
+| 3 | W3 cross-size SVD projection | cases 1–4 + FRONT **done** (RESULTS §20); Weight-Selection baselines running; preprint draft NOT posted | **Pre-registered success FAILS on case 1**: width 768→384 gives an early head start (step 100) but no endpoint gain (1.0×, 1/3 seeds); GPT-2→bytes null; FRONT far below scratch. Heads 12→6 transfers fully (3.7×, −0.11 nats) and head-dim 64→32 gives 1.28× in 3/3 (CrossGMN's failure cell). | `dirs_only_20261022T0{35754,40349,40448,43832}Z`, `init_state_20261022T041102Z` |
+| 4 | W4 RL anchor pilot | pre-registered; CPU smoke passed; **6 arms running** on A100-40 (β0 / KL 0.04 / anchor 0.0025 × on-policy / recycle:4) | (pending) | — |
+| 5 | W5 sparse prior / COUNT control | run 1 **VOID** (gather off-by-one: the prior predicted the current byte; kill rule fired as designed); fixed + selftested; run 2 (`w5b`) running | (pending run 2) | `prior_20261022T035740Z.json` (void, kept as record) |
 | 6 | W6 packaging, lineage decay, prior art | `docs/ANCHOR-RECIPES.md` + `examples/` written (verified surfaces per stack); lineage `[trace]` line + `--track_ref` built; README rows pending | — | — |
 | 7 | W7 cheap mechanism probes | not started | — | — |
 
@@ -58,6 +58,21 @@ CPU runs are bit-reproducible here, so the acceptance bar is exact equality.
   has no fast CPU kernels: ~50 s/step for the 10.65M model on this laptop. CPU
   smokes with Muon are therefore slow but correct; GPU is unaffected. Kept the
   torch implementation (the brief's first choice) rather than vendoring one.
+- **D10** W5 run 1 is void by its own pre-registered kill condition (the `prior` arm never
+  reached baseline-best and its step-0 loss sat above uniform). Root cause: the sparse
+  prior's in-window gather built each position's context from the symbols BEFORE it,
+  predicting the current byte. The standalone sequential scorer was correct, which is
+  why the build check passed. Fixed (`prism_prior.py`), three alignment selftests
+  added, identical run relaunched as `w5b`. The void artifact stays committed as a record.
+- **D11** The W2a sweep driver shared one run dir between the 6-point and the 2-point
+  grids, so the second invocation's artifact overwrote the first's; the committed sweep
+  artifacts were reconstructed from the banked stage files (noted inside each).
+- **D12** The seed-1336 tuning showed the committed baseline recipe was already within
+  0.01 nats of its grid's best; the tuned schedule (LR 2e-3, warmup 300) is used for
+  every W2a control arm. statmatch (70 teacher statistics on a random init) is WORSE
+  than the baseline on both corpora at 1 seed; the strongest control is therefore the
+  tuned baseline or small_qk (σ=1e-5 beat it by 0.008 nats on 1336), whose 3-seed run
+  decides the cross-artifact ratio.
 - **D9** W2b/W3/W5 are built by parallel workers in their own worktrees
   (branches `exp/alpha-w2b`, `exp/alpha-w3`, `exp/alpha-w5`, all cut from
   `alpha-moves` at 630f181), prepare-only; every GPU launch goes through me.
