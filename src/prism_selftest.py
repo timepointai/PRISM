@@ -378,6 +378,100 @@ d = donor_adjusted_multiplier(2.0, 1500, teacher_params=1e7, teacher_tokens=2000
 check('donor-adjusted multiplier: 2000 teacher steps fold in as 2000 student steps',
       abs(d['donor_steps'] - 2000) < 1e-6 and abs(d['with_donor'] - 3000 / 3500) < 1e-9)
 
+
+# ══════════════════════════════════════════════════════════════════════════
+# alpha-moves W2b — the GPT-NeoX / Pythia port and the Pile stream reader.
+# Synthetic checks always run; the pythia-70m checks run when the two
+# checkpoints are cached under .prism_cache/pythia-70m/{step0,main}.
+# ══════════════════════════════════════════════════════════════════════════
+import tempfile
+print('prism_neox (GPT-NeoX / Pythia port):')
+try:
+    from transformers import GPTNeoXForCausalLM
+    from prism_neox import (qkv_unpack, qkv_repack, qkv_unpack_bias, classify_neox_param, neox_matrices,
+                            extract_neox_fingerprint, apply_prism_neox, synthetic_neox_config, load_neox)
+    import pile_mmap as pm
+    _HAVE_NEOX = True
+except Exception as e:                                   # pragma: no cover
+    _HAVE_NEOX = False
+    print(f'  (skipped: {type(e).__name__}: {e})')
+if _HAVE_NEOX:
+    Wq = torch.randn(192, 64)
+    check('QKV per-head pack <-> [Q;K;V] blocks round-trips exactly',
+          torch.equal(qkv_repack(qkv_unpack(Wq, 4), 4), Wq))
+    nx = GPTNeoXForCausalLM(synthetic_neox_config())
+    att = nx.gpt_neox.layers[0].attention
+    xin = torch.randn(1, 5, 64)
+    q_h1 = att.query_key_value(xin).view(1, 5, 4, 48).transpose(1, 2).chunk(3, dim=-1)[0][0, 1]
+    Wb = qkv_unpack(att.query_key_value.weight.data, 4)
+    qb = xin[0] @ Wb[:64].T + qkv_unpack_bias(att.query_key_value.bias.data, 4)[:64]
+    check('unpacked Q block rows == the HF forward\'s per-head query (head 1)',
+          torch.allclose(q_h1, qb[:, 16:32], atol=1e-5))
+    mats = neox_matrices(nx)
+    all2d = {n for n, p in nx.named_parameters() if p.dim() == 2}
+    check('group classification covers every 2-D matrix and nothing else',
+          {n for n, _, _ in mats} == all2d and all(classify_neox_param(n) is None
+                                                  for n, p in nx.named_parameters() if p.dim() < 2))
+    check('five groups present (attention, attn_proj, ffn_up, ffn_down, embedding — embeddings untied)',
+          {g for _, _, g in mats} == {'attention', 'attn_proj', 'ffn_up', 'ffn_down', 'embedding'}
+          and sum(g == 'embedding' for _, _, g in mats) == 2)
+    fpx = extract_neox_fingerprint(nx)
+    for nm_, d_ in list(fpx['directions'].items())[:3]:
+        pass
+    check('fingerprint U columns / Vt rows orthonormal',
+          all(orthonormal_cols(d['U']) and orthonormal_cols(d['Vt'].T) for d in fpx['directions'].values()))
+    nx2 = GPTNeoXForCausalLM(synthetic_neox_config()); sd0 = {k: v.clone() for k, v in nx2.state_dict().items()}
+    n0 = apply_prism_neox(nx2, fpx, align=0.0, imprint=False, verbose=False)
+    check('align=0, imprint=False is an exact no-op (the published step0 is kept bit for bit)',
+          n0 == 0 and all(torch.equal(sd0[k], v) for k, v in nx2.state_dict().items()))
+    n1 = apply_prism_neox(nx2, fpx, align=0.75, imprint=True, verbose=False)
+    xo = torch.randint(0, 128, (2, 16))
+    outx = nx2(input_ids=xo, labels=xo)
+    check(f'2-layer synthetic NeoX: EigenTransfer+Imprint shapes {n1} matrices and the model still runs',
+          n1 == len(mats) and torch.isfinite(outx.loss))
+    Wd = nx2.gpt_neox.layers[0].attention.dense.weight.data.float()
+    Ud, sd_, Vtd = torch.linalg.svd(Wd)
+    check('shaped matrix has the imprinted (non-flat) spectrum and orthonormal factors',
+          orthonormal_cols(Ud) and sd_[0] > sd_[-1] * 1.01)
+    nx3 = GPTNeoXForCausalLM(synthetic_neox_config())
+    apply_prism_neox(nx3, fpx, align=1.0, imprint=False, verbose=False)
+    nm0 = 'gpt_neox.layers.0.mlp.dense_h_to_4h.weight'
+    Up = fpx['directions'][nm0]['U']
+    Us = torch.linalg.svd(dict(nx3.named_parameters())[nm0].data.float(), full_matrices=False)[0]
+    check('align=1, no imprint: column space moves onto the teacher\'s (subspace alignment > 0.95)',
+          subspace_alignment(Us[:, :8], Up[:, :8]) > 0.95)
+    print('pile_mmap (MMIDIDX reader):')
+    td = tempfile.mkdtemp()
+    idxp, shards_, data_ = pm.write_synthetic_dataset(td, 40, seq_len=17, shard_bytes=300)
+    h_ = pm.read_idx_header(idxp)
+    check('synthetic .idx header round-trips (uint16, N=40)', h_['dtype'] == np.uint16 and h_['n_seq'] == 40)
+    ps_ = pm.PileStream(idxp, {i: p_ for i, p_ in enumerate(shards_)}, shard_bytes=300)
+    check('sharded reads exact, including sequences straddling two shards',
+          all(np.array_equal(ps_.sequence(i), data_[i]) for i in range(40)))
+    xb, yb = ps_.batch(3, 4)
+    check('batch targets are the left shift', np.array_equal(yb[0], data_[3][1:]) and xb.shape == (4, 16))
+    win = pm.read_idx_window(open(idxp, 'rb'), 30, 5)
+    ps_w = pm.PileStream(None, {i: p_ for i, p_ in enumerate(shards_)}, shard_bytes=300, window=win)
+    check('windowed stream serves GLOBAL sequence ids', np.array_equal(ps_w.sequence(33), data_[33]))
+    sr = pm.shards_for_range(*pm.byte_range_for_sequences(0, 8000 * 1024))
+    check('8000 iterations of the real stream (33.6 GB) span shards 0 and 1', list(sr) == [0, 1])
+    hold = pm.shards_for_range(*pm.byte_range_for_sequences(140000 * 1024, 140000 * 1024 + 512))
+    check('the held-out window (iteration 140000) lives in shard 19', list(hold) == [19])
+    p70 = os.path.join(os.path.dirname(os.path.abspath(__file__)) if '__file__' in dir() else '.', '.prism_cache', 'pythia-70m')
+    if os.path.exists(os.path.join(p70, 'step0', 'model.safetensors')) and os.path.exists(os.path.join(p70, 'main', 'model.safetensors')):
+        print('pythia-70m (cached checkpoints):')
+        st0 = load_neox(os.path.join(p70, 'step0'))
+        sd70 = {k: v.clone() for k, v in st0.state_dict().items()}
+        m70 = neox_matrices(st0)
+        check('pythia-70m: 26 PRISM matrices (6×4 + embed_in + embed_out)', len(m70) == 26)
+        fp70 = extract_neox_fingerprint(load_neox(os.path.join(p70, 'main')))
+        check('pythia-70m fingerprint: 5 group spectra, 26 direction sets',
+              len(fp70['spectra']) == 5 and len(fp70['directions']) == 26)
+        apply_prism_neox(st0, fp70, align=0.0, imprint=False, verbose=False)
+        check('pythia-70m step0 untouched by the no-op arm', all(torch.equal(sd70[k], v) for k, v in st0.state_dict().items()))
+    else:
+        print('  (pythia-70m checkpoints not cached under .prism_cache/pythia-70m — real-checkpoint checks skipped)')
+
 print(f'\n{len(PASS)} passed, {len(FAIL)} failed')
 if FAIL:
     print('FAILED:', FAIL)
