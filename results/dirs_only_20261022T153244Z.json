@@ -1,0 +1,6159 @@
+{
+  "schema": "prism-eval/1",
+  "partial": false,
+  "run_key": "dirs_only_t2000_s1500_e10_i50_seeds1337-1338-1339_mlr1e-3mw100_blr2e-3bw300_cormodernweb_tra50",
+  "seeds_requested": [
+    1337,
+    1338,
+    1339
+  ],
+  "seeds_done": [
+    1337,
+    1338,
+    1339
+  ],
+  "provenance": {
+    "created_utc": "2026-10-22T16:22:02.816572+00:00",
+    "git_commit": "d37226abb6ea9592e2704163bc71b034c973aa85",
+    "git_dirty": true,
+    "python": "3.11.12",
+    "argv": [
+      "--corpus=modernweb",
+      "--baseline_lr=2e-3",
+      "--baseline_warmup=300",
+      "--method=dirs_only",
+      "--method_lr=1e-3",
+      "--method_warmup=100",
+      "--seeds=1337,1338,1339",
+      "--teacher_steps=2000",
+      "--student_steps=1500",
+      "--eval_every=10",
+      "--eval_iters=50",
+      "--track_overlap=50"
+    ],
+    "torch": "2.14.1+cu130",
+    "device": "NVIDIA L4"
+  },
+  "config": {
+    "method": "dirs_only",
+    "teacher_steps": 2000,
+    "student_steps": 1500,
+    "eval_every": 10,
+    "eval_iters": 50,
+    "seeds": [
+      1337,
+      1338,
+      1339
+    ],
+    "device": "cuda",
+    "overlaps": null,
+    "overlap_distances": {},
+    "teacher_sweep": null,
+    "batch_size": null,
+    "teacher_data_equals_student_data": true,
+    "cross_teacher": null,
+    "corpus": "modernweb",
+    "fingerprint": null,
+    "method_lr": "1e-3",
+    "method_warmup": 100,
+    "baseline_lr": "2e-3",
+    "baseline_warmup": 300,
+    "schedule_matched": false,
+    "n_dct": 8,
+    "optim": "adamw",
+    "teacher_optim": "adamw",
+    "teacher_dims": {
+      "n_layer": null,
+      "n_embd": null,
+      "n_head": null
+    },
+    "student_dims": {
+      "n_layer": null,
+      "n_embd": null,
+      "n_head": null
+    },
+    "crosssize": null,
+    "init_builder": null,
+    "method_knobs": {
+      "track_overlap": 50,
+      "corpus": "modernweb"
+    },
+    "far_corpus": null,
+    "far_val": false
+  },
+  "runs": [
+    {
+      "seed": 1337,
+      "overlap": null,
+      "baseline": {
+        "curve": {
+          "0": 5.6468,
+          "10": 3.8871,
+          "20": 3.3589,
+          "30": 2.975,
+          "40": 2.7611,
+          "50": 2.6449,
+          "60": 2.6175,
+          "70": 2.5922,
+          "80": 2.5839,
+          "90": 2.5644,
+          "100": 2.5566,
+          "110": 2.5511,
+          "120": 2.5452,
+          "130": 2.5416,
+          "140": 2.5473,
+          "150": 2.5342,
+          "160": 2.5225,
+          "170": 2.5092,
+          "180": 2.5058,
+          "190": 2.4827,
+          "200": 2.4711,
+          "210": 2.4246,
+          "220": 2.3882,
+          "230": 2.3401,
+          "240": 2.2976,
+          "250": 2.2587,
+          "260": 2.2341,
+          "270": 2.1932,
+          "280": 2.1617,
+          "290": 2.1416,
+          "300": 2.1165,
+          "310": 2.0852,
+          "320": 2.0699,
+          "330": 2.0549,
+          "340": 2.0384,
+          "350": 2.0194,
+          "360": 1.9962,
+          "370": 1.9921,
+          "380": 1.9772,
+          "390": 1.9597,
+          "400": 1.9419,
+          "410": 1.9348,
+          "420": 1.9215,
+          "430": 1.9158,
+          "440": 1.8941,
+          "450": 1.8906,
+          "460": 1.8812,
+          "470": 1.8687,
+          "480": 1.8586,
+          "490": 1.8529,
+          "500": 1.8437,
+          "510": 1.8266,
+          "520": 1.8209,
+          "530": 1.8112,
+          "540": 1.8082,
+          "550": 1.8065,
+          "560": 1.7924,
+          "570": 1.7825,
+          "580": 1.78,
+          "590": 1.7778,
+          "600": 1.761,
+          "610": 1.7507,
+          "620": 1.7491,
+          "630": 1.744,
+          "640": 1.7423,
+          "650": 1.7215,
+          "660": 1.7268,
+          "670": 1.7131,
+          "680": 1.7001,
+          "690": 1.6994,
+          "700": 1.6976,
+          "710": 1.7011,
+          "720": 1.6864,
+          "730": 1.6855,
+          "740": 1.675,
+          "750": 1.6829,
+          "760": 1.6592,
+          "770": 1.659,
+          "780": 1.6484,
+          "790": 1.6441,
+          "800": 1.6503,
+          "810": 1.6378,
+          "820": 1.6419,
+          "830": 1.6414,
+          "840": 1.6228,
+          "850": 1.6318,
+          "860": 1.6151,
+          "870": 1.6156,
+          "880": 1.6074,
+          "890": 1.6053,
+          "900": 1.6214,
+          "910": 1.612,
+          "920": 1.6002,
+          "930": 1.5915,
+          "940": 1.5974,
+          "950": 1.5989,
+          "960": 1.592,
+          "970": 1.5832,
+          "980": 1.5822,
+          "990": 1.5862,
+          "1000": 1.5783,
+          "1010": 1.5869,
+          "1020": 1.5748,
+          "1030": 1.5767,
+          "1040": 1.569,
+          "1050": 1.56,
+          "1060": 1.5634,
+          "1070": 1.5591,
+          "1080": 1.5553,
+          "1090": 1.5563,
+          "1100": 1.5462,
+          "1110": 1.555,
+          "1120": 1.5543,
+          "1130": 1.5562,
+          "1140": 1.5339,
+          "1150": 1.5422,
+          "1160": 1.5452,
+          "1170": 1.5419,
+          "1180": 1.5338,
+          "1190": 1.5363,
+          "1200": 1.53,
+          "1210": 1.5325,
+          "1220": 1.5199,
+          "1230": 1.53,
+          "1240": 1.5225,
+          "1250": 1.5242,
+          "1260": 1.5297,
+          "1270": 1.5191,
+          "1280": 1.5257,
+          "1290": 1.5268,
+          "1300": 1.517,
+          "1310": 1.5164,
+          "1320": 1.5063,
+          "1330": 1.5174,
+          "1340": 1.508,
+          "1350": 1.51,
+          "1360": 1.5111,
+          "1370": 1.5068,
+          "1380": 1.5008,
+          "1390": 1.5015,
+          "1400": 1.5027,
+          "1410": 1.5035,
+          "1420": 1.4941,
+          "1430": 1.5045,
+          "1440": 1.4963,
+          "1450": 1.491,
+          "1460": 1.4927,
+          "1470": 1.494,
+          "1480": 1.4764,
+          "1490": 1.485,
+          "1500": 1.4835
+        },
+        "best": 1.4764,
+        "best_step": 1480,
+        "at_end": 1.4835,
+        "wall_sec": 432.7,
+        "overfits": false,
+        "step_ms": 284.16,
+        "overlap": {
+          "0": {
+            "embedding": {
+              "init": 1.0,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "50": {
+            "embedding": {
+              "init": 0.9101,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.9299,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.8692,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.8602,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.3881,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "100": {
+            "embedding": {
+              "init": 0.7352,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7632,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.688,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6354,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.122,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "150": {
+            "embedding": {
+              "init": 0.5741,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.5507,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.4655,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.4195,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0675,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "200": {
+            "embedding": {
+              "init": 0.3328,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.3253,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.2013,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.2538,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0521,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "250": {
+            "embedding": {
+              "init": 0.1944,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.1585,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0967,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.1307,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0406,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "300": {
+            "embedding": {
+              "init": 0.1571,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0916,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0674,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0801,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0353,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "350": {
+            "embedding": {
+              "init": 0.143,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0716,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0586,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0641,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0329,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "400": {
+            "embedding": {
+              "init": 0.1363,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0636,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0539,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.056,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.032,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "450": {
+            "embedding": {
+              "init": 0.1282,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0568,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.051,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0521,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0303,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "500": {
+            "embedding": {
+              "init": 0.1299,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0547,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0494,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0502,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0299,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "550": {
+            "embedding": {
+              "init": 0.1282,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.051,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0483,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0483,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0295,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "600": {
+            "embedding": {
+              "init": 0.1269,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0473,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0474,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0461,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0293,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "650": {
+            "embedding": {
+              "init": 0.1228,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0449,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0456,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0451,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0287,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "700": {
+            "embedding": {
+              "init": 0.12,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0436,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0459,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0444,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0282,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "750": {
+            "embedding": {
+              "init": 0.1192,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0435,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0453,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.043,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0281,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "800": {
+            "embedding": {
+              "init": 0.1194,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0434,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0443,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0419,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0283,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "850": {
+            "embedding": {
+              "init": 0.1178,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0418,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0439,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0411,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0279,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "900": {
+            "embedding": {
+              "init": 0.1171,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0415,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0442,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.041,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0277,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "950": {
+            "embedding": {
+              "init": 0.1163,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0412,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0445,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0408,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0279,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1000": {
+            "embedding": {
+              "init": 0.1156,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0408,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0445,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0405,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0277,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1050": {
+            "embedding": {
+              "init": 0.1178,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.041,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0436,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0398,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0275,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1100": {
+            "embedding": {
+              "init": 0.114,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0406,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0443,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0392,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0274,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1150": {
+            "embedding": {
+              "init": 0.1145,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0404,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0433,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0393,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0272,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1200": {
+            "embedding": {
+              "init": 0.1154,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.04,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0425,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0391,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0273,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1250": {
+            "embedding": {
+              "init": 0.1156,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0403,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0432,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0387,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0269,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1300": {
+            "embedding": {
+              "init": 0.1151,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0405,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0426,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0388,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0267,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1350": {
+            "embedding": {
+              "init": 0.1144,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0404,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0435,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0384,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0267,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1400": {
+            "embedding": {
+              "init": 0.1137,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0399,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0436,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0383,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0267,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1450": {
+            "embedding": {
+              "init": 0.1137,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.04,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0434,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.038,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0266,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1500": {
+            "embedding": {
+              "init": 0.1131,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0399,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0436,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0378,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0266,
+              "ref": null,
+              "chance": 0.026
+            }
+          }
+        }
+      },
+      "method": {
+        "curve": {
+          "0": 4.4257,
+          "10": 3.1211,
+          "20": 2.6525,
+          "30": 2.3572,
+          "40": 2.1919,
+          "50": 2.0435,
+          "60": 1.9321,
+          "70": 1.8563,
+          "80": 1.8141,
+          "90": 1.758,
+          "100": 1.7254,
+          "110": 1.6957,
+          "120": 1.6712,
+          "130": 1.6544,
+          "140": 1.6324,
+          "150": 1.6146,
+          "160": 1.6065,
+          "170": 1.581,
+          "180": 1.5915,
+          "190": 1.5797,
+          "200": 1.5672,
+          "210": 1.56,
+          "220": 1.5608,
+          "230": 1.5583,
+          "240": 1.5466,
+          "250": 1.5532,
+          "260": 1.536,
+          "270": 1.544,
+          "280": 1.5349,
+          "290": 1.5266,
+          "300": 1.5267,
+          "310": 1.5193,
+          "320": 1.5177,
+          "330": 1.5193,
+          "340": 1.514,
+          "350": 1.5227,
+          "360": 1.5037,
+          "370": 1.509,
+          "380": 1.5129,
+          "390": 1.5135,
+          "400": 1.5065,
+          "410": 1.5055,
+          "420": 1.5027,
+          "430": 1.5066,
+          "440": 1.5049,
+          "450": 1.5029,
+          "460": 1.495,
+          "470": 1.4992,
+          "480": 1.4915,
+          "490": 1.494,
+          "500": 1.4878,
+          "510": 1.4812,
+          "520": 1.4875,
+          "530": 1.4812,
+          "540": 1.4787,
+          "550": 1.4913,
+          "560": 1.4822,
+          "570": 1.4797,
+          "580": 1.485,
+          "590": 1.4768,
+          "600": 1.472,
+          "610": 1.4752,
+          "620": 1.4714,
+          "630": 1.4719,
+          "640": 1.4783,
+          "650": 1.4631,
+          "660": 1.4682,
+          "670": 1.4539,
+          "680": 1.4582,
+          "690": 1.4623,
+          "700": 1.4573,
+          "710": 1.4611,
+          "720": 1.46,
+          "730": 1.4646,
+          "740": 1.4607,
+          "750": 1.4627,
+          "760": 1.448,
+          "770": 1.445,
+          "780": 1.4448,
+          "790": 1.4429,
+          "800": 1.4534,
+          "810": 1.4307,
+          "820": 1.4478,
+          "830": 1.4539,
+          "840": 1.4314,
+          "850": 1.4416,
+          "860": 1.4294,
+          "870": 1.4356,
+          "880": 1.4282,
+          "890": 1.4273,
+          "900": 1.446,
+          "910": 1.4318,
+          "920": 1.4341,
+          "930": 1.4249,
+          "940": 1.4265,
+          "950": 1.4292,
+          "960": 1.4256,
+          "970": 1.4193,
+          "980": 1.4233,
+          "990": 1.4325,
+          "1000": 1.4211,
+          "1010": 1.4315,
+          "1020": 1.4258,
+          "1030": 1.4222,
+          "1040": 1.4195,
+          "1050": 1.4151,
+          "1060": 1.4114,
+          "1070": 1.4183,
+          "1080": 1.4171,
+          "1090": 1.4175,
+          "1100": 1.4071,
+          "1110": 1.4154,
+          "1120": 1.4128,
+          "1130": 1.4166,
+          "1140": 1.4008,
+          "1150": 1.4147,
+          "1160": 1.409,
+          "1170": 1.4115,
+          "1180": 1.4055,
+          "1190": 1.4074,
+          "1200": 1.4075,
+          "1210": 1.4111,
+          "1220": 1.3963,
+          "1230": 1.4109,
+          "1240": 1.3986,
+          "1250": 1.4041,
+          "1260": 1.4096,
+          "1270": 1.4042,
+          "1280": 1.4127,
+          "1290": 1.41,
+          "1300": 1.4046,
+          "1310": 1.4029,
+          "1320": 1.3919,
+          "1330": 1.4069,
+          "1340": 1.3929,
+          "1350": 1.3993,
+          "1360": 1.398,
+          "1370": 1.4057,
+          "1380": 1.389,
+          "1390": 1.3945,
+          "1400": 1.3952,
+          "1410": 1.3973,
+          "1420": 1.3908,
+          "1430": 1.3951,
+          "1440": 1.3938,
+          "1450": 1.3902,
+          "1460": 1.3942,
+          "1470": 1.3962,
+          "1480": 1.3809,
+          "1490": 1.3871,
+          "1500": 1.3949
+        },
+        "best": 1.3809,
+        "best_step": 1480,
+        "at_end": 1.3949,
+        "wall_sec": 422.3,
+        "overfits": false,
+        "step_ms": 275.64,
+        "overlap": {
+          "0": {
+            "embedding": {
+              "init": 1.0,
+              "ref": 0.7695,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 1.0001,
+              "ref": 0.8266,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 1.0001,
+              "ref": 0.9468,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 1.0001,
+              "ref": 0.588,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 1.0001,
+              "ref": 0.931,
+              "chance": 0.026
+            }
+          },
+          "50": {
+            "embedding": {
+              "init": 0.9555,
+              "ref": 0.8086,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.9157,
+              "ref": 0.8327,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.8601,
+              "ref": 0.8195,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.9231,
+              "ref": 0.6304,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.8819,
+              "ref": 0.8338,
+              "chance": 0.026
+            }
+          },
+          "100": {
+            "embedding": {
+              "init": 0.9059,
+              "ref": 0.8386,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.8147,
+              "ref": 0.8328,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6605,
+              "ref": 0.6484,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.8641,
+              "ref": 0.6478,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7881,
+              "ref": 0.7739,
+              "chance": 0.026
+            }
+          },
+          "150": {
+            "embedding": {
+              "init": 0.8375,
+              "ref": 0.8898,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.77,
+              "ref": 0.8177,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6146,
+              "ref": 0.6164,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.7952,
+              "ref": 0.6854,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7791,
+              "ref": 0.7808,
+              "chance": 0.026
+            }
+          },
+          "200": {
+            "embedding": {
+              "init": 0.8327,
+              "ref": 0.8889,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7535,
+              "ref": 0.8167,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6224,
+              "ref": 0.6297,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.748,
+              "ref": 0.7199,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7832,
+              "ref": 0.7931,
+              "chance": 0.026
+            }
+          },
+          "250": {
+            "embedding": {
+              "init": 0.8286,
+              "ref": 0.8878,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7376,
+              "ref": 0.811,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.62,
+              "ref": 0.6314,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.7091,
+              "ref": 0.7469,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7774,
+              "ref": 0.792,
+              "chance": 0.026
+            }
+          },
+          "300": {
+            "embedding": {
+              "init": 0.8245,
+              "ref": 0.8874,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7295,
+              "ref": 0.8087,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6366,
+              "ref": 0.6499,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6842,
+              "ref": 0.7604,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7811,
+              "ref": 0.7996,
+              "chance": 0.026
+            }
+          },
+          "350": {
+            "embedding": {
+              "init": 0.8097,
+              "ref": 0.8999,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7264,
+              "ref": 0.8088,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6321,
+              "ref": 0.6467,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6606,
+              "ref": 0.7765,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7801,
+              "ref": 0.8014,
+              "chance": 0.026
+            }
+          },
+          "400": {
+            "embedding": {
+              "init": 0.801,
+              "ref": 0.9046,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7211,
+              "ref": 0.8023,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6347,
+              "ref": 0.6521,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6341,
+              "ref": 0.7877,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7731,
+              "ref": 0.7968,
+              "chance": 0.026
+            }
+          },
+          "450": {
+            "embedding": {
+              "init": 0.7951,
+              "ref": 0.9071,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.711,
+              "ref": 0.7893,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6364,
+              "ref": 0.6542,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6068,
+              "ref": 0.8075,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7744,
+              "ref": 0.8003,
+              "chance": 0.026
+            }
+          },
+          "500": {
+            "embedding": {
+              "init": 0.7908,
+              "ref": 0.9072,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7094,
+              "ref": 0.7834,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6302,
+              "ref": 0.6482,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5845,
+              "ref": 0.822,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7664,
+              "ref": 0.7936,
+              "chance": 0.026
+            }
+          },
+          "550": {
+            "embedding": {
+              "init": 0.7877,
+              "ref": 0.906,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7024,
+              "ref": 0.777,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6235,
+              "ref": 0.6412,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5703,
+              "ref": 0.823,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7636,
+              "ref": 0.7915,
+              "chance": 0.026
+            }
+          },
+          "600": {
+            "embedding": {
+              "init": 0.7829,
+              "ref": 0.9007,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6989,
+              "ref": 0.77,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6229,
+              "ref": 0.642,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5618,
+              "ref": 0.8182,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7593,
+              "ref": 0.7878,
+              "chance": 0.026
+            }
+          },
+          "650": {
+            "embedding": {
+              "init": 0.7773,
+              "ref": 0.8873,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6943,
+              "ref": 0.7647,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.621,
+              "ref": 0.6406,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5551,
+              "ref": 0.818,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7548,
+              "ref": 0.7842,
+              "chance": 0.026
+            }
+          },
+          "700": {
+            "embedding": {
+              "init": 0.7744,
+              "ref": 0.8804,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6878,
+              "ref": 0.7572,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6157,
+              "ref": 0.6353,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5497,
+              "ref": 0.8129,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7487,
+              "ref": 0.7785,
+              "chance": 0.026
+            }
+          },
+          "750": {
+            "embedding": {
+              "init": 0.7709,
+              "ref": 0.8757,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6824,
+              "ref": 0.7501,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6068,
+              "ref": 0.627,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5456,
+              "ref": 0.8125,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.746,
+              "ref": 0.7764,
+              "chance": 0.026
+            }
+          },
+          "800": {
+            "embedding": {
+              "init": 0.7631,
+              "ref": 0.8768,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6754,
+              "ref": 0.7416,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6008,
+              "ref": 0.6213,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5422,
+              "ref": 0.8065,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7419,
+              "ref": 0.7725,
+              "chance": 0.026
+            }
+          },
+          "850": {
+            "embedding": {
+              "init": 0.7565,
+              "ref": 0.8775,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6744,
+              "ref": 0.7394,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5901,
+              "ref": 0.6105,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5375,
+              "ref": 0.8002,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7372,
+              "ref": 0.7684,
+              "chance": 0.026
+            }
+          },
+          "900": {
+            "embedding": {
+              "init": 0.7499,
+              "ref": 0.8842,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6609,
+              "ref": 0.7218,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5833,
+              "ref": 0.6038,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5339,
+              "ref": 0.797,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.732,
+              "ref": 0.7632,
+              "chance": 0.026
+            }
+          },
+          "950": {
+            "embedding": {
+              "init": 0.7446,
+              "ref": 0.8764,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.66,
+              "ref": 0.7218,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5819,
+              "ref": 0.602,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5305,
+              "ref": 0.793,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7236,
+              "ref": 0.7549,
+              "chance": 0.026
+            }
+          },
+          "1000": {
+            "embedding": {
+              "init": 0.7411,
+              "ref": 0.872,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6497,
+              "ref": 0.7116,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5765,
+              "ref": 0.5963,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.528,
+              "ref": 0.7905,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7197,
+              "ref": 0.7512,
+              "chance": 0.026
+            }
+          },
+          "1050": {
+            "embedding": {
+              "init": 0.7388,
+              "ref": 0.867,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6486,
+              "ref": 0.7133,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5725,
+              "ref": 0.592,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5258,
+              "ref": 0.7845,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7155,
+              "ref": 0.7473,
+              "chance": 0.026
+            }
+          },
+          "1100": {
+            "embedding": {
+              "init": 0.7378,
+              "ref": 0.8673,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6459,
+              "ref": 0.7112,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5717,
+              "ref": 0.5914,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5228,
+              "ref": 0.7792,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.71,
+              "ref": 0.7417,
+              "chance": 0.026
+            }
+          },
+          "1150": {
+            "embedding": {
+              "init": 0.7354,
+              "ref": 0.8654,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6407,
+              "ref": 0.7032,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5653,
+              "ref": 0.5844,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5199,
+              "ref": 0.7715,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.703,
+              "ref": 0.7349,
+              "chance": 0.026
+            }
+          },
+          "1200": {
+            "embedding": {
+              "init": 0.7349,
+              "ref": 0.8631,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6402,
+              "ref": 0.702,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5638,
+              "ref": 0.5836,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5166,
+              "ref": 0.7639,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7009,
+              "ref": 0.7329,
+              "chance": 0.026
+            }
+          },
+          "1250": {
+            "embedding": {
+              "init": 0.7335,
+              "ref": 0.8589,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6346,
+              "ref": 0.6963,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.559,
+              "ref": 0.5788,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5148,
+              "ref": 0.7608,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6995,
+              "ref": 0.7314,
+              "chance": 0.026
+            }
+          },
+          "1300": {
+            "embedding": {
+              "init": 0.7328,
+              "ref": 0.8573,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6271,
+              "ref": 0.69,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5613,
+              "ref": 0.5808,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5119,
+              "ref": 0.7518,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.693,
+              "ref": 0.7246,
+              "chance": 0.026
+            }
+          },
+          "1350": {
+            "embedding": {
+              "init": 0.7308,
+              "ref": 0.8546,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6262,
+              "ref": 0.689,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.558,
+              "ref": 0.5774,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5116,
+              "ref": 0.7506,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6891,
+              "ref": 0.7206,
+              "chance": 0.026
+            }
+          },
+          "1400": {
+            "embedding": {
+              "init": 0.7297,
+              "ref": 0.8528,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6206,
+              "ref": 0.685,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.549,
+              "ref": 0.5686,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5091,
+              "ref": 0.744,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6859,
+              "ref": 0.7172,
+              "chance": 0.026
+            }
+          },
+          "1450": {
+            "embedding": {
+              "init": 0.7286,
+              "ref": 0.8493,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6132,
+              "ref": 0.6778,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5434,
+              "ref": 0.5631,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5075,
+              "ref": 0.7435,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6794,
+              "ref": 0.7106,
+              "chance": 0.026
+            }
+          },
+          "1500": {
+            "embedding": {
+              "init": 0.7267,
+              "ref": 0.8458,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6043,
+              "ref": 0.6686,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.543,
+              "ref": 0.5632,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5074,
+              "ref": 0.743,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6795,
+              "ref": 0.7107,
+              "chance": 0.026
+            }
+          }
+        }
+      },
+      "score": {
+        "prism_score": 2.466666666666667,
+        "hit_step": 600,
+        "reached_baseline_quality": true,
+        "baseline_target": 1.4764,
+        "left_censored": false,
+        "note": ""
+      }
+    },
+    {
+      "seed": 1338,
+      "overlap": null,
+      "baseline": {
+        "curve": {
+          "0": 5.7133,
+          "10": 3.9661,
+          "20": 3.4615,
+          "30": 3.0145,
+          "40": 2.7904,
+          "50": 2.665,
+          "60": 2.6118,
+          "70": 2.5974,
+          "80": 2.5682,
+          "90": 2.5603,
+          "100": 2.5639,
+          "110": 2.548,
+          "120": 2.5479,
+          "130": 2.5435,
+          "140": 2.5366,
+          "150": 2.5308,
+          "160": 2.5247,
+          "170": 2.5177,
+          "180": 2.5072,
+          "190": 2.4759,
+          "200": 2.464,
+          "210": 2.4331,
+          "220": 2.3571,
+          "230": 2.3068,
+          "240": 2.3274,
+          "250": 2.2543,
+          "260": 2.2078,
+          "270": 2.1727,
+          "280": 2.1499,
+          "290": 2.1227,
+          "300": 2.0972,
+          "310": 2.0715,
+          "320": 2.0646,
+          "330": 2.0361,
+          "340": 2.0184,
+          "350": 2.0073,
+          "360": 1.9834,
+          "370": 1.9649,
+          "380": 1.9533,
+          "390": 1.936,
+          "400": 1.9295,
+          "410": 1.9253,
+          "420": 1.9014,
+          "430": 1.8898,
+          "440": 1.8874,
+          "450": 1.8628,
+          "460": 1.8613,
+          "470": 1.8456,
+          "480": 1.8495,
+          "490": 1.8287,
+          "500": 1.8309,
+          "510": 1.8159,
+          "520": 1.8034,
+          "530": 1.8,
+          "540": 1.7857,
+          "550": 1.7893,
+          "560": 1.7738,
+          "570": 1.7668,
+          "580": 1.7673,
+          "590": 1.7523,
+          "600": 1.746,
+          "610": 1.7499,
+          "620": 1.7289,
+          "630": 1.7347,
+          "640": 1.7187,
+          "650": 1.7161,
+          "660": 1.7117,
+          "670": 1.6932,
+          "680": 1.6916,
+          "690": 1.6815,
+          "700": 1.6809,
+          "710": 1.6856,
+          "720": 1.6822,
+          "730": 1.6776,
+          "740": 1.6727,
+          "750": 1.6583,
+          "760": 1.6736,
+          "770": 1.6523,
+          "780": 1.6461,
+          "790": 1.6428,
+          "800": 1.6237,
+          "810": 1.6277,
+          "820": 1.6279,
+          "830": 1.6258,
+          "840": 1.6334,
+          "850": 1.6215,
+          "860": 1.6193,
+          "870": 1.6155,
+          "880": 1.6086,
+          "890": 1.6073,
+          "900": 1.5976,
+          "910": 1.594,
+          "920": 1.616,
+          "930": 1.5946,
+          "940": 1.5914,
+          "950": 1.5966,
+          "960": 1.588,
+          "970": 1.5818,
+          "980": 1.5811,
+          "990": 1.5774,
+          "1000": 1.5802,
+          "1010": 1.5747,
+          "1020": 1.568,
+          "1030": 1.5697,
+          "1040": 1.5648,
+          "1050": 1.5705,
+          "1060": 1.572,
+          "1070": 1.5617,
+          "1080": 1.5567,
+          "1090": 1.5473,
+          "1100": 1.551,
+          "1110": 1.5481,
+          "1120": 1.553,
+          "1130": 1.5466,
+          "1140": 1.5413,
+          "1150": 1.5357,
+          "1160": 1.5383,
+          "1170": 1.5411,
+          "1180": 1.5425,
+          "1190": 1.5309,
+          "1200": 1.5422,
+          "1210": 1.5375,
+          "1220": 1.5311,
+          "1230": 1.5263,
+          "1240": 1.5227,
+          "1250": 1.5279,
+          "1260": 1.5232,
+          "1270": 1.5274,
+          "1280": 1.5267,
+          "1290": 1.5155,
+          "1300": 1.5258,
+          "1310": 1.5111,
+          "1320": 1.494,
+          "1330": 1.5155,
+          "1340": 1.5115,
+          "1350": 1.513,
+          "1360": 1.5067,
+          "1370": 1.5129,
+          "1380": 1.5047,
+          "1390": 1.4934,
+          "1400": 1.5091,
+          "1410": 1.4974,
+          "1420": 1.5025,
+          "1430": 1.5012,
+          "1440": 1.4999,
+          "1450": 1.5057,
+          "1460": 1.5106,
+          "1470": 1.487,
+          "1480": 1.4915,
+          "1490": 1.493,
+          "1500": 1.4945
+        },
+        "best": 1.487,
+        "best_step": 1470,
+        "at_end": 1.4945,
+        "wall_sec": 430.3,
+        "overfits": false,
+        "step_ms": 282.62,
+        "overlap": {
+          "0": {
+            "embedding": {
+              "init": 1.0,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "50": {
+            "embedding": {
+              "init": 0.9026,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.9349,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.8609,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.8479,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.383,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "100": {
+            "embedding": {
+              "init": 0.744,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7408,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6747,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6188,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.1226,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "150": {
+            "embedding": {
+              "init": 0.5782,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.5092,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.4079,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.4061,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0689,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "200": {
+            "embedding": {
+              "init": 0.34,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.2955,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.1927,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.237,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0511,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "250": {
+            "embedding": {
+              "init": 0.2182,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.1558,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0921,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.1231,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0402,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "300": {
+            "embedding": {
+              "init": 0.1745,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0952,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0649,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0797,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0348,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "350": {
+            "embedding": {
+              "init": 0.159,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0729,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0569,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.066,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0326,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "400": {
+            "embedding": {
+              "init": 0.1577,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0623,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0545,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0612,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0317,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "450": {
+            "embedding": {
+              "init": 0.1526,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0559,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0521,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0566,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0314,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "500": {
+            "embedding": {
+              "init": 0.1479,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0539,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0503,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0544,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0308,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "550": {
+            "embedding": {
+              "init": 0.1461,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0511,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0483,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.052,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0301,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "600": {
+            "embedding": {
+              "init": 0.1414,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0476,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0469,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0512,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0298,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "650": {
+            "embedding": {
+              "init": 0.1365,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0462,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.048,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0496,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0298,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "700": {
+            "embedding": {
+              "init": 0.1342,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0443,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0468,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0487,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0295,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "750": {
+            "embedding": {
+              "init": 0.1336,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0428,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0465,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.048,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0294,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "800": {
+            "embedding": {
+              "init": 0.1308,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0417,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0472,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0476,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0294,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "850": {
+            "embedding": {
+              "init": 0.1295,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0417,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0465,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0466,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0295,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "900": {
+            "embedding": {
+              "init": 0.1285,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.041,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0474,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.045,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0293,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "950": {
+            "embedding": {
+              "init": 0.1276,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0402,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0462,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0442,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0289,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1000": {
+            "embedding": {
+              "init": 0.1247,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0399,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0464,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.044,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0286,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1050": {
+            "embedding": {
+              "init": 0.1239,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0404,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0458,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0432,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0287,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1100": {
+            "embedding": {
+              "init": 0.1228,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0397,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0459,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.042,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0288,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1150": {
+            "embedding": {
+              "init": 0.1194,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0394,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.045,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0426,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0286,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1200": {
+            "embedding": {
+              "init": 0.1195,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.039,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0454,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0421,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0286,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1250": {
+            "embedding": {
+              "init": 0.1186,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0385,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0457,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0423,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0283,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1300": {
+            "embedding": {
+              "init": 0.1179,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0388,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0461,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0413,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0283,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1350": {
+            "embedding": {
+              "init": 0.1169,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0399,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0463,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0405,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0281,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1400": {
+            "embedding": {
+              "init": 0.1158,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0391,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0465,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.04,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0283,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1450": {
+            "embedding": {
+              "init": 0.1144,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0395,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0465,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0404,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0282,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1500": {
+            "embedding": {
+              "init": 0.1134,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0392,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0458,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0406,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0281,
+              "ref": null,
+              "chance": 0.026
+            }
+          }
+        }
+      },
+      "method": {
+        "curve": {
+          "0": 4.3586,
+          "10": 3.0481,
+          "20": 2.6434,
+          "30": 2.3588,
+          "40": 2.1757,
+          "50": 2.0434,
+          "60": 1.9263,
+          "70": 1.8476,
+          "80": 1.7909,
+          "90": 1.7513,
+          "100": 1.7237,
+          "110": 1.6863,
+          "120": 1.6638,
+          "130": 1.6493,
+          "140": 1.6219,
+          "150": 1.6147,
+          "160": 1.6,
+          "170": 1.6038,
+          "180": 1.5911,
+          "190": 1.5697,
+          "200": 1.5703,
+          "210": 1.5642,
+          "220": 1.5676,
+          "230": 1.5548,
+          "240": 1.5589,
+          "250": 1.546,
+          "260": 1.5422,
+          "270": 1.5314,
+          "280": 1.5327,
+          "290": 1.527,
+          "300": 1.5256,
+          "310": 1.5201,
+          "320": 1.5245,
+          "330": 1.5213,
+          "340": 1.5158,
+          "350": 1.5122,
+          "360": 1.5106,
+          "370": 1.5111,
+          "380": 1.5046,
+          "390": 1.4984,
+          "400": 1.4981,
+          "410": 1.5073,
+          "420": 1.4925,
+          "430": 1.4947,
+          "440": 1.4866,
+          "450": 1.4881,
+          "460": 1.4928,
+          "470": 1.4805,
+          "480": 1.4882,
+          "490": 1.4838,
+          "500": 1.4832,
+          "510": 1.4775,
+          "520": 1.4778,
+          "530": 1.4721,
+          "540": 1.4704,
+          "550": 1.4735,
+          "560": 1.4646,
+          "570": 1.4741,
+          "580": 1.4661,
+          "590": 1.4663,
+          "600": 1.4662,
+          "610": 1.4594,
+          "620": 1.4519,
+          "630": 1.4671,
+          "640": 1.4648,
+          "650": 1.4589,
+          "660": 1.4581,
+          "670": 1.4458,
+          "680": 1.4444,
+          "690": 1.4374,
+          "700": 1.4483,
+          "710": 1.4467,
+          "720": 1.4507,
+          "730": 1.4443,
+          "740": 1.4408,
+          "750": 1.4414,
+          "760": 1.4565,
+          "770": 1.4403,
+          "780": 1.4399,
+          "790": 1.4397,
+          "800": 1.4238,
+          "810": 1.4373,
+          "820": 1.4335,
+          "830": 1.4273,
+          "840": 1.4366,
+          "850": 1.4337,
+          "860": 1.4342,
+          "870": 1.4335,
+          "880": 1.4259,
+          "890": 1.4271,
+          "900": 1.4231,
+          "910": 1.4232,
+          "920": 1.4424,
+          "930": 1.4242,
+          "940": 1.4177,
+          "950": 1.4201,
+          "960": 1.4209,
+          "970": 1.4194,
+          "980": 1.4206,
+          "990": 1.4171,
+          "1000": 1.4179,
+          "1010": 1.4211,
+          "1020": 1.4134,
+          "1030": 1.4186,
+          "1040": 1.4159,
+          "1050": 1.4204,
+          "1060": 1.4278,
+          "1070": 1.4183,
+          "1080": 1.4179,
+          "1090": 1.4114,
+          "1100": 1.4068,
+          "1110": 1.4085,
+          "1120": 1.4159,
+          "1130": 1.4105,
+          "1140": 1.4114,
+          "1150": 1.4036,
+          "1160": 1.4043,
+          "1170": 1.4058,
+          "1180": 1.4101,
+          "1190": 1.3964,
+          "1200": 1.4158,
+          "1210": 1.4065,
+          "1220": 1.4007,
+          "1230": 1.4065,
+          "1240": 1.3987,
+          "1250": 1.4003,
+          "1260": 1.3985,
+          "1270": 1.4024,
+          "1280": 1.3935,
+          "1290": 1.3987,
+          "1300": 1.4119,
+          "1310": 1.3942,
+          "1320": 1.3783,
+          "1330": 1.4053,
+          "1340": 1.3925,
+          "1350": 1.394,
+          "1360": 1.3945,
+          "1370": 1.4011,
+          "1380": 1.3979,
+          "1390": 1.3849,
+          "1400": 1.3978,
+          "1410": 1.3846,
+          "1420": 1.3956,
+          "1430": 1.3916,
+          "1440": 1.3994,
+          "1450": 1.3957,
+          "1460": 1.4015,
+          "1470": 1.3869,
+          "1480": 1.3895,
+          "1490": 1.3927,
+          "1500": 1.3983
+        },
+        "best": 1.3783,
+        "best_step": 1320,
+        "at_end": 1.3983,
+        "wall_sec": 423.8,
+        "overfits": false,
+        "step_ms": 276.31,
+        "overlap": {
+          "0": {
+            "embedding": {
+              "init": 1.0,
+              "ref": 0.7692,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 1.0001,
+              "ref": 0.8265,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 1.0001,
+              "ref": 0.9467,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 1.0001,
+              "ref": 0.5878,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 1.0001,
+              "ref": 0.9305,
+              "chance": 0.026
+            }
+          },
+          "50": {
+            "embedding": {
+              "init": 0.9565,
+              "ref": 0.8071,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.9054,
+              "ref": 0.8135,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.8597,
+              "ref": 0.8188,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.9202,
+              "ref": 0.6294,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.8851,
+              "ref": 0.8373,
+              "chance": 0.026
+            }
+          },
+          "100": {
+            "embedding": {
+              "init": 0.9078,
+              "ref": 0.8322,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.8045,
+              "ref": 0.8159,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.662,
+              "ref": 0.6486,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.8544,
+              "ref": 0.6516,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.8025,
+              "ref": 0.7867,
+              "chance": 0.026
+            }
+          },
+          "150": {
+            "embedding": {
+              "init": 0.8452,
+              "ref": 0.8531,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7658,
+              "ref": 0.7981,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6004,
+              "ref": 0.6005,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.7943,
+              "ref": 0.6876,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7789,
+              "ref": 0.7804,
+              "chance": 0.026
+            }
+          },
+          "200": {
+            "embedding": {
+              "init": 0.8307,
+              "ref": 0.8576,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7483,
+              "ref": 0.8062,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6306,
+              "ref": 0.6381,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.7531,
+              "ref": 0.7225,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7918,
+              "ref": 0.8015,
+              "chance": 0.026
+            }
+          },
+          "250": {
+            "embedding": {
+              "init": 0.8271,
+              "ref": 0.8591,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7402,
+              "ref": 0.8026,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6323,
+              "ref": 0.6423,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.719,
+              "ref": 0.7457,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7967,
+              "ref": 0.812,
+              "chance": 0.026
+            }
+          },
+          "300": {
+            "embedding": {
+              "init": 0.824,
+              "ref": 0.8617,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7355,
+              "ref": 0.8026,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6348,
+              "ref": 0.6476,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6914,
+              "ref": 0.7606,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7897,
+              "ref": 0.8088,
+              "chance": 0.026
+            }
+          },
+          "350": {
+            "embedding": {
+              "init": 0.8203,
+              "ref": 0.8616,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7231,
+              "ref": 0.7913,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.626,
+              "ref": 0.6415,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6582,
+              "ref": 0.7768,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7916,
+              "ref": 0.8136,
+              "chance": 0.026
+            }
+          },
+          "400": {
+            "embedding": {
+              "init": 0.7941,
+              "ref": 0.8837,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7196,
+              "ref": 0.7845,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6357,
+              "ref": 0.6518,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6331,
+              "ref": 0.7903,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7835,
+              "ref": 0.8077,
+              "chance": 0.026
+            }
+          },
+          "450": {
+            "embedding": {
+              "init": 0.7856,
+              "ref": 0.8903,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7143,
+              "ref": 0.7809,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6255,
+              "ref": 0.642,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6098,
+              "ref": 0.8013,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7772,
+              "ref": 0.8031,
+              "chance": 0.026
+            }
+          },
+          "500": {
+            "embedding": {
+              "init": 0.784,
+              "ref": 0.8907,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7093,
+              "ref": 0.7765,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6179,
+              "ref": 0.636,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.589,
+              "ref": 0.8073,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7659,
+              "ref": 0.7934,
+              "chance": 0.026
+            }
+          },
+          "550": {
+            "embedding": {
+              "init": 0.781,
+              "ref": 0.8897,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6999,
+              "ref": 0.769,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6124,
+              "ref": 0.6307,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5752,
+              "ref": 0.8088,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7648,
+              "ref": 0.7933,
+              "chance": 0.026
+            }
+          },
+          "600": {
+            "embedding": {
+              "init": 0.7795,
+              "ref": 0.8898,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6953,
+              "ref": 0.7667,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6045,
+              "ref": 0.6233,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5635,
+              "ref": 0.8191,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7607,
+              "ref": 0.7904,
+              "chance": 0.026
+            }
+          },
+          "650": {
+            "embedding": {
+              "init": 0.7764,
+              "ref": 0.8871,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6846,
+              "ref": 0.752,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5971,
+              "ref": 0.6159,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.558,
+              "ref": 0.8169,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.75,
+              "ref": 0.7801,
+              "chance": 0.026
+            }
+          },
+          "700": {
+            "embedding": {
+              "init": 0.7735,
+              "ref": 0.8887,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6821,
+              "ref": 0.7481,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5973,
+              "ref": 0.6168,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5531,
+              "ref": 0.8084,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7496,
+              "ref": 0.7802,
+              "chance": 0.026
+            }
+          },
+          "750": {
+            "embedding": {
+              "init": 0.7663,
+              "ref": 0.8929,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.671,
+              "ref": 0.7389,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6021,
+              "ref": 0.6218,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5447,
+              "ref": 0.8053,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7465,
+              "ref": 0.7775,
+              "chance": 0.026
+            }
+          },
+          "800": {
+            "embedding": {
+              "init": 0.7594,
+              "ref": 0.8965,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6615,
+              "ref": 0.7293,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5963,
+              "ref": 0.6163,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5407,
+              "ref": 0.8043,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7386,
+              "ref": 0.7696,
+              "chance": 0.026
+            }
+          },
+          "850": {
+            "embedding": {
+              "init": 0.7535,
+              "ref": 0.8996,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6592,
+              "ref": 0.7281,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5889,
+              "ref": 0.6103,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5372,
+              "ref": 0.8015,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7332,
+              "ref": 0.7644,
+              "chance": 0.026
+            }
+          },
+          "900": {
+            "embedding": {
+              "init": 0.7509,
+              "ref": 0.8959,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6509,
+              "ref": 0.7186,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5845,
+              "ref": 0.6051,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5367,
+              "ref": 0.8003,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7304,
+              "ref": 0.7618,
+              "chance": 0.026
+            }
+          },
+          "950": {
+            "embedding": {
+              "init": 0.7461,
+              "ref": 0.8949,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6469,
+              "ref": 0.714,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5762,
+              "ref": 0.5966,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5327,
+              "ref": 0.7921,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7222,
+              "ref": 0.7539,
+              "chance": 0.026
+            }
+          },
+          "1000": {
+            "embedding": {
+              "init": 0.7426,
+              "ref": 0.8878,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6443,
+              "ref": 0.7088,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.579,
+              "ref": 0.6,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5302,
+              "ref": 0.7868,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7164,
+              "ref": 0.748,
+              "chance": 0.026
+            }
+          },
+          "1050": {
+            "embedding": {
+              "init": 0.736,
+              "ref": 0.8765,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.639,
+              "ref": 0.7033,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5817,
+              "ref": 0.6024,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5277,
+              "ref": 0.7784,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7105,
+              "ref": 0.7421,
+              "chance": 0.026
+            }
+          },
+          "1100": {
+            "embedding": {
+              "init": 0.735,
+              "ref": 0.8734,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.636,
+              "ref": 0.7011,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5856,
+              "ref": 0.6057,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5272,
+              "ref": 0.7785,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.702,
+              "ref": 0.7338,
+              "chance": 0.026
+            }
+          },
+          "1150": {
+            "embedding": {
+              "init": 0.7323,
+              "ref": 0.8697,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6273,
+              "ref": 0.6954,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5796,
+              "ref": 0.6003,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5246,
+              "ref": 0.7765,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7004,
+              "ref": 0.7324,
+              "chance": 0.026
+            }
+          },
+          "1200": {
+            "embedding": {
+              "init": 0.7299,
+              "ref": 0.8689,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6259,
+              "ref": 0.6929,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5746,
+              "ref": 0.5951,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5224,
+              "ref": 0.77,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6968,
+              "ref": 0.7289,
+              "chance": 0.026
+            }
+          },
+          "1250": {
+            "embedding": {
+              "init": 0.7306,
+              "ref": 0.8644,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6171,
+              "ref": 0.685,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5671,
+              "ref": 0.5883,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5203,
+              "ref": 0.7708,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6923,
+              "ref": 0.7241,
+              "chance": 0.026
+            }
+          },
+          "1300": {
+            "embedding": {
+              "init": 0.7284,
+              "ref": 0.8627,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6174,
+              "ref": 0.6829,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5664,
+              "ref": 0.5877,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5185,
+              "ref": 0.7663,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6898,
+              "ref": 0.722,
+              "chance": 0.026
+            }
+          },
+          "1350": {
+            "embedding": {
+              "init": 0.7252,
+              "ref": 0.8387,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6115,
+              "ref": 0.6761,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5666,
+              "ref": 0.5873,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5169,
+              "ref": 0.7628,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6889,
+              "ref": 0.7212,
+              "chance": 0.026
+            }
+          },
+          "1400": {
+            "embedding": {
+              "init": 0.7265,
+              "ref": 0.8386,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6082,
+              "ref": 0.6729,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5619,
+              "ref": 0.5822,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5131,
+              "ref": 0.7562,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6826,
+              "ref": 0.7146,
+              "chance": 0.026
+            }
+          },
+          "1450": {
+            "embedding": {
+              "init": 0.7223,
+              "ref": 0.8413,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6047,
+              "ref": 0.6702,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5588,
+              "ref": 0.5793,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5118,
+              "ref": 0.7529,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6786,
+              "ref": 0.7104,
+              "chance": 0.026
+            }
+          },
+          "1500": {
+            "embedding": {
+              "init": 0.7195,
+              "ref": 0.8345,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6,
+              "ref": 0.6643,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5574,
+              "ref": 0.5779,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5093,
+              "ref": 0.745,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6738,
+              "ref": 0.7057,
+              "chance": 0.026
+            }
+          }
+        }
+      },
+      "score": {
+        "prism_score": 3.340909090909091,
+        "hit_step": 440,
+        "reached_baseline_quality": true,
+        "baseline_target": 1.487,
+        "left_censored": false,
+        "note": ""
+      }
+    },
+    {
+      "seed": 1339,
+      "overlap": null,
+      "baseline": {
+        "curve": {
+          "0": 5.6107,
+          "10": 4.0011,
+          "20": 3.4412,
+          "30": 3.0087,
+          "40": 2.7697,
+          "50": 2.6516,
+          "60": 2.6039,
+          "70": 2.5812,
+          "80": 2.5861,
+          "90": 2.558,
+          "100": 2.5617,
+          "110": 2.5543,
+          "120": 2.5445,
+          "130": 2.5428,
+          "140": 2.5284,
+          "150": 2.5747,
+          "160": 2.5332,
+          "170": 2.5176,
+          "180": 2.4948,
+          "190": 2.4842,
+          "200": 2.4461,
+          "210": 2.4085,
+          "220": 2.3414,
+          "230": 2.315,
+          "240": 2.2685,
+          "250": 2.2554,
+          "260": 2.2032,
+          "270": 2.1769,
+          "280": 2.1595,
+          "290": 2.1319,
+          "300": 2.1005,
+          "310": 2.092,
+          "320": 2.0565,
+          "330": 2.0453,
+          "340": 2.0165,
+          "350": 2.0043,
+          "360": 1.9926,
+          "370": 1.9664,
+          "380": 1.9455,
+          "390": 1.9283,
+          "400": 1.9269,
+          "410": 1.9196,
+          "420": 1.8908,
+          "430": 1.8882,
+          "440": 1.8801,
+          "450": 1.8674,
+          "460": 1.8574,
+          "470": 1.8575,
+          "480": 1.8387,
+          "490": 1.8241,
+          "500": 1.8177,
+          "510": 1.8109,
+          "520": 1.8054,
+          "530": 1.8009,
+          "540": 1.7971,
+          "550": 1.7753,
+          "560": 1.7711,
+          "570": 1.7757,
+          "580": 1.7695,
+          "590": 1.7589,
+          "600": 1.7363,
+          "610": 1.7419,
+          "620": 1.7355,
+          "630": 1.7388,
+          "640": 1.7261,
+          "650": 1.7154,
+          "660": 1.7182,
+          "670": 1.709,
+          "680": 1.7011,
+          "690": 1.694,
+          "700": 1.6973,
+          "710": 1.6816,
+          "720": 1.692,
+          "730": 1.6754,
+          "740": 1.6596,
+          "750": 1.6548,
+          "760": 1.6558,
+          "770": 1.6445,
+          "780": 1.6457,
+          "790": 1.6374,
+          "800": 1.6446,
+          "810": 1.6463,
+          "820": 1.6339,
+          "830": 1.6248,
+          "840": 1.6216,
+          "850": 1.6204,
+          "860": 1.6151,
+          "870": 1.6185,
+          "880": 1.6123,
+          "890": 1.601,
+          "900": 1.6025,
+          "910": 1.6006,
+          "920": 1.5952,
+          "930": 1.5987,
+          "940": 1.6024,
+          "950": 1.5922,
+          "960": 1.5918,
+          "970": 1.5857,
+          "980": 1.5853,
+          "990": 1.5925,
+          "1000": 1.5903,
+          "1010": 1.5902,
+          "1020": 1.5802,
+          "1030": 1.5643,
+          "1040": 1.5687,
+          "1050": 1.5682,
+          "1060": 1.5728,
+          "1070": 1.5658,
+          "1080": 1.5635,
+          "1090": 1.5619,
+          "1100": 1.5636,
+          "1110": 1.5581,
+          "1120": 1.5515,
+          "1130": 1.5489,
+          "1140": 1.5482,
+          "1150": 1.5464,
+          "1160": 1.5465,
+          "1170": 1.5423,
+          "1180": 1.5402,
+          "1190": 1.5296,
+          "1200": 1.5402,
+          "1210": 1.5292,
+          "1220": 1.5276,
+          "1230": 1.5306,
+          "1240": 1.5354,
+          "1250": 1.5122,
+          "1260": 1.5341,
+          "1270": 1.5256,
+          "1280": 1.5185,
+          "1290": 1.5235,
+          "1300": 1.5242,
+          "1310": 1.5129,
+          "1320": 1.52,
+          "1330": 1.519,
+          "1340": 1.5155,
+          "1350": 1.5123,
+          "1360": 1.5249,
+          "1370": 1.5077,
+          "1380": 1.4999,
+          "1390": 1.5138,
+          "1400": 1.5032,
+          "1410": 1.5051,
+          "1420": 1.5007,
+          "1430": 1.4995,
+          "1440": 1.5054,
+          "1450": 1.5104,
+          "1460": 1.4958,
+          "1470": 1.4964,
+          "1480": 1.5021,
+          "1490": 1.4848,
+          "1500": 1.4886
+        },
+        "best": 1.4848,
+        "best_step": 1490,
+        "at_end": 1.4886,
+        "wall_sec": 430.1,
+        "overfits": false,
+        "step_ms": 282.39,
+        "overlap": {
+          "0": {
+            "embedding": {
+              "init": 1.0,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 1.0001,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "50": {
+            "embedding": {
+              "init": 0.8942,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.9278,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.8815,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.8607,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.3982,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "100": {
+            "embedding": {
+              "init": 0.7356,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.743,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6864,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6281,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.124,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "150": {
+            "embedding": {
+              "init": 0.5515,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.519,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.4237,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.411,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0691,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "200": {
+            "embedding": {
+              "init": 0.3481,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.3209,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.1864,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.2344,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0511,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "250": {
+            "embedding": {
+              "init": 0.2242,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.1563,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0988,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.1213,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0417,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "300": {
+            "embedding": {
+              "init": 0.1785,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0951,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0729,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0778,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0352,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "350": {
+            "embedding": {
+              "init": 0.1593,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0733,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0637,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0645,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0336,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "400": {
+            "embedding": {
+              "init": 0.1529,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0635,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0596,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0583,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0325,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "450": {
+            "embedding": {
+              "init": 0.1483,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0596,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0563,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0539,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0315,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "500": {
+            "embedding": {
+              "init": 0.1436,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0556,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0538,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0521,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0312,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "550": {
+            "embedding": {
+              "init": 0.141,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0524,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.052,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0503,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0305,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "600": {
+            "embedding": {
+              "init": 0.1374,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0483,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0513,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.049,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0301,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "650": {
+            "embedding": {
+              "init": 0.1354,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0465,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0511,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0477,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0301,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "700": {
+            "embedding": {
+              "init": 0.1321,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0448,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0493,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0476,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0298,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "750": {
+            "embedding": {
+              "init": 0.131,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0441,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0491,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0463,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0296,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "800": {
+            "embedding": {
+              "init": 0.1278,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0428,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0484,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0452,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0292,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "850": {
+            "embedding": {
+              "init": 0.1262,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0424,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0484,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0449,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0291,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "900": {
+            "embedding": {
+              "init": 0.1265,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0419,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0484,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0438,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0289,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "950": {
+            "embedding": {
+              "init": 0.1247,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0414,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0472,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0431,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0289,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1000": {
+            "embedding": {
+              "init": 0.1244,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0408,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0466,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0426,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0289,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1050": {
+            "embedding": {
+              "init": 0.124,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0396,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0466,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0423,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0287,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1100": {
+            "embedding": {
+              "init": 0.1234,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0396,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0472,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0419,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0284,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1150": {
+            "embedding": {
+              "init": 0.1223,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0395,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0477,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0415,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0282,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1200": {
+            "embedding": {
+              "init": 0.1218,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0391,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0474,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0412,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0281,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1250": {
+            "embedding": {
+              "init": 0.1196,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0392,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0477,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0413,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.028,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1300": {
+            "embedding": {
+              "init": 0.1196,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0385,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0477,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.041,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0281,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1350": {
+            "embedding": {
+              "init": 0.1189,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0382,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0468,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0403,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.028,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1400": {
+            "embedding": {
+              "init": 0.1176,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0374,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0471,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0401,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.028,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1450": {
+            "embedding": {
+              "init": 0.1158,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0378,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0464,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0399,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.0281,
+              "ref": null,
+              "chance": 0.026
+            }
+          },
+          "1500": {
+            "embedding": {
+              "init": 0.1163,
+              "ref": null,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.0377,
+              "ref": null,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.0468,
+              "ref": null,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.0402,
+              "ref": null,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.028,
+              "ref": null,
+              "chance": 0.026
+            }
+          }
+        }
+      },
+      "method": {
+        "curve": {
+          "0": 4.3345,
+          "10": 3.1047,
+          "20": 2.6579,
+          "30": 2.3574,
+          "40": 2.1759,
+          "50": 2.0402,
+          "60": 1.922,
+          "70": 1.8538,
+          "80": 1.8055,
+          "90": 1.764,
+          "100": 1.7486,
+          "110": 1.7035,
+          "120": 1.6782,
+          "130": 1.6581,
+          "140": 1.6212,
+          "150": 1.6138,
+          "160": 1.6003,
+          "170": 1.6027,
+          "180": 1.5871,
+          "190": 1.5709,
+          "200": 1.5668,
+          "210": 1.5611,
+          "220": 1.5454,
+          "230": 1.5614,
+          "240": 1.5374,
+          "250": 1.5441,
+          "260": 1.5387,
+          "270": 1.5365,
+          "280": 1.5461,
+          "290": 1.5165,
+          "300": 1.5151,
+          "310": 1.5154,
+          "320": 1.5084,
+          "330": 1.5155,
+          "340": 1.5056,
+          "350": 1.5123,
+          "360": 1.5032,
+          "370": 1.4965,
+          "380": 1.4891,
+          "390": 1.4876,
+          "400": 1.4941,
+          "410": 1.4899,
+          "420": 1.4945,
+          "430": 1.4841,
+          "440": 1.4846,
+          "450": 1.4874,
+          "460": 1.4786,
+          "470": 1.4745,
+          "480": 1.4765,
+          "490": 1.4715,
+          "500": 1.4725,
+          "510": 1.4632,
+          "520": 1.4728,
+          "530": 1.4773,
+          "540": 1.4688,
+          "550": 1.452,
+          "560": 1.4644,
+          "570": 1.4707,
+          "580": 1.4678,
+          "590": 1.4641,
+          "600": 1.4469,
+          "610": 1.4578,
+          "620": 1.4627,
+          "630": 1.4653,
+          "640": 1.453,
+          "650": 1.4506,
+          "660": 1.4528,
+          "670": 1.4486,
+          "680": 1.4502,
+          "690": 1.4368,
+          "700": 1.4457,
+          "710": 1.4362,
+          "720": 1.4412,
+          "730": 1.4398,
+          "740": 1.4324,
+          "750": 1.4386,
+          "760": 1.439,
+          "770": 1.4325,
+          "780": 1.4355,
+          "790": 1.4274,
+          "800": 1.4413,
+          "810": 1.4356,
+          "820": 1.4323,
+          "830": 1.4264,
+          "840": 1.4333,
+          "850": 1.4244,
+          "860": 1.422,
+          "870": 1.4339,
+          "880": 1.4273,
+          "890": 1.4207,
+          "900": 1.4254,
+          "910": 1.428,
+          "920": 1.4287,
+          "930": 1.4242,
+          "940": 1.4284,
+          "950": 1.4191,
+          "960": 1.4236,
+          "970": 1.4176,
+          "980": 1.4256,
+          "990": 1.4312,
+          "1000": 1.4312,
+          "1010": 1.4253,
+          "1020": 1.4161,
+          "1030": 1.4077,
+          "1040": 1.4114,
+          "1050": 1.4143,
+          "1060": 1.4173,
+          "1070": 1.4184,
+          "1080": 1.4122,
+          "1090": 1.4181,
+          "1100": 1.4161,
+          "1110": 1.4139,
+          "1120": 1.4103,
+          "1130": 1.4146,
+          "1140": 1.4126,
+          "1150": 1.4059,
+          "1160": 1.4108,
+          "1170": 1.4009,
+          "1180": 1.4013,
+          "1190": 1.4016,
+          "1200": 1.4065,
+          "1210": 1.4018,
+          "1220": 1.4009,
+          "1230": 1.3987,
+          "1240": 1.418,
+          "1250": 1.3885,
+          "1260": 1.4129,
+          "1270": 1.396,
+          "1280": 1.3925,
+          "1290": 1.4038,
+          "1300": 1.4025,
+          "1310": 1.3983,
+          "1320": 1.3999,
+          "1330": 1.3885,
+          "1340": 1.4025,
+          "1350": 1.3967,
+          "1360": 1.401,
+          "1370": 1.3919,
+          "1380": 1.3856,
+          "1390": 1.3991,
+          "1400": 1.3945,
+          "1410": 1.3943,
+          "1420": 1.3924,
+          "1430": 1.387,
+          "1440": 1.3927,
+          "1450": 1.4028,
+          "1460": 1.388,
+          "1470": 1.3885,
+          "1480": 1.3971,
+          "1490": 1.3841,
+          "1500": 1.3848
+        },
+        "best": 1.3841,
+        "best_step": 1490,
+        "at_end": 1.3848,
+        "wall_sec": 422.8,
+        "overfits": false,
+        "step_ms": 276.03,
+        "overlap": {
+          "0": {
+            "embedding": {
+              "init": 1.0,
+              "ref": 0.7695,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 1.0001,
+              "ref": 0.8268,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 1.0001,
+              "ref": 0.9466,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 1.0001,
+              "ref": 0.5877,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 1.0001,
+              "ref": 0.9312,
+              "chance": 0.026
+            }
+          },
+          "50": {
+            "embedding": {
+              "init": 0.9535,
+              "ref": 0.8074,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.9107,
+              "ref": 0.8041,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.8603,
+              "ref": 0.8184,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.9197,
+              "ref": 0.6239,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.8809,
+              "ref": 0.8329,
+              "chance": 0.026
+            }
+          },
+          "100": {
+            "embedding": {
+              "init": 0.9065,
+              "ref": 0.8358,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.798,
+              "ref": 0.8045,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6719,
+              "ref": 0.6579,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.862,
+              "ref": 0.6492,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.8092,
+              "ref": 0.7931,
+              "chance": 0.026
+            }
+          },
+          "150": {
+            "embedding": {
+              "init": 0.8438,
+              "ref": 0.863,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7552,
+              "ref": 0.7876,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6062,
+              "ref": 0.6079,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.8069,
+              "ref": 0.6813,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7921,
+              "ref": 0.7924,
+              "chance": 0.026
+            }
+          },
+          "200": {
+            "embedding": {
+              "init": 0.8344,
+              "ref": 0.8641,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.731,
+              "ref": 0.7907,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.615,
+              "ref": 0.6239,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.7488,
+              "ref": 0.7178,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.8007,
+              "ref": 0.8099,
+              "chance": 0.026
+            }
+          },
+          "250": {
+            "embedding": {
+              "init": 0.8291,
+              "ref": 0.8637,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7273,
+              "ref": 0.7877,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6198,
+              "ref": 0.6324,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.7231,
+              "ref": 0.7344,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7944,
+              "ref": 0.8093,
+              "chance": 0.026
+            }
+          },
+          "300": {
+            "embedding": {
+              "init": 0.8254,
+              "ref": 0.8622,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.722,
+              "ref": 0.7872,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6165,
+              "ref": 0.631,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6862,
+              "ref": 0.7543,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7915,
+              "ref": 0.8104,
+              "chance": 0.026
+            }
+          },
+          "350": {
+            "embedding": {
+              "init": 0.8208,
+              "ref": 0.8612,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.7144,
+              "ref": 0.7798,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.62,
+              "ref": 0.636,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6583,
+              "ref": 0.7708,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7891,
+              "ref": 0.8111,
+              "chance": 0.026
+            }
+          },
+          "400": {
+            "embedding": {
+              "init": 0.8173,
+              "ref": 0.861,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.706,
+              "ref": 0.7695,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6144,
+              "ref": 0.6312,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6356,
+              "ref": 0.7885,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.782,
+              "ref": 0.8059,
+              "chance": 0.026
+            }
+          },
+          "450": {
+            "embedding": {
+              "init": 0.8138,
+              "ref": 0.8605,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.699,
+              "ref": 0.7648,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6172,
+              "ref": 0.6344,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.6153,
+              "ref": 0.797,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7776,
+              "ref": 0.8031,
+              "chance": 0.026
+            }
+          },
+          "500": {
+            "embedding": {
+              "init": 0.7884,
+              "ref": 0.9017,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6965,
+              "ref": 0.7586,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6149,
+              "ref": 0.6334,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5903,
+              "ref": 0.8058,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7726,
+              "ref": 0.7996,
+              "chance": 0.026
+            }
+          },
+          "550": {
+            "embedding": {
+              "init": 0.784,
+              "ref": 0.9013,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6892,
+              "ref": 0.7526,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6118,
+              "ref": 0.6309,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5716,
+              "ref": 0.807,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7695,
+              "ref": 0.7974,
+              "chance": 0.026
+            }
+          },
+          "600": {
+            "embedding": {
+              "init": 0.7826,
+              "ref": 0.9014,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6845,
+              "ref": 0.7457,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.609,
+              "ref": 0.6285,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.564,
+              "ref": 0.809,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7648,
+              "ref": 0.7936,
+              "chance": 0.026
+            }
+          },
+          "650": {
+            "embedding": {
+              "init": 0.7807,
+              "ref": 0.8956,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6775,
+              "ref": 0.7368,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.6015,
+              "ref": 0.6207,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5584,
+              "ref": 0.8052,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7629,
+              "ref": 0.7927,
+              "chance": 0.026
+            }
+          },
+          "700": {
+            "embedding": {
+              "init": 0.777,
+              "ref": 0.8931,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6721,
+              "ref": 0.7302,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5987,
+              "ref": 0.6192,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5535,
+              "ref": 0.7995,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7548,
+              "ref": 0.7847,
+              "chance": 0.026
+            }
+          },
+          "750": {
+            "embedding": {
+              "init": 0.7726,
+              "ref": 0.8916,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.669,
+              "ref": 0.7271,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.595,
+              "ref": 0.6165,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5443,
+              "ref": 0.8002,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7513,
+              "ref": 0.7818,
+              "chance": 0.026
+            }
+          },
+          "800": {
+            "embedding": {
+              "init": 0.7704,
+              "ref": 0.8916,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.659,
+              "ref": 0.7176,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5827,
+              "ref": 0.6035,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5423,
+              "ref": 0.7925,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7433,
+              "ref": 0.7741,
+              "chance": 0.026
+            }
+          },
+          "850": {
+            "embedding": {
+              "init": 0.7653,
+              "ref": 0.8934,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6584,
+              "ref": 0.7155,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5761,
+              "ref": 0.597,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5399,
+              "ref": 0.7925,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7423,
+              "ref": 0.7735,
+              "chance": 0.026
+            }
+          },
+          "900": {
+            "embedding": {
+              "init": 0.7514,
+              "ref": 0.8899,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6559,
+              "ref": 0.7126,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5758,
+              "ref": 0.5962,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5367,
+              "ref": 0.7857,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7351,
+              "ref": 0.7666,
+              "chance": 0.026
+            }
+          },
+          "950": {
+            "embedding": {
+              "init": 0.7416,
+              "ref": 0.8822,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6478,
+              "ref": 0.7069,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5755,
+              "ref": 0.5963,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5341,
+              "ref": 0.7808,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7291,
+              "ref": 0.7606,
+              "chance": 0.026
+            }
+          },
+          "1000": {
+            "embedding": {
+              "init": 0.7363,
+              "ref": 0.8842,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6448,
+              "ref": 0.7055,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.572,
+              "ref": 0.592,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5309,
+              "ref": 0.7802,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7251,
+              "ref": 0.7565,
+              "chance": 0.026
+            }
+          },
+          "1050": {
+            "embedding": {
+              "init": 0.7324,
+              "ref": 0.8812,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6374,
+              "ref": 0.6969,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5661,
+              "ref": 0.5857,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5292,
+              "ref": 0.7742,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7206,
+              "ref": 0.7519,
+              "chance": 0.026
+            }
+          },
+          "1100": {
+            "embedding": {
+              "init": 0.7288,
+              "ref": 0.8791,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6336,
+              "ref": 0.6907,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5616,
+              "ref": 0.5811,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5278,
+              "ref": 0.7714,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.716,
+              "ref": 0.7473,
+              "chance": 0.026
+            }
+          },
+          "1150": {
+            "embedding": {
+              "init": 0.7256,
+              "ref": 0.873,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6306,
+              "ref": 0.6915,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5557,
+              "ref": 0.5748,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5248,
+              "ref": 0.767,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7113,
+              "ref": 0.7425,
+              "chance": 0.026
+            }
+          },
+          "1200": {
+            "embedding": {
+              "init": 0.7229,
+              "ref": 0.8703,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6247,
+              "ref": 0.6859,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5586,
+              "ref": 0.5783,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5231,
+              "ref": 0.7659,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7077,
+              "ref": 0.7391,
+              "chance": 0.026
+            }
+          },
+          "1250": {
+            "embedding": {
+              "init": 0.7234,
+              "ref": 0.8705,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6212,
+              "ref": 0.6846,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5559,
+              "ref": 0.5764,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.521,
+              "ref": 0.7638,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.7016,
+              "ref": 0.7328,
+              "chance": 0.026
+            }
+          },
+          "1300": {
+            "embedding": {
+              "init": 0.7234,
+              "ref": 0.8738,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6193,
+              "ref": 0.6786,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5526,
+              "ref": 0.5724,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5194,
+              "ref": 0.7598,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.695,
+              "ref": 0.7262,
+              "chance": 0.026
+            }
+          },
+          "1350": {
+            "embedding": {
+              "init": 0.7209,
+              "ref": 0.8688,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6126,
+              "ref": 0.672,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5544,
+              "ref": 0.5746,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5174,
+              "ref": 0.7559,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6913,
+              "ref": 0.7226,
+              "chance": 0.026
+            }
+          },
+          "1400": {
+            "embedding": {
+              "init": 0.7198,
+              "ref": 0.8701,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.608,
+              "ref": 0.6701,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5522,
+              "ref": 0.5733,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5162,
+              "ref": 0.7515,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6876,
+              "ref": 0.7188,
+              "chance": 0.026
+            }
+          },
+          "1450": {
+            "embedding": {
+              "init": 0.7195,
+              "ref": 0.8684,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6061,
+              "ref": 0.6677,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5422,
+              "ref": 0.5617,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.514,
+              "ref": 0.7479,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6842,
+              "ref": 0.7155,
+              "chance": 0.026
+            }
+          },
+          "1500": {
+            "embedding": {
+              "init": 0.7193,
+              "ref": 0.8659,
+              "chance": 0.0521
+            },
+            "attention": {
+              "init": 0.6025,
+              "ref": 0.6641,
+              "chance": 0.0278
+            },
+            "attn_proj": {
+              "init": 0.5389,
+              "ref": 0.559,
+              "chance": 0.0417
+            },
+            "ffn_up": {
+              "init": 0.5124,
+              "ref": 0.7444,
+              "chance": 0.026
+            },
+            "ffn_down": {
+              "init": 0.6819,
+              "ref": 0.7131,
+              "chance": 0.026
+            }
+          }
+        }
+      },
+      "score": {
+        "prism_score": 3.4651162790697674,
+        "hit_step": 430,
+        "reached_baseline_quality": true,
+        "baseline_target": 1.4848,
+        "left_censored": false,
+        "note": ""
+      }
+    }
+  ],
+  "summary": {
+    "n_seeds": 3,
+    "n_reached_baseline": 3,
+    "prism_score": {
+      "median": 3.340909090909091,
+      "min": 2.466666666666667,
+      "max": 3.4651162790697674,
+      "values": [
+        2.4667,
+        3.3409,
+        3.4651
+      ]
+    },
+    "any_left_censored": false,
+    "baseline_best": {
+      "median": 1.4848,
+      "min": 1.4764,
+      "max": 1.487,
+      "values": [
+        1.4764,
+        1.487,
+        1.4848
+      ]
+    },
+    "method_best": {
+      "median": 1.3809,
+      "min": 1.3783,
+      "max": 1.3841,
+      "values": [
+        1.3809,
+        1.3783,
+        1.3841
+      ]
+    },
+    "method_overfits_any": false,
+    "baseline_overfits_any": false
+  }
+}
