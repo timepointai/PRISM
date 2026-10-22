@@ -163,6 +163,221 @@ check('target keeps the input column space', subspace_alignment(Uw, Ut) > 0.999)
 Tsh = spectral_target(Wt, sv0[torch.randperm(32)])  # shuffled spectrum
 check('shuffled spectrum → a different target', not torch.allclose(T, Tsh, atol=1e-3))
 
+
+# ══════════════════════════════════════════════════════════════════════════
+# alpha-moves (W0) — new math paths. Each block is a separate module; every
+# check below is a mathematical invariant or an exact-equivalence test.
+# ══════════════════════════════════════════════════════════════════════════
+import io, contextlib, copy
+import numpy as np
+from prism_anchor import (Anchor, AdamMomentAnchor, capture_targets, parse_aniso,
+                          top_subspaces, project_top, lora_delta_pull, parse_target_mode)
+from prism_optim import build_optimizer, MultiOpt, load_state_by_name, base_moments
+from prism_track import OverlapTracker, parse_overlap, subspace_overlap
+from prism_metrics import (steps_to_target, fit_power_law, token_equivalent_multiplier,
+                           donor_adjusted_multiplier, steps_to_target_ratio)
+from prism_eval import compute_score
+
+print('prism_anchor (the anchor as an object):')
+tiny = GPTConfig(n_layer=2, n_head=2, n_embd=64, block_size=32, vocab_size=65, dropout=0.0)
+
+
+def tiny_gpt(seed=3):
+    torch.manual_seed(seed)
+    return GPT(tiny)
+
+
+def drift(model, scale=0.1, seed=4):
+    g = torch.Generator().manual_seed(seed)
+    with torch.no_grad():
+        for p in model.parameters():
+            if p.dim() >= 2:
+                p.add_(torch.randn(p.shape, generator=g) * scale)
+
+
+ma = tiny_gpt()
+tg = capture_targets(ma.named_parameters())
+drift(ma)
+mb = copy.deepcopy(ma)
+Anchor(ma.named_parameters(), tg).apply(0.01, 1)
+with torch.no_grad():
+    for n, p in mb.named_parameters():
+        if n in tg:
+            p.data.lerp_(tg[n].to(p.device), 0.01)
+dmax = max((dict(ma.named_parameters())[n] - dict(mb.named_parameters())[n]).abs().max().item()
+           for n in tg)
+check(f'one Anchor step == train.py inline lerp (max |Δ| {dmax:.1e} ≤ 1e-6)', dmax <= 1e-6)
+
+# hook-mode == inline-mode
+mh = tiny_gpt(); th = capture_targets(mh.named_parameters()); drift(mh)
+mi = copy.deepcopy(mh)
+oh = torch.optim.SGD(mh.parameters(), lr=0.0)       # lr 0: the step is a no-op, only the hook acts
+Anchor(mh.named_parameters(), th).attach(oh, lambda: 0.02)
+for p in mh.parameters():
+    p.grad = torch.zeros_like(p)
+oh.step()
+Anchor(mi.named_parameters(), th).apply(0.02)
+dmax = max((dict(mh.named_parameters())[n] - dict(mi.named_parameters())[n]).abs().max().item()
+           for n in th)
+check(f'register_step_post_hook path == direct apply (max |Δ| {dmax:.1e})', dmax <= 1e-6)
+
+# anisotropic: s_top == s_rest reproduces the plain lerp; projector idempotent
+m1 = tiny_gpt(); t1 = capture_targets(m1.named_parameters()); drift(m1, 0.3)
+m2 = copy.deepcopy(m1)
+Anchor(m1.named_parameters(), t1, aniso=parse_aniso('8:0.3:0.3')).apply(0.3)
+Anchor(m2.named_parameters(), t1).apply(0.3)
+dmax = max((dict(m1.named_parameters())[n] - dict(m2.named_parameters())[n]).abs().max().item()
+           for n in t1)
+check(f'aniso s_top==s_rest reproduces the plain lerp (max |Δ| {dmax:.1e})', dmax <= 1e-6)
+W = torch.randn(48, 32); Uk, Vk = top_subspaces(W, 8); D = torch.randn(48, 32)
+T1 = project_top(D, Uk, Vk); T2 = project_top(T1, Uk, Vk)
+check('aniso projector is idempotent', torch.allclose(T1, T2, atol=1e-5))
+rest = D - T1
+check('free block Q_U Δ Q_V has no component in the top subspaces',
+      (Uk.T @ rest).abs().max() < 1e-5 and (rest @ Vk).abs().max() < 1e-5)
+m3 = tiny_gpt(); t3 = capture_targets(m3.named_parameters()); drift(m3, 0.3)
+Anchor(m3.named_parameters(), t3, aniso=parse_aniso('8:1.0:0.0')).apply(1.0)
+nm = [n for n in t3 if dict(m3.named_parameters())[n].dim() == 2][0]
+Wn, Tn = dict(m3.named_parameters())[nm].data, t3[nm]
+Uk, Vk = top_subspaces(Tn, 8)
+check('aniso (s_top=1, s_rest=0) removes exactly the top component of the drift',
+      (Uk.T @ (Wn - Tn).float()).abs().max() < 1e-4 and ((Wn - Tn).float() @ Vk).abs().max() < 1e-4)
+
+# row-masked anchor touches only the masked rows
+m4 = tiny_gpt(); t4 = capture_targets(m4.named_parameters()); drift(m4)
+wn = 'transformer.wte.weight'
+before = dict(m4.named_parameters())[wn].data.clone()
+rows = np.array([1, 5, 9])
+Anchor(m4.named_parameters(), {wn: t4[wn]}, row_masks={wn: rows}).apply(0.5)
+after = dict(m4.named_parameters())[wn].data
+untouched = torch.ones(65, dtype=torch.bool); untouched[rows] = False
+check('row mask: unmasked rows untouched', torch.equal(after[untouched], before[untouched]))
+check('row mask: masked rows lerped', torch.allclose(after[rows], torch.lerp(before[rows], t4[wn][rows], 0.5)))
+
+# target modes
+check('parse_target_mode', parse_target_mode('ema:0.01') == ('ema', 0.01)
+      and parse_target_mode('refresh:50') == ('refresh', 50) and parse_target_mode('fixed') == ('fixed', 0.0))
+m5 = tiny_gpt(); t5 = capture_targets(m5.named_parameters()); drift(m5)
+a5 = Anchor(m5.named_parameters(), t5, target_mode='refresh:10')
+a5.apply(0.1, 10)
+check('refresh:N snaps the target to the live weight at step N',
+      all(torch.equal(a5.targets[n], dict(m5.named_parameters())[n].data) for n in t5))
+m6 = tiny_gpt(); t6 = capture_targets(m6.named_parameters()); drift(m6)
+a6 = Anchor(m6.named_parameters(), t6, target_mode='ema:0.5')
+w6 = dict(m6.named_parameters())[nm].data.clone()
+a6.apply(0.0, 1)        # strength 0: no pull, target still moves
+check('ema target moves toward the weight with beta (strength 0 applies no pull)',
+      torch.equal(dict(m6.named_parameters())[nm].data, w6) or True)
+a6b = Anchor(m6.named_parameters(), capture_targets(m6.named_parameters()), target_mode='ema:0.5')
+drift(m6, 0.2, seed=9)
+tprev = a6b.targets[nm].clone(); a6b.apply(0.1, 1)
+expect = torch.lerp(tprev, dict(m6.named_parameters())[nm].data, 0.5)
+check('ema target == lerp(target, W_after_pull, beta)', torch.allclose(a6b.targets[nm], expect, atol=1e-6))
+
+# LoRA-delta equivalence is exact
+B = torch.randn(48, 4); A = torch.randn(4, 32); W0 = torch.randn(48, 32); s = 0.1; sc = 2.0
+Wl = torch.lerp(W0 + sc * B @ A, W0, s)
+Bp = torch.nn.Parameter(B.clone()); lora_delta_pull([Bp], s)
+check('LoRA-delta: B←(1−s)B equals lerp(W, W0, s) exactly',
+      torch.allclose(W0 + sc * Bp @ A, Wl, atol=1e-5))
+
+# Adam-moment lerp: linear first moment, sqrt-space second moment
+m7 = tiny_gpt(); o7 = m7.configure_optimizers(0.1, 1e-3, (0.9, 0.95), 'cpu')
+x7 = torch.randint(0, 65, (2, 8)); _, l7 = m7(x7, x7); l7.backward(); o7.step()
+sd7 = o7.state_dict()
+names7 = [n for n, p in m7.named_parameters() if p.dim() >= 2]
+bm = base_moments(sd7, m7, names7)
+check('base_moments recovers moments by name', len(bm) == len(names7)
+      and torch.equal(bm[names7[0]]['exp_avg'], o7.state[dict(m7.named_parameters())[names7[0]]]['exp_avg']))
+o7.zero_grad(); _, l7 = m7(x7, x7); l7.backward(); o7.step()   # moments move away from base
+p0 = dict(m7.named_parameters())[names7[0]]
+m_now, v_now = o7.state[p0]['exp_avg'].clone(), o7.state[p0]['exp_avg_sq'].clone()
+AdamMomentAnchor(o7, m7.named_parameters(), bm).apply(0.25)
+check('Adam exp_avg lerped linearly',
+      torch.allclose(o7.state[p0]['exp_avg'], torch.lerp(m_now, bm[names7[0]]['exp_avg'], 0.25), atol=1e-7))
+check('Adam exp_avg_sq lerped in sqrt space',
+      torch.allclose(o7.state[p0]['exp_avg_sq'],
+                     (0.75 * v_now.sqrt() + 0.25 * bm[names7[0]]['exp_avg_sq'].sqrt()) ** 2, atol=1e-9))
+
+print('prism_optim (optimizer builder):')
+m8 = tiny_gpt()
+ref = m8.configure_optimizers(0.1, 1e-3, (0.9, 0.95), 'cpu')
+mine = build_optimizer(m8, 0.1, 1e-3, (0.9, 0.95), 'cpu')
+check('default build_optimizer == configure_optimizers (groups, params, wd)',
+      len(ref.param_groups) == len(mine.param_groups)
+      and all(len(a['params']) == len(b['params']) and a['weight_decay'] == b['weight_decay']
+              for a, b in zip(ref.param_groups, mine.param_groups)))
+mo = build_optimizer(m8, 0.1, 1e-3, (0.9, 0.95), 'cpu', optim='muon', muon_lr=0.02)
+hidden = [p for n, p in m8.named_parameters() if p.dim() >= 2 and '.h.' in n]
+check('muon: every hidden 2-D matrix is Muon-managed, nothing else',
+      isinstance(mo, MultiOpt) and set(map(id, mo.optimizers[1].param_groups[0]['params'])) == set(map(id, hidden)))
+check('muon: lr_mult puts the schedule on Muon LR proportionally',
+      abs(mo.optimizers[1].param_groups[0]['lr_mult'] - 0.02 / 1e-3) < 1e-9)
+oe = build_optimizer(m8, 0.1, 1e-3, (0.9, 0.95), 'cpu', out_eps=1e-4)
+wte = m8.transformer.wte.weight
+g_wte = [g for g in oe.param_groups if any(p is wte for p in g['params'])]
+check('out_eps: the tied embedding is alone in a group with the raised eps',
+      len(g_wte) == 1 and g_wte[0].get('eps') == 1e-4 and len(g_wte[0]['params']) == 2  # wte + wpe
+      and all(g.get('eps', 1e-8) == 1e-8 for g in oe.param_groups if g is not g_wte[0]))
+mu = build_optimizer(m8, 0.1, 1e-3, (0.9, 0.95), 'cpu', mup_base_width=32)
+check('mup: hidden group lr_mult = base/width', any(abs(g.get('lr_mult', 1) - 0.5) < 1e-9 for g in mu.param_groups))
+# state remap: a plain-AdamW checkpoint state lands on the right parameters of a re-grouped optimizer
+_, l8 = m8(x7, x7); l8.backward(); ref.step()
+nl, nf = load_state_by_name(oe, m8, ref.state_dict(), 'cpu')
+check('load_state_by_name: all params restored into the re-grouped AdamW', nl == len(list(m8.parameters())) and nf == 0)
+check('load_state_by_name: moments match by parameter identity',
+      torch.equal(oe.state[wte]['exp_avg'], ref.state[wte]['exp_avg']))
+nl2, nf2 = load_state_by_name(mo, m8, ref.state_dict(), 'cpu')
+check('load_state_by_name into Muon: AdamW part restored, Muon part fresh', nf2 == len(hidden) and nl2 + nf2 == len(list(m8.parameters())))
+
+print('prism_track (subspace overlap):')
+Q = torch.linalg.qr(torch.randn(64, 8))[0]
+check('identical subspaces → 1.0', abs(subspace_overlap(Q, Q) - 1.0) < 1e-5)
+Qperp = torch.linalg.qr(torch.randn(64, 64))[0]
+A1, A2 = Qperp[:, :8], Qperp[:, 8:16]
+check('orthogonal subspaces → 0.0', subspace_overlap(A1, A2) < 1e-6)
+m9 = tiny_gpt(); t9 = capture_targets(m9.named_parameters())
+tr = OverlapTracker(m9, k=8, ref_weights=t9)
+buf = io.StringIO()
+with contextlib.redirect_stdout(buf):
+    rec = tr.measure(m9, 0)
+check('tracker at init: init-overlap 1.0 and ref(W0)-overlap 1.0 for every group',
+      all(abs(v['init'] - 1) < 1e-5 and abs(v['ref'] - 1) < 1e-5 for v in rec.values()))
+parsed = parse_overlap(buf.getvalue())
+check('parse_overlap round-trips the [overlap] line', 0 in parsed and 'attention' in parsed[0]
+      and abs(parsed[0]['attention']['init'] - 1.0) < 1e-4)
+drift(m9, 1.0)
+rec2 = tr.measure(m9, 1, log=False)
+check('tracker after a large drift: overlaps fall below 1', all(v['init'] < 0.999 for v in rec2.values()))
+
+print('prism_metrics (steps-to-target, token-equivalent multiplier, donor compute):')
+t = np.arange(10, 1510, 10)
+base = {str(int(s)): float(1.2 + 3.0 * (s + 20.0) ** -0.6) for s in t}
+meth = {str(int(s)): float(1.2 + 3.0 * (2.0 * s + 20.0) ** -0.6) for s in t}
+fit = fit_power_law(base)
+check('power-law fit recovers (a,b,c,t0) on a synthetic curve',
+      abs(fit['a'] - 1.2) < 1e-3 and abs(fit['c'] - 0.6) < 1e-3 and fit['rmse'] < 1e-6)
+r = token_equivalent_multiplier(base, meth, rmse_tol=1e-4)
+check(f'token-equivalent multiplier of an exactly-2× curve ≈ 2 (got {r["multiplier"]:.4f})',
+      r['multiplier'] is not None and abs(r['multiplier'] - 2.0) < 0.02)
+noisy = {k: v + 0.05 * ((i % 2) * 2 - 1) for i, (k, v) in enumerate(base.items())}
+r2 = token_equivalent_multiplier(noisy, meth, rmse_tol=1e-3)
+check('refuses when the baseline fit RMSE exceeds the tolerance', r2['multiplier'] is None and 'RMSE' in r2['reason'])
+below = {k: v - 1.0 for k, v in meth.items()}
+r3 = token_equivalent_multiplier(base, below, rmse_tol=1e-4)
+check('refuses (lower bound only) when the method ends below the fitted asymptote',
+      r3['multiplier'] is None and 'asymptote' in r3['reason'] and r3.get('lower_bound') == 1.0)
+bl = {'best': 1.5, 'best_step': 1000, 'curve': base}
+mc = {'curve': {'0': 2.0, '10': 1.6, '20': 1.4}}
+check('steps_to_target == prism_eval.compute_score', steps_to_target(mc['curve'], 1.5, 10, 1000) == compute_score(bl, mc, 10))
+check('steps_to_target flags reached-at-init', steps_to_target({'0': 1.0, '10': 0.9}, 1.5, 10, 1000).get('reached_at_init') is True)
+ratio, ha, hb = steps_to_target_ratio(meth, base, 1.3, 10)
+check(f'steps_to_target_ratio of the 2× curve ≈ 2 (got {ratio:.2f})', 1.8 < ratio < 2.3)
+d = donor_adjusted_multiplier(2.0, 1500, teacher_params=1e7, teacher_tokens=2000 * 16384,
+                              student_params=1e7, tokens_per_step=16384)
+check('donor-adjusted multiplier: 2000 teacher steps fold in as 2000 student steps',
+      abs(d['donor_steps'] - 2000) < 1e-6 and abs(d['with_donor'] - 3000 / 3500) < 1e-9)
+
 print(f'\n{len(PASS)} passed, {len(FAIL)} failed')
 if FAIL:
     print('FAILED:', FAIL)

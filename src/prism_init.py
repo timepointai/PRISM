@@ -345,7 +345,7 @@ def apply_prism(model, align_strength=0.75, lam=1.0,
                 spectra_path=None, directions_path=None, verbose=True,
                 align_spec=None, align_mode='linear', align_topk=0,
                 align_depth_gamma=0.0, per_layer_spectra_path=None,
-                n_layer=None):
+                n_layer=None, imprint=True):
     """Apply Prism initialization to a nanoGPT model.
 
     Spectral Imprint: reshape singular values to match extracted spectrum.
@@ -373,6 +373,8 @@ def apply_prism(model, align_strength=0.75, lam=1.0,
         per_layer_spectra_path: path to a per-matrix spectra json (name→coeffs); if
             present, each matrix uses its own spectrum instead of the group average.
         n_layer: block count, for depth tapering (read from model config if None).
+        imprint: False = EigenTransfer only — rotate U/V toward the teacher but keep
+            the fresh init's OWN singular values (the pure-directions arm, W2a).
     """
     align_spec = _parse_align_spec(align_spec)
     if n_layer is None:
@@ -458,6 +460,8 @@ def apply_prism(model, align_strength=0.75, lam=1.0,
             blended = flat + lam * (shaped - flat)
             blended = torch.clamp(blended, min=0.01)
             s_new = blended * (frob / torch.norm(blended).item())
+            if not imprint:
+                s_new = s_fresh                      # pure directions: keep the fresh spectrum
 
             # Directional alignment
             U_use = U_fresh
@@ -509,6 +513,8 @@ def apply_prism(model, align_strength=0.75, lam=1.0,
             extra.append(f'spec={align_spec}')
         if per_layer_spectra:
             extra.append('per_layer_spectra')
+        if not imprint:
+            extra.append('NO imprint (fresh spectrum kept)')
         suffix = ('  [' + ', '.join(extra) + ']') if extra else ''
         print(f'[prism] Spectral Imprint (lam={lam}) + '
               f'EigenTransfer (align={align_strength}){suffix}')
