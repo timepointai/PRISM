@@ -138,3 +138,8 @@ A10 $1.10/h, L40S $1.95/h, A100-40 $2.10/h, A100-80 $2.50/h, H100 $3.95/h.
 - **EWC grid.** All three pre-registered λ values blocked injection on the catalog
   rig; the tuning-parity budget forbids a fourth. Shall EWC get a second,
   lower grid (λ ∈ {0.001, 0.003, 0.01}) as a separately pre-registered follow-up?
+
+**D13 (2026-10-22, user decision relayed by the planning session).** PRISM GPU spend is
+capped at $100 total through 2026-11-21. Finish the runs already in flight, open the PR,
+and launch nothing else: no Tier B (Pythia G2, 1B retention study, W4 3-seed
+confirmations) and no 124M replication before 2026-11-21.
