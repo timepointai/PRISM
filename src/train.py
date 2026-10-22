@@ -101,6 +101,7 @@ prism_anchor_target = 'fixed'  # 'fixed' | 'ema:<beta>' | 'refresh:<N>' — what
 prism_anchor_device = 'cpu'  # 'cpu' (targets moved per step, historical) | 'auto' (kept on the training device)
 prism_track_overlap = 0      # every N steps print [overlap] subspace lines (prism_track.py); 0 = off
 prism_track_k = 16           # top-k subspace size for the overlap tracker
+prism_track_ref = ''         # directions.pt to use as the tracker's reference (default: the transplanted teacher / W0)
 ft_method = ''               # '' | 'sst' | 'rpsft' | 'ewc' | 'lora' | 'selfdistill' — competitor finetune methods (prism_baselines.py)
 ft_method_cfg = ''           # 'k:v,k:v' hyper-parameters for ft_method (see prism_baselines.py docstring)
 prior_sparse = ''            # sparse interpolated n-gram prior (prism_prior.py build); overrides prior_table
@@ -450,14 +451,16 @@ tracker = None
 if prism_track_overlap > 0:
     from prism_track import OverlapTracker
     _ref_dirs = _ref_w = None
-    if init_from == 'scratch' and prism_init and prism_directions:
+    if prism_track_ref:
+        _ref_dirs = torch.load(prism_track_ref, map_location='cpu', weights_only=False)
+    elif init_from == 'scratch' and prism_init and prism_directions:
         _ref_dirs = torch.load(prism_directions, map_location='cpu', weights_only=False)
     elif init_from == 'resume':
         _ref_w = (prism_anchor_obj.targets if prism_anchor_obj is not None else
                   {n: p.data.clone().cpu() for n, p in model.named_parameters() if p.dim() >= 2})
     tracker = OverlapTracker(model, k=prism_track_k, ref_dirs=_ref_dirs, ref_weights=_ref_w)
     print(f"[overlap] tracking {len(tracker.names)} matrices every {prism_track_overlap} steps "
-          f"(k={prism_track_k}, ref={'teacher dirs' if _ref_dirs else ('W0' if _ref_w else 'none')})")
+          f"(k={prism_track_k}, ref={('explicit dirs ' + prism_track_ref) if prism_track_ref else ('teacher dirs' if _ref_dirs else ('W0' if _ref_w else 'none'))})")
 
 # Sparse n-gram prior / COUNT embedding (W5): built by prism_prior.py. Installed
 # before compile so the forward replacement is what gets compiled.

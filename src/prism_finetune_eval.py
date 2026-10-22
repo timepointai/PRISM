@@ -125,6 +125,9 @@ ARM_SPECS = {
     'lora_r4_t3':      dict(resume=True,  mod=0.0, lr='3e-3', extra=['--ft_method=lora', '--ft_method_cfg=r:4']),
     'lora_r4':         dict(resume=True,  mod=0.0, lr='1e-3', extra=['--ft_method=lora', '--ft_method_cfg=r:4']),
     'lora_r16':        dict(resume=True,  mod=0.0, lr='1e-3', extra=['--ft_method=lora', '--ft_method_cfg=r:16']),
+    'lora_r16_t1':     dict(resume=True,  mod=0.0, lr='3e-4', extra=['--ft_method=lora', '--ft_method_cfg=r:16']),
+    'lora_r16_t2':     dict(resume=True,  mod=0.0, lr='1e-3', extra=['--ft_method=lora', '--ft_method_cfg=r:16']),
+    'lora_r16_t3':     dict(resume=True,  mod=0.0, lr='3e-3', extra=['--ft_method=lora', '--ft_method_cfg=r:16']),
     'selfdistill_t1':  dict(resume=True,  mod=0.0, extra=['--ft_method=selfdistill', '--ft_method_cfg=alpha:0.3']),
     'selfdistill_t2':  dict(resume=True,  mod=0.0, extra=['--ft_method=selfdistill', '--ft_method_cfg=alpha:1.0']),
     'selfdistill_t3':  dict(resume=True,  mod=0.0, extra=['--ft_method=selfdistill', '--ft_method_cfg=alpha:3.0']),
@@ -427,7 +430,14 @@ def main():
                         'distinct tag when a new arm set shares a prior run schedule)')
     p.add_argument('--track_overlap', type=int, default=0,
                    help='every N steps bank [overlap] subspace traces for every arm (0 = off)')
+    p.add_argument('--arm_overrides', default='',
+                   help="'name:spec_arm,name:spec_arm' — run arm NAME with the spec of SPEC_ARM "
+                        "(the tuning-parity winner chosen on seed 1336, per rig); recorded in arm_specs")
     a = p.parse_args()
+    for pair in [x for x in a.arm_overrides.split(',') if x.strip()]:
+        name, spec_arm = pair.split(':')
+        assert name in ARM_SPECS and spec_arm in ARM_SPECS, f'unknown arm in override {pair}'
+        ARM_SPECS[name] = dict(ARM_SPECS[spec_arm], tuned_from=spec_arm)
     global SHAKE
     SHAKE = f'data/{a.old_corpus}'
     a.seeds = [int(s) for s in a.seeds.split(',') if s.strip()]
@@ -545,6 +555,7 @@ def _persist(stamp, key, a, dist, device, arms, per_seed, metrics, complete):
             'ft_val_corpus': a.ft_val_corpus,
             'recall_prompts': a.recall_prompts,
             'track_overlap': a.track_overlap,
+            'arm_overrides': a.arm_overrides,
             'base_steps': a.base_steps, 'ft_steps': a.ft_steps,
             'ft_warmup': a.ft_warmup, 'eval_every': a.eval_every,
             'eval_iters': a.eval_iters, 'seeds': a.seeds, 'arms': arms,

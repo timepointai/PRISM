@@ -13,11 +13,15 @@ over the matrices in a group. For two k-dim subspaces of R^d the metric is
 mean_i cos²θ_i = ‖U_kᵀ U'_k‖_F² / k ∈ [0, 1]; identical → 1, orthogonal → 0,
 and two random k-subspaces sit near k/d (reported as `chance`).
 
-Log line (a NEW format — the existing eval-line regexes are untouched):
+Log lines (NEW formats — the existing eval-line regexes are untouched):
 
     [overlap] step 120 attention init=0.8123 ref=0.4411 chance=0.0417
+    [trace] step 120 attention fro=12.3456 fro_ref=11.9876
 
-`parse_overlap(stdout)` banks it as {step: {group: {init, ref, chance}}}.
+`[trace]` is the lineage metric of arXiv 2608.07786 ("Trace": per-component
+Frobenius-norm profile, here the group mean, with the reference model's value
+beside it); `[overlap]` is its subspace-alignment metric in mean-cos² form.
+`parse_overlap(stdout)` banks both as {step: {group: {init, ref, chance, fro, fro_ref}}}.
 """
 import math
 import re
@@ -28,6 +32,7 @@ from prism_init import classify_nanogpt_param
 
 _LINE = re.compile(r'\[overlap\] step (\d+) (\w+) init=([\d.]+|nan) ref=([\d.]+|nan) '
                    r'chance=([\d.]+)')
+_TRACE = re.compile(r'\[trace\] step (\d+) (\w+) fro=([\d.]+) fro_ref=([\d.]+|nan)')
 
 
 def subspace_overlap(A, B):
@@ -62,22 +67,30 @@ class OverlapTracker:
                 self.init[name] = (U.cpu(), V.cpu())
                 kk = U.shape[1]
                 self.chance[name] = 0.5 * (kk / p.shape[0] + kk / p.shape[1])
+                self.ref_fro = getattr(self, 'ref_fro', {})
                 if ref_dirs and name in ref_dirs:
                     d = ref_dirs[name]
                     Ur, Vtr = d['U'], d['Vt']
                     if Ur.shape[0] == p.shape[0] and Vtr.shape[1] == p.shape[1]:
                         self.ref[name] = (Ur[:, :kk].contiguous().cpu(),
                                          Vtr[:kk].transpose(0, 1).contiguous().cpu())
+                        if 'S' in d:
+                            self.ref_fro[name] = float(torch.as_tensor(d['S']).float().pow(2).sum().sqrt())
                 elif ref_weights and name in ref_weights:
                     Ur, Vr = topk_uv(ref_weights[name], k)
                     self.ref[name] = (Ur.cpu(), Vr.cpu())
+                    self.ref_fro[name] = float(ref_weights[name].float().norm())
 
     @torch.no_grad()
     def measure(self, model, step, log=True):
         params = dict(model.named_parameters())
         per_group = {}
+        fro_group = {}
         for name in self.names:
             W = params[name].data
+            fr = fro_group.setdefault(self.groups[name], [[], []])
+            fr[0].append(float(W.float().norm()))
+            fr[1].append(self.ref_fro.get(name, float('nan')))
             U, V = topk_uv(W, self.k)
             Ui, Vi = self.init[name]
             o_init = 0.5 * (subspace_overlap(U.cpu(), Ui) + subspace_overlap(V.cpu(), Vi))
@@ -94,10 +107,15 @@ class OverlapTracker:
             rec = {'init': sum(inits) / len(inits),
                    'ref': (sum(refs) / len(refs)) if refs else float('nan'),
                    'chance': sum(ch) / len(ch)}
+            fro_s, fro_r = fro_group[g]
+            rec['fro'] = sum(fro_s) / len(fro_s)
+            fr_ok = [v for v in fro_r if not math.isnan(v)]
+            rec['fro_ref'] = (sum(fr_ok) / len(fr_ok)) if fr_ok else float('nan')
             out[g] = rec
             if log:
                 print(f"[overlap] step {step} {g} init={rec['init']:.4f} "
                       f"ref={rec['ref']:.4f} chance={rec['chance']:.4f}", flush=True)
+                print(f"[trace] step {step} {g} fro={rec['fro']:.4f} fro_ref={rec['fro_ref']:.4f}", flush=True)
         return out
 
 
@@ -108,9 +126,14 @@ def parse_overlap(stdout):
         m = _LINE.search(line)
         if m:
             step, g = int(m.group(1)), m.group(2)
-            out.setdefault(step, {})[g] = {'init': float(m.group(3)),
-                                           'ref': float(m.group(4)),
-                                           'chance': float(m.group(5))}
+            out.setdefault(step, {}).setdefault(g, {}).update(
+                {'init': float(m.group(3)), 'ref': float(m.group(4)), 'chance': float(m.group(5))})
+            continue
+        m = _TRACE.search(line)
+        if m:
+            step, g = int(m.group(1)), m.group(2)
+            out.setdefault(step, {}).setdefault(g, {}).update(
+                {'fro': float(m.group(3)), 'fro_ref': float(m.group(4))})
     return out
 
 

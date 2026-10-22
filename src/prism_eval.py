@@ -649,6 +649,8 @@ def method_args_for(method, cache, lr, warmup, knobs=None, seed=None):
         extra.append(f"--muon_lr={k['muon_lr']}")
     if k.get('track_overlap') is not None:
         extra += [f"--prism_track_overlap={k['track_overlap']}"]
+    if k.get('track_ref'):
+        extra += [f"--prism_track_ref={k['track_ref']}"]     # e.g. an UNRELATED teacher's directions
     if k.get('per_layer'):
         extra.append(f'--prism_per_layer_spectra={cache}/spectra_per_layer.json')
     if k.get('align_mode') is not None:
@@ -974,6 +976,9 @@ def main():
                    help="mimetic control: 'a1,b1,a2,b2' (default paper char-level values)")
     p.add_argument('--init_state', type=str, default=None,
                    help="init_state control: path to a state_dict .pt built by prism_crosssize.py etc.")
+    p.add_argument('--track_ref', type=str, default=None,
+                   help="directions.pt used as the tracker reference for BOTH arms (an unrelated "
+                        "teacher's fingerprint — the W6.2 lineage-decay control)")
     p.add_argument('--track_overlap', type=int, default=None,
                    help="every N steps bank [overlap] subspace traces (both arms)")
     # ── alpha-moves W3: cross-size projection ──
@@ -1041,6 +1046,7 @@ def main():
         ('mimetic', args.mimetic, None),
         ('init_state', os.path.basename(args.init_state) if args.init_state else None, None),
         ('track_overlap', args.track_overlap, None),
+        ('track_ref', os.path.basename(os.path.dirname(args.track_ref)) if args.track_ref else None, None),
         ('tdims', dims_tag(teacher_dims_of(args)) or None, None),
         ('sdims', dims_tag(student_dims_of(args)) or None, None),
         ('xsize', args.crosssize, None),
@@ -1058,6 +1064,8 @@ def main():
         raise SystemExit('--crosssize_hf replaces --crosssize (the HF teacher is projected with pca)')
     if args.init_state:
         method_knobs['init_state'] = args.init_state   # full path for the flag; basename in the key
+    if args.track_ref:
+        method_knobs['track_ref'] = args.track_ref
     if args.n_dct is not None:
         method_knobs['n_dct'] = args.n_dct
     if args.far_corpus:
@@ -1340,6 +1348,12 @@ def main():
                 if args.baseline_warmup is not None:
                     baseline_extra.append(f'--warmup_iters={args.baseline_warmup}')
                 baseline_extra += shared_extra(args)
+                if args.track_overlap and cache and os.path.exists(os.path.join(cache, 'directions.pt')):
+                    # lineage tracing (W6.2): the baseline's distance to the SAME teacher's
+                    # directions is the chance-level reference for the PRISM student's decay
+                    baseline_extra.append(f'--prism_track_ref={cache}/directions.pt')
+                if args.track_ref:
+                    baseline_extra.append(f'--prism_track_ref={args.track_ref}')
 
                 stage[0] += 1
                 log(f'[stage {stage[0]}/{total_stages}] baseline (seed {seed}{osfx})', 2)

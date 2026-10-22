@@ -97,7 +97,7 @@ def extract_from_checkpoint(ckpt_path, out_dir, n_dct=8, per_layer=False):
             if per_layer:
                 per_layer_spectra[name] = _dct_fit(s_norm.numpy(), n_dct)
             directions[name] = {
-                'U': U, 'Vt': Vt,
+                'U': U, 'Vt': Vt, 'S': s.clone(),
                 'group': group, 'shape': list(W.shape),
             }
             print(f'  {name:45s} {str(list(W.shape)):>15s} {group:>10s} '
