@@ -193,7 +193,6 @@ def main():
     p.add_argument('--grad_accum', type=int, default=4)
     p.add_argument('--num_generations', type=int, default=8)
     p.add_argument('--max_completion_length', type=int, default=256)
-    p.add_argument('--max_prompt_length', type=int, default=512)
     p.add_argument('--eval_n', type=int, default=300)
     p.add_argument('--retention', default='hellaswag,arc_easy,winogrande', help="'none' to skip")
     p.add_argument('--retention_limit', type=int, default=300)
@@ -254,7 +253,7 @@ def main():
         output_dir=out_dir, seed=a.seed, max_steps=a.steps, learning_rate=a.lr,
         per_device_train_batch_size=a.per_device_bs, gradient_accumulation_steps=a.grad_accum,
         num_generations=a.num_generations, max_completion_length=a.max_completion_length,
-        max_prompt_length=a.max_prompt_length, beta=arm['beta'],
+        beta=arm['beta'],
         num_iterations=regime['num_iterations'], steps_per_generation=regime['steps_per_generation'],
         logging_steps=1, save_strategy='no', report_to='none', bf16=bool(a.bf16 and device == 'cuda'),
         gradient_checkpointing=(device == 'cuda'), use_cpu=(device == 'cpu'),
