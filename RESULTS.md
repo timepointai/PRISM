@@ -39,6 +39,16 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | Z2 | **Energy P2 (§16)**: baseline-1500 quality from a complete 600-step run — 42% of the GPU time | [`dirs_only_20260728T085214Z.json`](results/dirs_only_20260728T085214Z.json) |
 | Z3 | **Energy P3 (§16)**: −0.072 bpb beyond the baseline's ceiling at 56% of its GPU time | [`dirs_only_20260728T102700Z.json`](results/dirs_only_20260728T102700Z.json) |
 | AA | **Act 1 — the prior's floor on enwik8 (§17)**: NOT a PRISM result; the reach-at-init gate | [`ngram_floor_20260728T202028Z.json`](results/ngram_floor_20260728T202028Z.json) |
+| AB | **W1 tuning, catalog (§18)**: 21 arms, seed 1336 — competitor settings by the pre-registered rule | [`finetune_20261022T024927Z.json`](results/finetune_20261022T024927Z.json) |
+| AC | **W1 tuning, facts (§18)**: 21 arms, seed 1336 | [`finetune_20261022T024917Z.json`](results/finetune_20261022T024917Z.json) |
+| AD | **W1 catalog head-to-head (§18)**: 23 arms × 3 seeds — SST / RP-SFT / EWC / LoRA / self-distillation vs the dial | [`finetune_20261022T043049Z.json`](results/finetune_20261022T043049Z.json) |
+| — | W2a tuning sweeps (§19), seed 1336: baseline / dirs_only grids, Muon LR | [`sweep_20261022T*.json`](results/) |
+| AF | **Cross-size case 1 (§20)**: width 768→384 — early head start, no endpoint gain | [`dirs_only_20261022T035754Z.json`](results/dirs_only_20261022T035754Z.json) |
+| AG | **Cross-size case 2 (§20)**: heads 12→6 — 3.7×, −0.11 nats | [`dirs_only_20261022T040349Z.json`](results/dirs_only_20261022T040349Z.json) |
+| AH | **Cross-size case 3 (§20)**: head-dim 64→32 — 1.28× in 3/3 | [`dirs_only_20261022T040448Z.json`](results/dirs_only_20261022T040448Z.json) |
+| AI | **Cross-size case 4 (§20)**: GPT-2 124M → byte student — null | [`dirs_only_20261022T043832Z.json`](results/dirs_only_20261022T043832Z.json) |
+| AJ | **FRONT from GPT-2 (§20)**: our re-implementation — far below scratch | [`init_state_20261022T041102Z.json`](results/init_state_20261022T041102Z.json) |
+| — | **W5 run 1 (§21) — VOID** (gather off-by-one; kept as a record) | [`prior_20261022T035740Z.json`](results/prior_20261022T035740Z.json) |
 
 ## 1. Speed: ~12×, resolved (Run C)
 
@@ -571,6 +581,146 @@ below that prior floor (Act 2)* — Act 2 is the part that is a PRISM claim,
 and this gate result is what authorizes spending on it (needs the sparse
 gather + block-edge backoff in `train.py`'s `_prior_logp`, then
 `prism_prior_eval` arms on enwik8).
+
+## 18. The injection-dial head-to-head (Runs AB–AE) — catalog rig landed; facts rig pending
+
+*Alpha-moves W1 ([`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md) pre-registration
+of 2026-10-21). Competitors are our re-implementations (`src/prism_baselines.py`,
+deviations listed there), each tuned on seed 1336 only with three settings by the
+rule written before looking (lowest forgetting with seen-recall ≥ 0.90, else highest
+seen-recall). Tuning records: [`finetune_20261022T024927Z.json`](results/finetune_20261022T024927Z.json)
+(catalog), [`finetune_20261022T024917Z.json`](results/finetune_20261022T024917Z.json) (facts).*
+
+**Catalog rig, 3 seeds** ([`finetune_20261022T043049Z.json`](results/finetune_20261022T043049Z.json);
+modernweb base, 2,000 + 1,000 steps, the §13 rig; medians of 3; forgetting = modernweb val climb):
+
+| arm | forgetting ↓ | ×less than plain | seen ↑ | novel cases ↑ | step time vs plain |
+|---|---|---|---|---|---|
+| plain | 2.915 | 1.0× | 100% | 98% | 1.00 |
+| low-LR 1e-4 | 2.003 | 1.5× | 90% | 88% | 1.00 |
+| **weak anchor 0.0025** (`raw_weak`) | 0.944 | 3.1× | 93% | 97% | 1.06 |
+| anchor 0.0035 | 0.797 | 3.6× | 92% | 93% | 1.06 |
+| anchor 0.005 | 0.647 | 4.5× | 88% | 88% | 1.06 |
+| anchor 0.01 (`raw_mid`) | 0.369 | 7.8× | 15% | 12% | 1.06 |
+| low-LR × weak anchor | 0.784 | 3.7× | 58% | 62% | 1.05 |
+| anisotropic anchor (k=32, 0.01 top / 0.0025 rest) | 0.624 | 4.6× | 92% | 93% | 1.12 |
+| weak anchor, embedding excluded | 1.053 | 2.8× | 93% | 97% | 1.06 |
+| weak anchor, absent-token rows only | 1.040 | 2.8× | 93% | 97% | 1.04 |
+| weak anchor + Adam reset | 0.980 | 3.0× | 95% | 97% | 1.06 |
+| weak anchor + Adam-moment lerp | 0.851 | 3.4× | 93% | 93% | 1.22 |
+| Adam-ε 1e-4 on the tied embedding (`out_eps`) | 2.894 | 1.0× | 100% | 99% | 1.00 |
+| plain + Adam reset | 3.070 | 0.95× | 100% | 99% | 1.00 |
+| **self-distillation, α=1.0** (KL to the frozen base) | **0.399** | **7.6×** | **98%** | **99%** | 1.05 |
+| SST, paper default r=0.99 (R100) | 0.946 | 3.1× | 3% | 3% | 1.04 |
+| SST, tuned r=0.5 | 1.161 | 2.5× | 12% | 12% | 1.04 |
+| RP-SFT, λ=0.1 (k=64) | 2.627 | 1.1× | 100% | 98% | 1.01 |
+| EWC, λ=0.1 (normalised Fisher) | 0.412 | 7.4× | 12% | 9% | 1.02 |
+| LoRA r=4 (lr 1e-3) | 2.232 | 1.3× | 12% | 8% | 1.36 |
+| LoRA r=16 (lr 1e-3) | 3.396 | 0.87× | 95% | 97% | 1.42 |
+
+**The pre-registered readouts.**
+
+1. **Hard projection blocks injection like PRISM's strong band.** SST at its paper
+   default stores 3% of the task (per seed 12/2/3%), within 10 points of the 0.01
+   anchor (15%) and 97 points below plain. Even with half the spectrum free (r = 0.5,
+   the tuned setting) it stores 12%. EWC (Fisher-weighted) and LoRA r=4 block too.
+   The prediction the brief made from the literature holds: methods that keep the
+   update off the principal directions cannot write a new task into them.
+2. **One arm beats the weak anchor on both axes in 3 of 3 seeds: self-distillation.**
+   α = 1.0 KL-to-the-frozen-base forgets 0.40 (vs 0.94) while storing 98% (vs 93%),
+   per seed 0.399/0.407/0.373 vs 0.991/0.944/0.930 forgetting and 98/100/98% vs
+   93/95/93% recall. It costs one base forward pass per micro-step — the very cost the
+   anchor's pitch removes — and at this scale that shows as 1.05× step time. So on
+   the catalog rig the single-scalar anchor does **not** own the frontier; a
+   function-space anchor dominates it. The anisotropic anchor (0.62, 92%) is the best
+   PRISM-family point and sits between the two.
+3. **The retention is directional, not embedding-row or momentum repair.** Excluding
+   the tied embedding changes forgetting by +12%, anchoring only absent-token rows
+   by +10%, resetting Adam by +4%, lerping Adam moments by −10% — all under the 20%
+   bar. The Adam-ε control alone (arXiv 2610.09835's fix) does nothing here (1.0×),
+   with the caveat that on a 256-byte vocabulary almost no token is "absent" from
+   the new corpus, so the mechanism that paper targets barely exists in this rig.
+
+The other open cells: the dial's shape between 0.0025 and 0.01 is monotone
+(0.0035 → 92% at 3.6×, 0.005 → 88% at 4.5×); the low-LR × weak-anchor combination
+hurts injection (58%) and is dominated by the anchor alone; RP-SFT at the one
+setting that injects forgets like plain; LoRA r=16 learns the task but forgets
+*more* than full finetuning at this LR.
+
+**Facts rig, 3 seeds:** running at the time of writing (`finetune_*_w1` on
+volume `prism-alpha-a`); this section is completed when it lands. Verdicts above
+are catalog-only until then.
+
+## 19. Hardened controls for the core bet (W2a) — running
+
+Tuning (seed 1336; [`sweep_20261022T034021Z`](results/sweep_20261022T034021Z.json)
+baseline modernweb, [`…T034028Z`](results/sweep_20261022T034028Z.json) dirs_only
+modernweb, [`…T034136Z`](results/sweep_20261022T034136Z.json) baseline enwik8,
+[`…T034056Z`](results/sweep_20261022T034056Z.json) dirs_only enwik8, Muon
+[`…T040212Z`](results/sweep_20261022T040212Z.json) / [`…T040253Z`](results/sweep_20261022T040253Z.json)
+baseline, [`…T150053Z`](results/sweep_20261022T150053Z.json) /
+[`…T145919Z`](results/sweep_20261022T145919Z.json) dirs_only): the committed
+baseline recipe (LR 1e-3, σ 0.02, warmup 100) was already within 0.01 nats of the
+best of its 8-point grid on both corpora; the tuned baseline is LR 2e-3 with
+warmup 300 (1.4802 vs 1.4902 on modernweb, 1.3183 vs 1.3272 on enwik8). `dirs_only`
+prefers a lower LR than the baseline (1e-3 on modernweb, 5e-4 on enwik8) and σ 0.02;
+σ 0.01 hurts every arm. Muon: LR 0.01 for baseline and dirs_only on both corpora.
+The 3-seed arms at these settings are running; §19 is written when they land.
+
+## 20. Cross-size SVD projection (Runs AF–AJ): heads and head-dims transfer, width does not
+
+*Alpha-moves W3 ([`docs/CROSS-SIZE.md`](docs/CROSS-SIZE.md), pre-registered
+2026-10-21: success = ≥ 1.5× steps-to-target vs scratch on case 1 AND > 1× on case 3,
+3 of 3 seeds). Operator: residual-stream PCA projection of the teacher's matrices
+into the student's coordinates, per-head QK/OV circuit projection, uniform layer
+selection, then the ordinary EigenTransfer (`src/prism_crosssize.py`). Modern web,
+PROBE rig, 3 seeds, overlap traces every 50 steps.*
+
+| case | teacher → student | steps-to-target vs scratch (median, range) | best loss vs scratch | init loss vs scratch | step-100 loss vs scratch | artifact |
+|---|---|---|---|---|---|---|
+| 1 width | 12L/768/12h (trained here, 2,000 steps) → 6L/384/6h | **1.0× (reached in 1/3 seeds)** | 1.4924 vs 1.4892 | 5.74 vs 5.65 | **2.25 vs 2.55** | [`dirs_only_20261022T035754Z`](results/dirs_only_20261022T035754Z.json) |
+| 2 heads | 6L/384/**12h** → 6L/384/**6h** | **3.7× (2.9–3.9), 3/3** | **1.3827 vs 1.4892** | 4.64 vs 5.65 | 1.78 vs 2.55 | [`dirs_only_20261022T040349Z`](results/dirs_only_20261022T040349Z.json) |
+| 3 head-dim | 6L/384/6h → 6L/**192**/6h (scratch baseline at 192) | **1.28× (1.24–1.34), 3/3** | 1.5855 vs 1.6384 | 5.36 vs 5.61 | 2.52 vs 2.60 | [`dirs_only_20261022T040448Z`](results/dirs_only_20261022T040448Z.json) |
+| 4 GPT-2 | GPT-2 124M (public weights) → 6L/384/6h bytes, internal matrices only | **1.0× (1/3)** | 1.4900 vs 1.4892 | 5.67 vs 5.65 | 2.57 vs 2.55 | [`dirs_only_20261022T043832Z`](results/dirs_only_20261022T043832Z.json) |
+| 4 FRONT | GPT-2 → same student, 3D-DCT truncation (our re-implementation) | never reaches scratch-best | **2.078 vs 1.4892** | 5.58 vs 5.65 | 2.64 vs 2.55 | [`init_state_20261022T041102Z`](results/init_state_20261022T041102Z.json) |
+
+**Verdict: the pre-registered success criterion FAILS on case 1.** Projecting a
+twice-as-wide teacher's directions through its residual-stream PCA onto the
+student buys a real early-window head start (0.31 nats at step 100, 3/3 seeds)
+that is gone by the horizon: the projected student never beats scratch-best in
+2 of 3 seeds and ends 0.003 nats behind. GPT-2's directions projected onto the
+byte-level student do nothing at any step. Two projections *do* transfer:
+halving the head count at fixed width keeps the full same-size effect (3.7×
+against the same-size 3.3× of §11, best loss 0.11 nats below scratch), and
+halving the head dimension gives 1.28× in every seed — the cell CrossGMN reports
+0.74× on (reported by arXiv 2610.01649; different scale and task). FRONT's
+truncated weights from GPT-2 actively hurt here (0.59 nats behind scratch at the
+end), consistent with it being an index-space operator meeting a mismatched
+vocabulary and depth.
+
+The overlap traces say the operator did impose the directions: at step 0 the
+students' top-16 subspaces overlap the projected reference at 0.58–0.93 (chance
+0.03). In case 2 the FFN-up overlap *rises* during training (0.65 → 0.81); in cases
+1 and 4 it decays toward chance (0.58 → 0.16, 0.58 → 0.07). Directions that a
+wider model uses in its own coordinates are adopted and then abandoned; the
+problem is the coordinate map, not the transplant. Whether a μP-native teacher,
+a per-layer PCA or Procrustes alignment changes that is the next cell (the
+Procrustes and Weight-Selection baselines for cases 1–3 are running as this is
+written). The draft preprint in `docs/preprint/` is NOT to be posted; it will
+be revised to lead with the head/head-dim result and the width null.
+
+## 21. Prior fusion against the COUNT control (W5) — run 1 void, run 2 running
+
+[`prior_20261022T035740Z.json`](results/prior_20261022T035740Z.json) is kept as a
+record and is **void**: its own kill condition fired (`prior` never reached
+baseline-best; its step-0 loss sat above uniform). The cause was an off-by-one in
+the sparse prior's in-window gather, which fed the logits a confident prediction
+of the *current* byte (details in [`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md),
+W5 block). Fixed and selftested; the identical run is repeating under tag `w5b`.
+No claim is drawn from the void run beyond the two readouts that do not depend on
+the fusion path: the standalone sparse prior reproduces Act 1 (1.927 bpb on the
+student's slot vs 1.906 on the full training bytes), and `dirs_only` reproduces §14
+on this rig (4.2× to baseline-best, 1.90 bpb).
 
 ## What this does NOT establish
 
