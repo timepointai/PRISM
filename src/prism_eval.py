@@ -375,7 +375,7 @@ def stream_train(cmd, label, max_step, timeout=TRAIN_TIMEOUT):
 
 def train_teacher(steps, seed, eval_iters, device, label, cache_tag='eval',
                   batch_size=None, n_dct=8, per_layer=False, teacher_optim='adamw',
-                  muon_lr=None):
+                  muon_lr=None, teacher_dims=None):
     """Train teacher model and extract fingerprint. One teacher per (seed, data,
     steps). Cached by the presence of directions.pt, so a resumed run skips it.
     cache_tag separates teachers trained on different data (e.g. the same-data
@@ -384,7 +384,8 @@ def train_teacher(steps, seed, eval_iters, device, label, cache_tag='eval',
     # n_dct / per_layer change the fingerprint, so they're in the cache path — a
     # 16-coeff extract must never silently reuse an 8-coeff one.
     sfx = ('' if n_dct == 8 else f'_dct{n_dct}') + ('_pl' if per_layer else '') \
-        + ('' if teacher_optim == 'adamw' else f'_{teacher_optim}')
+        + ('' if teacher_optim == 'adamw' else f'_{teacher_optim}') \
+        + (dims_tag(teacher_dims) if teacher_dims else '')
     cache = f'.prism_cache/{cache_tag}_teacher_s{seed}_t{steps}{sfx}'
     if os.path.exists(f'{cache}/directions.pt'):
         log(f'[resume] teacher (seed {seed}) already trained — using cached '
@@ -402,7 +403,8 @@ def train_teacher(steps, seed, eval_iters, device, label, cache_tag='eval',
         '--compile=False', '--prism_init=False', '--wandb_log=False',
     ] + ([f'--batch_size={batch_size}'] if batch_size else [])
       + ([f'--optim={teacher_optim}'] + ([f'--muon_lr={muon_lr}'] if muon_lr else [])
-         if teacher_optim != 'adamw' else []),
+         if teacher_optim != 'adamw' else [])
+      + dims_flags(teacher_dims),
         f'{label} teacher', steps)
 
     if rc != 0:
@@ -422,6 +424,76 @@ def train_teacher(steps, seed, eval_iters, device, label, cache_tag='eval',
     log(f'fingerprint saved to {cache}.', 2)
 
     return cache
+
+
+def dims_tag(dims):
+    """'_L6d384h6' for a {'n_layer','n_embd','n_head'} dict (None entries skipped)."""
+    if not dims or all(v is None for v in dims.values()):
+        return ''
+    return ('_L' + str(dims.get('n_layer', '')) + 'd' + str(dims.get('n_embd', ''))
+            + 'h' + str(dims.get('n_head', ''))).replace('None', 'x')
+
+
+def dims_flags(dims):
+    return [f'--{k}={v}' for k, v in (dims or {}).items() if v is not None]
+
+
+def crosssize_fingerprint(teacher_ckpt, student_dims, align, hidden, layer_select, calib_dir,
+                          out_dir, device, hf=None, calib_text=None):
+    """Build (once) the projected fingerprint prism_crosssize.py writes; returns out_dir.
+    student_dims may hold None entries → the config's 6L/384/6h."""
+    if os.path.exists(os.path.join(out_dir, 'directions.pt')):
+        log(f'[resume] cross-size fingerprint cached at {out_dir}.', 2)
+        return out_dir
+    sd = {'n_layer': student_dims.get('n_layer') or 6, 'n_embd': student_dims.get('n_embd') or 384,
+          'n_head': student_dims.get('n_head') or 6}
+    cmd = [sys.executable, 'prism_crosssize.py', f'--student_n_layer={sd["n_layer"]}',
+           f'--student_n_embd={sd["n_embd"]}', f'--student_n_head={sd["n_head"]}',
+           f'--out={out_dir}', f'--align={align}', f'--hidden={hidden}',
+           f'--layer_select={layer_select}', f'--device={device}', '--student_block=256']
+    if hf:
+        cmd += [f'--teacher_hf={hf}', f'--calib_text={calib_text}',
+                f'--student_vocab={pickle.load(open(os.path.join(calib_dir, "meta.pkl"), "rb"))["vocab_size"]}']
+    else:
+        if not os.path.exists(teacher_ckpt):
+            raise RuntimeError(f'cross-size needs the teacher checkpoint {teacher_ckpt}; the '
+                               f'fingerprint cache survived but the ckpt did not — delete the '
+                               f'teacher cache dir to retrain it.')
+        cmd += [f'--teacher_ckpt={teacher_ckpt}', f'--calib={calib_dir}']
+    log(f'Building cross-size fingerprint ({align}, hidden={hidden}, layers={layer_select}) → {out_dir}', 2)
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
+    if r.returncode != 0:
+        raise RuntimeError(f'prism_crosssize failed:\n{r.stdout[-1500:]}\n{r.stderr[-2500:]}')
+    for line in r.stdout.splitlines():
+        if line.startswith('[xsize]'):
+            log(line, 4)
+    return out_dir
+
+
+def build_init_state(teacher_ckpt, builder, student_dims, out_path, device, hf=None, calib_dir=None,
+                     front_r=1.0):
+    """Build (once) a Weight-Selection / FRONT init_state .pt; returns its path."""
+    if os.path.exists(out_path):
+        log(f'[resume] init_state ({builder}) cached at {out_path}.', 2)
+        return out_path
+    sd = {'n_layer': student_dims.get('n_layer') or 6, 'n_embd': student_dims.get('n_embd') or 384,
+          'n_head': student_dims.get('n_head') or 6}
+    cmd = [sys.executable, 'prism_crosssize.py', f'--student_n_layer={sd["n_layer"]}',
+           f'--student_n_embd={sd["n_embd"]}', f'--student_n_head={sd["n_head"]}',
+           f'--builder={builder}', f'--out_state={out_path}', f'--front_r={front_r}',
+           f'--device={device}', '--student_block=256']
+    if hf:
+        cmd += [f'--teacher_hf={hf}',
+                f'--student_vocab={pickle.load(open(os.path.join(calib_dir, "meta.pkl"), "rb"))["vocab_size"]}']
+    else:
+        if not os.path.exists(teacher_ckpt):
+            raise RuntimeError(f'init builder needs the teacher checkpoint {teacher_ckpt}')
+        cmd += [f'--teacher_ckpt={teacher_ckpt}', f'--calib={calib_dir}']
+    log(f'Building init_state ({builder}) → {out_path}', 2)
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
+    if r.returncode != 0:
+        raise RuntimeError(f'prism_crosssize --builder failed:\n{r.stdout[-1500:]}\n{r.stderr[-2500:]}')
+    return out_path
 
 
 def run_training(name, extra_args, seed, steps, eval_every, eval_iters, device,
@@ -614,7 +686,16 @@ def shared_extra(args):
         out.append(f'--init_std={args.baseline_init_std}')
     if args.track_overlap:
         out.append(f'--prism_track_overlap={args.track_overlap}')
+    out += dims_flags(student_dims_of(args))      # both arms: the STUDENT's architecture
     return out
+
+
+def student_dims_of(args):
+    return {'n_layer': args.student_n_layer, 'n_embd': args.student_n_embd, 'n_head': args.student_n_head}
+
+
+def teacher_dims_of(args):
+    return {'n_layer': args.teacher_n_layer, 'n_embd': args.teacher_n_embd, 'n_head': args.teacher_n_head}
 
 
 def _stats(vals):
@@ -894,6 +975,25 @@ def main():
                    help="init_state control: path to a state_dict .pt built by prism_crosssize.py etc.")
     p.add_argument('--track_overlap', type=int, default=None,
                    help="every N steps bank [overlap] subspace traces (both arms)")
+    # ── alpha-moves W3: cross-size projection ──
+    p.add_argument('--teacher_n_layer', type=int, default=None, help='teacher depth (default: config)')
+    p.add_argument('--teacher_n_embd', type=int, default=None, help='teacher width (default: config)')
+    p.add_argument('--teacher_n_head', type=int, default=None, help='teacher heads (default: config)')
+    p.add_argument('--student_n_layer', type=int, default=None, help='student depth, BOTH arms (default: config)')
+    p.add_argument('--student_n_embd', type=int, default=None, help='student width, BOTH arms (default: config)')
+    p.add_argument('--student_n_head', type=int, default=None, help='student heads, BOTH arms (default: config)')
+    p.add_argument('--crosssize', type=str, default=None, choices=['pca', 'procrustes'],
+                   help="project the teacher's SVD subspaces into the student's coordinates "
+                        "(prism_crosssize.py) and use that as the method's fingerprint")
+    p.add_argument('--crosssize_hf', type=str, default=None,
+                   help="HF teacher (e.g. gpt2) for the cross-size projection — no teacher is "
+                        "trained; internal matrices only; calibration text = the corpus's text file")
+    p.add_argument('--xsize_hidden', type=str, default='pca', choices=['pca', 'svd'])
+    p.add_argument('--xsize_layers', type=str, default='uniform', choices=['uniform', 'average', 'first'])
+    p.add_argument('--init_builder', type=str, default=None, choices=['weightsel', 'front'],
+                   help="run --method=init_state with a Weight-Selection / FRONT init built "
+                        "from the teacher (prism_crosssize.py builders)")
+    p.add_argument('--front_r', type=float, default=1.0, help='FRONT low-frequency ratio r')
     p.add_argument('--report', action='store_true', help='print the last artifact')
     args = p.parse_args()
     device = args.device or default_device()
@@ -940,9 +1040,21 @@ def main():
         ('mimetic', args.mimetic, None),
         ('init_state', os.path.basename(args.init_state) if args.init_state else None, None),
         ('track_overlap', args.track_overlap, None),
+        ('tdims', dims_tag(teacher_dims_of(args)) or None, None),
+        ('sdims', dims_tag(student_dims_of(args)) or None, None),
+        ('xsize', args.crosssize, None),
+        ('xsize_hf', args.crosssize_hf, None),
+        ('xsize_hidden', args.xsize_hidden if args.crosssize or args.crosssize_hf else None, 'pca'),
+        ('xsize_layers', args.xsize_layers if args.crosssize or args.crosssize_hf else None, 'uniform'),
+        ('init_builder', args.init_builder, None),
+        ('front_r', args.front_r if args.init_builder == 'front' and args.front_r != 1.0 else None, None),
     ]:
         if v != default:
             method_knobs[k] = v
+    if args.init_builder and args.method != 'init_state':
+        raise SystemExit('--init_builder requires --method=init_state')
+    if args.crosssize_hf and args.crosssize:
+        raise SystemExit('--crosssize_hf replaces --crosssize (the HF teacher is projected with pca)')
     if args.init_state:
         method_knobs['init_state'] = args.init_state   # full path for the flag; basename in the key
     if args.n_dct is not None:
@@ -998,7 +1110,8 @@ def main():
         'batch_size': args.batch_size,
         'teacher_data_equals_student_data': (overlaps is None
                                              and not args.cross_teacher
-                                             and not args.fingerprint),
+                                             and not args.fingerprint
+                                             and not args.crosssize_hf),
         'cross_teacher': args.cross_teacher,
         'corpus': args.corpus,
         'fingerprint': args.fingerprint,
@@ -1011,6 +1124,10 @@ def main():
         'n_dct': n_dct,
         'optim': args.optim,
         'teacher_optim': args.teacher_optim,
+        'teacher_dims': teacher_dims_of(args),
+        'student_dims': student_dims_of(args),
+        'crosssize': args.crosssize or (f'hf:{args.crosssize_hf}' if args.crosssize_hf else None),
+        'init_builder': args.init_builder,
         'method_knobs': method_knobs,
         'far_corpus': args.far_corpus,
         'far_val': args.far_val,
@@ -1124,7 +1241,8 @@ def main():
                         run_training(args.method,
                                      method_args_for(args.method, cache,
                                                      args.method_lr, args.method_warmup,
-                                                     knobs=method_knobs, seed=seed),
+                                                     knobs=method_knobs, seed=seed)
+                                     + dims_flags(student_dims_of(args)),
                                      seed, args.student_steps, args.eval_every,
                                      args.eval_iters, device, lbl, batch_size=bs))
                     runs.append({
@@ -1173,16 +1291,47 @@ def main():
                 lbl = f's{seed}{osfx}'
 
                 stage[0] += 1
+                sdims = student_dims_of(args)
                 if args.fingerprint:
                     log(f'[stage {stage[0]}/{total_stages}] teacher SKIPPED — using '
                         f'pre-extracted fingerprint {args.fingerprint}', 2)
                     cache = args.fingerprint
+                elif args.crosssize_hf:
+                    log(f'[stage {stage[0]}/{total_stages}] teacher SKIPPED — HF teacher '
+                        f'{args.crosssize_hf} projected cross-size', 2)
+                    base_dir = f'data/{args.corpus}' if args.corpus else 'data/shakespeare_char'
+                    text = {'modernweb': 'data/modernweb/modern.txt',
+                            'shakespeare_char': 'data/shakespeare_char/input.txt'}.get(
+                        args.corpus or 'shakespeare_char', f'{base_dir}/input.txt')
+                    xdir = (f'.prism_cache/xsize_hf_{args.crosssize_hf.replace("/", "_")}_pca'
+                            f'_{args.xsize_hidden}_{args.xsize_layers}{dims_tag(sdims) or "_L6d384h6"}')
+                    cache = crosssize_fingerprint(None, sdims, 'pca', args.xsize_hidden,
+                                                  args.xsize_layers, base_dir, xdir, device,
+                                                  hf=args.crosssize_hf, calib_text=text)
+                    if args.init_builder:
+                        method_knobs['init_state'] = build_init_state(
+                            None, args.init_builder, sdims,
+                            f'{xdir}/init_{args.init_builder}_r{args.front_r:g}.pt', device,
+                            hf=args.crosssize_hf, calib_dir=base_dir, front_r=args.front_r)
                 else:
                     log(f'[stage {stage[0]}/{total_stages}] teacher (seed {seed})', 2)
                     cache = train_teacher(args.teacher_steps, seed, args.eval_iters,
                                           device, lbl, cache_tag=tag, batch_size=bs,
                                           n_dct=n_dct, per_layer=args.per_layer,
-                                          teacher_optim=args.teacher_optim, muon_lr=args.muon_lr)
+                                          teacher_optim=args.teacher_optim, muon_lr=args.muon_lr,
+                                          teacher_dims=teacher_dims_of(args))
+                    if args.crosssize:
+                        xdir = (f'{cache}/xsize_{args.crosssize}_{args.xsize_hidden}_'
+                                f'{args.xsize_layers}{dims_tag(sdims) or "_L6d384h6"}')
+                        cache = crosssize_fingerprint(f'out-eval-teacher-s{seed}/ckpt.pt', sdims,
+                                                      args.crosssize, args.xsize_hidden,
+                                                      args.xsize_layers, 'data/shakespeare_teacher',
+                                                      xdir, device)
+                    if args.init_builder:
+                        method_knobs['init_state'] = build_init_state(
+                            f'out-eval-teacher-s{seed}/ckpt.pt', args.init_builder, sdims,
+                            f'{cache}/init_{args.init_builder}_r{args.front_r:g}{dims_tag(sdims) or "_L6d384h6"}.pt',
+                            device, calib_dir='data/shakespeare_teacher', front_r=args.front_r)
 
                 baseline_extra = ['--prism_init=False']
                 if args.baseline_lr:
@@ -1204,7 +1353,8 @@ def main():
                     run_training(args.method,
                                  method_args_for(args.method, cache,
                                                  args.method_lr, args.method_warmup,
-                                                 knobs=method_knobs, seed=seed),
+                                                 knobs=method_knobs, seed=seed)
+                                 + dims_flags(student_dims_of(args)),   # the STUDENT's architecture
                                  seed, args.student_steps, args.eval_every,
                                  args.eval_iters, device, lbl, batch_size=bs))
 
