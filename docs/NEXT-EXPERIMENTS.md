@@ -101,6 +101,50 @@ differentiating hypothesis (projection blocks injection) is refuted and said so.
 **Cost.** Tuning: ~2 × 25 arm-runs on seed 1336 (~1.9 L4-h each rig ≈ $3).
 Results: ~2 × 22 arms × 3 seeds (~5.6 L4-h each rig ≈ $9). Tier A.
 
+### W2a — hardened controls for the core bet, probe scale (pre-registered 2026-10-21, before any launch)
+
+**Question.** Does geometry-at-init (`dirs_only`) still beat a *tuned* baseline
+and the analytic / statistics-matched inits the field now expects, under AdamW
+and under Muon, on modern web and enwik8?
+
+**Rig.** The PROBE rig unchanged (`prism_modal_modernweb.py` / `prism_modal_enwik8.py`
+FLAGS: 2,000-step teacher, 1,500-step students, eval every 10, eval_iters 50,
+batch 64×256, seeds 1337–1339). Tuning on **seed 1336 only** via
+`src/prism_sweep.py` (artifacts `results/sweep_*.json`).
+
+**Tuning parity (criterion written before looking).** Baseline grid: LR ∈
+{5e-4, 1e-3, 2e-3} × init σ ∈ {0.01, 0.02} at warmup 100, plus warmup 300 at
+LR ∈ {1e-3, 2e-3} (σ 0.02) — 8 settings; `dirs_only` gets the identical 8. Muon:
+`muon_lr` ∈ {0.01, 0.02, 0.04} for the baseline and for `dirs_only` (AdamW
+groups at the tuned AdamW LR). **Chosen setting = lowest best val loss within
+the 1,500-step horizon on seed 1336**, per corpus, per arm. `small_qk` sweeps
+σ_qk ∈ {1e-5, 1e-3, 1e-2} on 1336 by the same rule; `mimetic` and `statmatch`
+have one setting each (paper values; the stated statistic list).
+
+**Arms (3 seeds, both corpora).** AdamW at the tuned schedule: tuned baseline,
+`small_qk`, `mimetic`, `statmatch`, `spectral_only`, `recipe`, `dirs_only`,
+`dirs_pure` (EigenTransfer onto the fresh spectrum, no imprint). Muon: baseline,
+`dirs_only`, `dirs_pure`, `spectral_only`; plus `dirs_only` from a Muon-trained
+teacher. Every run records `optim` and `teacher_optim` and banks `[overlap]`
+traces every 50 steps.
+
+**Metrics.** `prism_score` of each arm vs its in-run baseline; the steps-to-target
+ratio of `dirs_only` against the **strongest control** (= the control arm with the
+lowest median best val among tuned baseline / small_qk / mimetic / statmatch, per
+corpus, computed cross-artifact with `prism_metrics.steps_to_target_ratio` at the
+control's best); the token-equivalent multiplier (fit on the strongest control's
+curve, RMSE tolerance 0.01 nats, refused otherwise); the end-of-training gap; the
+overlap traces (does Muon erase the imprint faster than the transplanted
+directions?).
+
+**Pre-registered rules (unchanged from the brief).** If `dirs_only`'s
+steps-to-target ratio against the strongest control is **< 1.2× on either
+corpus**, that goes into README "Honest bounds" **before any scale spend**. If it
+is < 1.2× under Muon, the core bet is labelled "AdamW-only until shown otherwise".
+
+**Cost.** Sweeps ≈ 4.6 L4-h (≈ $4); the 3-seed arms ≈ 2 corpora × 13 runs × ~0.7 L4-h
+≈ 18 L4-h (≈ $15). Tier A.
+
 ## Status update (2026-07-27): the modern-web probe ran — read it first
 
 [RESULTS §11](../RESULTS.md): byte-level FineWeb-Edu bench (`data/modernweb/`,

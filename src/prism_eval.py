@@ -610,8 +610,8 @@ def shared_extra(args):
         out.append(f'--optim={args.optim}')
         if args.muon_lr is not None:
             out.append(f'--muon_lr={args.muon_lr}')
-    if args.baseline_init_std is not None:
-        out.append(f'--init_std={args.baseline_init_std}')
+    if args.init_std is not None:
+        out.append(f'--init_std={args.init_std}')
     if args.track_overlap:
         out.append(f'--prism_track_overlap={args.track_overlap}')
     return out
@@ -883,8 +883,8 @@ def main():
     p.add_argument('--muon_lr', type=str, default=None, help="Muon LR (both arms); tune on seed 1336")
     p.add_argument('--teacher_optim', type=str, default='adamw', choices=['adamw', 'muon'],
                    help="optimizer the TEACHER is trained with (recorded; own fingerprint cache)")
-    p.add_argument('--baseline_init_std', type=str, default=None,
-                   help="init std for BOTH arms' fresh models (tuned-baseline sweep; default 0.02)")
+    p.add_argument('--init_std', type=str, default=None,
+                   help="init std for BOTH arms' fresh models (the tuned-baseline setting; default 0.02)")
     p.add_argument('--method_init_std', type=str, default=None,
                    help="init std for the METHOD arm only (its own tuning sweep)")
     p.add_argument('--qk_sigma', type=str, default=None, help="small_qk control: Q/K init std")
@@ -934,7 +934,7 @@ def main():
         ('optim', args.optim if args.optim != 'adamw' else None, None),
         ('muon_lr', args.muon_lr, None),
         ('teacher_optim', args.teacher_optim if args.teacher_optim != 'adamw' else None, None),
-        ('baseline_init_std', args.baseline_init_std, None),
+        ('init_std', args.init_std, None),
         ('method_init_std', args.method_init_std, None),
         ('qk_sigma', args.qk_sigma, None),
         ('mimetic', args.mimetic, None),

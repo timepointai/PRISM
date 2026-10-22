@@ -10,12 +10,12 @@ This file is the agent's memory: updated after every workstream.*
 | Move | Workstream | Status | Verdict (one sentence) | Artifacts |
 |---|---|---|---|---|
 | — | W0 shared infrastructure | **done** (code), golden check identical, selftest 67/67 | Anchor object, Muon/out_eps/μP optimizer builder, metrics, overlap tracker, recall v2, competitor hooks — all default-off. | — |
-| 1 | W1 injection-dial head-to-head | building → tuning launch pending | — | — |
-| 2a | W2a core-bet controls (probe scale) | not started | — | — |
-| 2b | W2b Pythia ladder (G1 port, runner) | not started | — | — |
-| 3 | W3 cross-size SVD projection | not started | — | — |
+| 1 | W1 injection-dial head-to-head | **tuning running** (seed 1336, facts + catalog, Modal) | — | — |
+| 2a | W2a core-bet controls (probe scale) | sweep driver built; sweeps launching | — | — |
+| 2b | W2b Pythia ladder (G1 port, runner) | in progress (worker, branch exp/alpha-w2b) | — | — |
+| 3 | W3 cross-size SVD projection | in progress (worker, branch exp/alpha-w3) | — | — |
 | 4 | W4 RL anchor pilot | not started | — | — |
-| 5 | W5 sparse prior / COUNT control | not started | — | — |
+| 5 | W5 sparse prior / COUNT control | in progress (worker, branch exp/alpha-w5) | — | — |
 | 6 | W6 packaging, lineage decay, prior art | not started | — | — |
 | 7 | W7 cheap mechanism probes | not started | — | — |
 
@@ -52,12 +52,35 @@ CPU runs are bit-reproducible here, so the acceptance bar is exact equality.
 - **D6** Competitor hyper-parameters: each gets three settings on seed 1336 under
   the pre-registered criterion in `docs/NEXT-EXPERIMENTS.md` (W1 block); the bare
   arm name is set to the winner before the 3-seed launch.
+- **D7** `ft_method_cfg` / `count_embed_cfg` use `key:value` (nanoGPT's
+  configurator splits every flag on `=`, so `k=v` inside a value breaks it).
+- **D8** `torch.optim.Muon` runs its Newton–Schulz iterations in bfloat16, which
+  has no fast CPU kernels: ~50 s/step for the 10.65M model on this laptop. CPU
+  smokes with Muon are therefore slow but correct; GPU is unaffected. Kept the
+  torch implementation (the brief's first choice) rather than vendoring one.
+- **D9** W2b/W3/W5 are built by parallel workers in their own worktrees
+  (branches `exp/alpha-w2b`, `exp/alpha-w3`, `exp/alpha-w5`, all cut from
+  `alpha-moves` at 630f181), prepare-only; every GPU launch goes through me.
+
+## CPU smokes (every new knob writes a conforming artifact)
+
+Finetune harness, tag `smokeknobs` (modernweb base, facts corpus, recall v1+v2,
+`--track_overlap=5`): arms plain, raw_weak, raw_weak_rows_absent,
+raw_weak_adamreset, raw_weak_adamlerp, raw_aniso_t1, out_eps, sst_t2, rpsft_t2,
+ewc_t2, lora_r4_t2, selfdistill_t2, lowlr_weak, raw_weak_exemb, plain_adamreset —
+all complete; artifact carries `step_ms`, `ftm_overhead_ms`, `overlap`,
+`recall_v2a/b/c`, `step_overhead_vs_plain`. From-scratch harness: `--optim=muon`,
+`dirs_pure`, `small_qk`, `mimetic`, `statmatch`, `tuned` (init_std both arms +
+method), `--teacher_optim=muon`, `--track_overlap` — all rc 0 with artifacts;
+`train.py --mup_base_width=32` runs. `prism_sweep.py` tiny grid — artifact
+`prism-sweep/1`. Smoke artifacts were deleted (never evidence).
 
 ## Spend ledger
 
 | launch | tier | GPU | est. hours | est. USD | actual USD | status |
 |---|---|---|---|---|---|---|
-| (none yet) | | | | | | |
+| W1 tuning, facts rig, seed 1336, 21 arms (`prism_modal_alpha.py --rig facts --slot a --tag w1tune`, commit 630f181) | A | L4 | 1.9 | 1.55 | pending | running (ap-nayF5Hz8sMFe4G44aKTnHC) |
+| W1 tuning, catalog rig, seed 1336, 21 arms (`--rig catalog --slot b --tag w1tune`) | A | L4 | 1.9 | 1.55 | pending | running (ap-vRlsFc7SZGjYXLZXJLNAp9) |
 
 Modal prices used for estimates (2026-10-21, modal.com/pricing): L4 $0.80/h,
 A10 $1.10/h, L40S $1.95/h, A100-40 $2.10/h, A100-80 $2.50/h, H100 $3.95/h.
