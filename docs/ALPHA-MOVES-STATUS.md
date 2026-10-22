@@ -10,13 +10,13 @@ This file is the agent's memory: updated after every workstream.*
 | Move | Workstream | Status | Verdict (one sentence) | Artifacts |
 |---|---|---|---|---|
 | — | W0 shared infrastructure | **done** (code), golden check identical, selftest 67/67 | Anchor object, Muon/out_eps/μP optimizer builder, metrics, overlap tracker, recall v2, competitor hooks — all default-off. | — |
-| 1 | W1 injection-dial head-to-head | **tuning running** (seed 1336, facts + catalog, Modal) | — | — |
+| 1 | W1 injection-dial head-to-head | catalog tuning **done**; catalog 3-seed **running**; facts tuning running | (pending) | `results/finetune_20261022T024927Z.json` (catalog tuning, seed 1336) |
 | 2a | W2a core-bet controls (probe scale) | sweep driver built; sweeps launching | — | — |
 | 2b | W2b Pythia ladder (G1 port, runner) | **built + merged** (prism_neox, pile_mmap, pythia_train, gated runner; 18 selftests); dry run pending; G2+ Tier B | — | — |
 | 3 | W3 cross-size SVD projection | **built + merged** (prism_crosssize, WS/FRONT builders, prism_eval knobs, runner, CROSS-SIZE.md, preprint draft); launching cases 1–4 | — | — |
-| 4 | W4 RL anchor pilot | not started | — | — |
+| 4 | W4 RL anchor pilot | code built (`prism_rl_anchor.py`, `prism_rl_pilot.py`, `prism_modal_rl.py`); CPU smoke pending (TRL venv installing) | — | — |
 | 5 | W5 sparse prior / COUNT control | **built + merged** (prism_prior 5.93 GB enwik8 c6 tables reproduce Act 1 to 1e-4; COUNT embedding; 8-arm harness); launching | — | — |
-| 6 | W6 packaging, lineage decay, prior art | not started | — | — |
+| 6 | W6 packaging, lineage decay, prior art | `docs/ANCHOR-RECIPES.md` + `examples/` written (verified surfaces per stack); lineage `[trace]` line + `--track_ref` built; README rows pending | — | — |
 | 7 | W7 cheap mechanism probes | not started | — | — |
 
 ## Golden-run check (§3.5)
@@ -75,6 +75,21 @@ method), `--teacher_optim=muon`, `--track_overlap` — all rc 0 with artifacts;
 `train.py --mup_base_width=32` runs. `prism_sweep.py` tiny grid — artifact
 `prism-sweep/1`. Smoke artifacts were deleted (never evidence).
 
+## W1 tuning picks (seed 1336, pre-registered rule: lowest forgetting with seen-recall ≥ 0.90, else highest seen)
+
+Catalog rig (`results/finetune_20261022T024927Z.json`):
+
+| method | t1 | t2 | t3 | chosen | note |
+|---|---|---|---|---|---|
+| sst (r) | 0.5: seen 0.20, forget 1.12 | 0.9: 0.12, 0.96 | 0.99: 0.05, 0.95 | **t1 (r=0.5)** | no setting reaches 0.90 — SST blocks the catalog task even with half the spectrum free |
+| rpsft (λ) | 0.1: 0.98, 2.51 | 1.0: 0.78, 1.89 | 10: 0.12, 1.06 | **t1 (λ=0.1)** | the only setting at parity; forgets ~like plain (2.82) |
+| ewc (λ, Fisher normalised to mean 1) | 0.1: 0.13, 0.37 | 1.0: 0.08, 0.33 | 10: 0.00, 0.29 | **t1 (λ=0.1)** | blocked at every grid point — the grid sat above EWC's useful band; a limitation of the 3-setting budget, stated as such |
+| lora_r4 (lr) | 3e-4: 0.15, 1.67 | 1e-3: 0.35, 2.22 | 3e-3: 0.35, 2.61 | **t2 (lr 1e-3)** | LoRA r=4 learns the task poorly in 1,000 steps; lr reused for r=16 |
+| selfdistill (α) | 0.3: 0.98, 0.55 | 1.0: 0.98, 0.38 | 3.0: 0.00, 0.30 | **t2 (α=1.0)** | beats raw_weak (0.93, 0.89) on BOTH axes on this seed — the 3-seed run decides |
+| raw_aniso | 32:0.01:0.0025 → 0.90, 0.57 | 32:0.02:0 → 0.95, 1.60 | 96:0.01:0.0025 → 0.85, 0.45 | **t1** | better forgetting than raw_weak at the parity boundary |
+
+Facts rig: pending (relaunched after a container preemption).
+
 ## Spend ledger
 
 | launch | tier | GPU | est. hours | est. USD | actual USD | status |
@@ -83,10 +98,28 @@ method), `--teacher_optim=muon`, `--track_overlap` — all rc 0 with artifacts;
 | W1 tuning, catalog rig, seed 1336, 21 arms (`--rig catalog --slot b --tag w1tune`) | A | L4 | 1.9 | 1.55 | pending | running (ap-vRlsFc7SZGjYXLZXJLNAp9) |
 | W1 tuning facts — relaunch after a container preemption at arm lora_r4_t1 (resumes banked arms; runner now clears stale locks) | A | L4 | ~1.2 (remaining) | ~1.0 | pending | running (fc-01M5GVZF7XFXR6PDMWY4H3X1P2) |
 | W2a sweeps (seed 1336): modernweb baseline (ev-a), modernweb dirs_only (ev-b), enwik8 baseline (ev-c), enwik8 dirs_only (ev-d), Muon muon_lr for the baseline on modernweb (ev-e) and enwik8 (ev-f) | A | L4 | 0.9+1.1+0.9+1.1+0.3+0.3 = 4.6 | 3.66 | pending | running |
+| W5 enwik8 prior fusion, 8 arms × 3 seeds (`prism_modal_alpha_w5.py`, volume prism-alpha-w5) | A | L4 | 3.8 | 3.02 | pending | running (fc-01M5GW3EN2D0D5J0ZR9XQHZ59P) |
+| W3 wave 1: case 1 xsize (w3-a), case 2 xsize (w3-b), case 3 xsize (w3-c), case 4 xsize (w3-d), case 4 front (w3-e), all `--track_overlap=50` | A | L4 | 4.6+1.6+1.3+1.1+1.1 = 9.7 | 7.80 | pending | running |
+| W2b Pythia dry run (70M, 2 arms × 20 iters, L4; data fetch 84 MB) | A | L4 | ~0.3 | <1 | pending | launched (ap-KG24YiLp5Azd2dUYtZpuuQ) |
+| W1 catalog 3-seed result run, 23 arms + base, tuned overrides, `--track_overlap=50` (slot b, tag w1) | A | L4 | 9.7 (conservative) | 7.76 | pending | running (fc-01M5GXB5EKYZCR46YTQY6847RX) |
+
+**Budget note (2026-10-21 evening).** The user's Modal panel showed $4.48 used and
+about **$38 of workspace usage remaining** at that point — below the brief's $300
+Tier A ceiling. Committed launches above total ≈ $27 estimated; the facts 3-seed
+run (≈ $8), W2a's 3-seed arms (≈ $15) and the W4 pilot (≈ $15–30) will exceed
+the remaining balance unless it is raised. Priority order if funds run short:
+W1 facts 3-seed → W2a core arms (dirs_only, tuned baseline, statmatch, small_qk
+on modernweb) → W4 minimal (β=0 / best KL / anchor in the recycle regime) → the
+rest. Every launch stays under the $40 per-run cap.
 
 Modal prices used for estimates (2026-10-21, modal.com/pricing): L4 $0.80/h,
 A10 $1.10/h, L40S $1.95/h, A100-40 $2.10/h, A100-80 $2.50/h, H100 $3.95/h.
 
 ## Open questions for the user
 
-- (none yet)
+- **Modal balance.** Your panel showed ~$38 of workspace usage left. The full Tier A
+  plan needs roughly $80–100 more than that (see the ledger). Top up, or accept the
+  priority order in the budget note.
+- **EWC grid.** All three pre-registered λ values blocked injection on the catalog
+  rig; the tuning-parity budget forbids a fourth. Shall EWC get a second,
+  lower grid (λ ∈ {0.001, 0.003, 0.01}) as a separately pre-registered follow-up?
