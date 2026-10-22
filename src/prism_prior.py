@@ -160,17 +160,22 @@ class SparsePrior:
         out = []
         key = torch.zeros(B, T, dtype=torch.long, device=self.device)
         pw = 1
+        # train.py's convention (the dense `_prior_logp`): the distribution at position t
+        # predicts Y[t] = X[t+1] from the k symbols ENDING AT t, X[t-k+1..t] — the current
+        # symbol is the newest context symbol. (A shift by k instead of k-1 here would
+        # predict the CURRENT symbol, which is what the voided first W5 run did.)
         for k in range(self.C + 1):
             if k > 0:
-                shifted = torch.zeros_like(X)
-                shifted[:, k:] = X[:, :-k]
+                sh = k - 1
+                shifted = X if sh == 0 else torch.cat(
+                    [torch.zeros(B, sh, dtype=X.dtype, device=X.device), X[:, :T - sh]], dim=1)
                 key = key + shifted * pw               # oldest symbol gets the highest weight
                 pw *= self.V
             keys = self.keys[k]
             i = torch.searchsorted(keys, key).clamp_(0, keys.numel() - 1)
             hit = keys[i] == key
-            if k > 0:
-                hit[:, :k] = False                    # block edge: no order-k context yet
+            if k > 1:
+                hit[:, :k - 1] = False                # block edge: fewer than k symbols seen so far
             rows = self.rows[k][i].float()           # (B,T,V)
             out.append((rows, hit))
         return out

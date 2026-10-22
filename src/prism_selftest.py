@@ -501,15 +501,25 @@ for _dt, _tol in ((np.float32, 1e-5), (np.float16, 1e-3)):
                _mus, _C, _V, {})
     _pr = load_sparse_prior(f'{_tmpd}/p_{_dt.__name__}.pt', 'cpu', vocab_size=_V)
     _P = _pr.probs(_X)[0]
-    _mine = _P[torch.arange(_C, 2000), _X[0, _C:2000]].numpy()
-    check(f'{_dt.__name__} rows: windowed probs == ngram_floor mix() on positions ≥ C (max |Δ| {np.abs(_mine - _ref).max():.1e} ≤ {_tol})',
+    # train.py's convention: the row at position t predicts X[t+1] (the window's NEXT symbol),
+    # so the sequential reference for target pos lives at row pos-1.
+    _mine = _P[torch.arange(_C - 1, 1999), _X[0, _C:2000]].numpy()
+    check(f'{_dt.__name__} rows: windowed probs (row t → X[t+1]) == ngram_floor mix() on targets ≥ C (max |Δ| {np.abs(_mine - _ref).max():.1e} ≤ {_tol})',
           np.abs(_mine - _ref).max() <= _tol)
+    _wrong = _P[torch.arange(_C, 2000), _X[0, _C:2000]].numpy()
+    check(f'{_dt.__name__} rows: the row does NOT predict the current symbol (the voided-run bug)',
+          np.abs(_wrong - _ref).max() > 1e-2)
     check(f'{_dt.__name__} rows: every (B,T,V) row normalises to 1', float((_P.sum(-1) - 1).abs().max()) <= _tol)
-_uni = torch.from_numpy(build_tables(_arr, 0, _V, log=lambda *a: None, row_dtype=np.float32)[0][1])[0]
-check('block edge: position 0 backs off to the unigram mixture (NOT uniform)',
-      torch.allclose(_P[0], _mus[0] * _uni + (1 - _mus[0]) / _V, atol=1e-3)
-      and not torch.allclose(_P[0], torch.full((_V,), 1 / _V)))
-check('block edge: position t<C equals the standalone prediction from t symbols of context',
+_tb = build_tables(_arr, _C, _V, log=lambda *a: None, row_dtype=np.float32)
+_uni = torch.from_numpy(_tb[0][1])[0]
+_k1, _r1 = _tb[1][0], _tb[1][1]
+_i1 = int(np.searchsorted(_k1, int(_X[0, 0])))
+_ml1 = torch.from_numpy(_r1[_i1]) if _i1 < len(_k1) and _k1[_i1] == int(_X[0, 0]) else None
+_mix0 = _mus[0] * _uni + (1 - _mus[0]) / _V
+_expect0 = _mus[1] * _ml1 + (1 - _mus[1]) * _mix0 if _ml1 is not None else _mix0
+check('block edge: position 0 uses its one symbol of context (order-1 ∘ unigram mixture, NOT uniform)',
+      torch.allclose(_P[0], _expect0, atol=1e-3) and not torch.allclose(_P[0], torch.full((_V,), 1 / _V)))
+check('block edge: position t<C equals the standalone prediction from t+1 symbols of context',
       torch.allclose(_pr.probs(_X[:, :3])[0, 2], _P[2]))
 check('logp == log(probs)', torch.allclose(_pr.logp(_X), torch.log(_pr.probs(_X).clamp_min(1e-12))))
 _bpb, _n = _pr.score_sequential(_arr[2000:4000])

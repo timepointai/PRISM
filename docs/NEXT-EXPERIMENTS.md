@@ -195,6 +195,18 @@ spec binds every sentence written about these arms.
 
 **Cost.** ≈ 3.8 L4-h ≈ $3. Tier A.
 
+**Run 1 VOID (2026-10-22, `results/prior_20261022T035740Z.json`, kept as a record).**
+The kill condition fired: `prior` never reached baseline-best in any seed, and its
+step-0 loss (6.41 nats) sat *above uniform* (5.55). Investigation found the sparse
+prior's in-window gather built each position's context from the symbols *before*
+it, so the fused logits carried a confident prediction of the **current** byte
+instead of the next one (the dense `_prior_logp` includes the current byte; the
+alignment selftest now pins the convention: 1.28 bits on the next symbol vs 5.5 on
+the current, on a synthetic corpus). The standalone sequential score was right all
+along (1.927 bpb, within the 0.02 bpb of Act 1 the rule allows), which is why the
+build check passed. Fixed in `prism_prior.py`; the run is repeated unchanged
+under tag `w5b`. Nothing in the pre-registration above changes.
+
 ### W4 — the RL anchor where RL drifts: single-seed pilot (pre-registered 2026-10-22, before any launch)
 
 **Why.** TRL GRPO defaults β = 0.0 and loads no reference model; prime-rl has no
