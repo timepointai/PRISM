@@ -172,16 +172,25 @@ rest. Every launch stays under the $40 per-run cap.
 Modal prices used for estimates (2026-10-21, modal.com/pricing): L4 $0.80/h,
 A10 $1.10/h, L40S $1.95/h, A100-40 $2.10/h, A100-80 $2.50/h, H100 $3.95/h.
 
-## Open questions for the user
+## Open questions for the user (updated 2026-11-02)
 
-- **Modal workspace spend limit.** Hit at 18:30 UTC on 2026-10-22; nothing runs until
-  it is raised. Finishing the in-flight runs costs ≈ $12 (commands above), well inside
-  the $100 cap of D13; the W4 10× wave is another ≈ $9. Raising the limit lets the
-  still-queued apps resume by themselves — stop them first (`modal app stop -y <ap-…>`)
-  if that is not wanted.
-- **EWC grid.** All three pre-registered λ values blocked injection on the catalog
-  rig; the tuning-parity budget forbids a fourth. Shall EWC get a second,
-  lower grid (λ ∈ {0.001, 0.003, 0.01}) as a separately pre-registered follow-up?
+- **License mismatch.** `LICENSE` is BSL 1.1 (commit c8d3562), but the README License
+  section and `HANDOFF.md` still say "PRISM Community License 1.2", as do two claude.ai
+  artifacts. A README diff is prepared and not applied.
+- **A lower EWC grid** (λ ∈ {0.001, 0.003, 0.01}) as a separately pre-registered
+  follow-up. All three pre-registered λ values blocked injection on both rigs.
+- **Isolating cross-size cells** (new compute): width-only from the wider teacher
+  (6L/768 → 6L/384) and depth-only (12L/384 → 6L/384), to separate depth from width in
+  case 1's failure. Also an unconfounded lineage control (an unrelated teacher with a
+  different init seed for every student seed).
+- **A pre-registered W5 rerun** with the in-harness prior within 0.02 bpb of Act 1 and a
+  target the fused arms do not start below.
+- **W7 GPU halves** (≈ $1–2 each; `docs/alpha/W7-NOTES.md`), in particular a faithful
+  spectrum imprint against the current DCT-8 curve.
+- **Refresh the two claude.ai artifacts** (Results Atlas, Alpha Map). They predate these
+  verdicts.
+- **Delete the merged branches on origin** (`alpha-moves`, `exp/alpha-*`) now that the
+  runs are finished. The agent cannot push `--delete`.
 
 **D13 (2026-10-22, user decision relayed by the planning session).** PRISM GPU spend is
 capped at $100 total through 2026-11-21. Finish the runs already in flight, open the PR,
