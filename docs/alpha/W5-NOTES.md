@@ -140,6 +140,6 @@ from Act 1's 1.9061, outside the kill condition's 0.02 bpb by 0.0010. Run 2
 seeds) therefore fails its own fidelity check and is reported as exploratory (RESULTS
 §21). The decision rule is also not evaluable as written: every fused arm starts at
 ~1.40 nats, below the baseline's best. A pre-registered rerun would need the in-harness
-prior within 0.02 bpb of Act 1 (count on the full pool, or relax nothing and accept
-that the slot-counted prior cannot pass), plus a target the fused arms do not already
+prior within 0.02 bpb of Act 1 (for example, counted on the full bytes as the build
+check was; the threshold is not relaxed), plus a target the fused arms do not already
 sit below. It is listed for the user, not run.
