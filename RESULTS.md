@@ -56,6 +56,8 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | AP | **W4 GRPO probe (§23)**: β0 / KL 0.04 / anchor, recycle:4, LR 1e-6, seed 1337 | [`rl_*_recycle4_s1337_w4_*.json`](results/) |
 | AS | **W4 GRPO probe, LR 1e-5 (§23)**: β0 / KL 0.04 / anchor × recycle:4 / stale:4, seed 1337 — drift without forgetting | [`rl_*_s1337_w4lr1e5_*.json`](results/) |
 | AM | **Lineage decay (§22)**: PRISM vs baseline students traced against the teacher's directions, enwik8 | [`dirs_only_20261022T172455Z.json`](results/dirs_only_20261022T172455Z.json) |
+| AT | **Lineage decay, modern web (§22)**: same design | [`dirs_only_20261022T181750Z.json`](results/dirs_only_20261022T181750Z.json) |
+| AU | **Lineage control (§22)**: modern-web students traced against an unrelated (enwik8) teacher | [`dirs_only_20261102T222126Z.json`](results/dirs_only_20261102T222126Z.json) |
 | AL | **W2a controls (§19)**: dirs_only / dirs_pure / recipe / spectral_only / mimetic / statmatch vs the tuned baseline; Muon arms | [`*_20261022T15*`, `*_20261022T16*`, `*_20261022T17*`](results/) |
 | — | **W5 run 1 (§21) — VOID** (gather off-by-one; kept as a record) | [`prior_20261022T035740Z.json`](results/prior_20261022T035740Z.json) |
 
@@ -939,53 +941,90 @@ every 10; medians of 3 (per-seed values in the artifact):
   `dirs_only`. Adding directions gains speed (5.8×) but leaves the endpoint 0.07–0.08
   above `dirs_only`. Logit fusion of the same counts (`prior`) ends ~0.10 nats lower.
 
-## 22. Lineage decay: how long a student carries its teacher's signature (Run AM)
+## 22. Lineage decay: how long a student carries its teacher's signature (Run AM and its controls)
 
-*Alpha-moves W6.2. The two metrics of the weight-lineage method of arXiv 2608.07786,
-computed online by `src/prism_track.py` every 25 steps: subspace alignment (here the
-mean squared cosine of the principal angles between a weight group's top-16 singular
-subspaces and the teacher's, averaged over left and right sides; chance = k/d) and the
-spectral-energy "trace" (per-group Frobenius norm, with the teacher's beside it).
-enwik8, tuned-baseline schedule, 3 seeds:
-[`dirs_only_20261022T172455Z.json`](results/dirs_only_20261022T172455Z.json). Both arms
-are traced against the SAME teacher's directions: the PRISM student was initialised
-from them, the baseline student never saw them.*
+*Alpha-moves W6.2. Our re-implementation of the two metrics of the weight-lineage method
+of arXiv 2608.07786, computed online by `src/prism_track.py` every 25 steps. The first is
+subspace alignment: the mean squared cosine of the principal angles between a weight
+group's top-16 singular subspaces and a reference model's, averaged over left and right
+sides (chance = k/d). The second is the spectral-energy "trace": the per-group Frobenius
+norm, with the reference's beside it. Tuned-baseline schedule, 3 seeds. Teacher and
+students use the same batch, so the 1,500 student steps are **0.75×** the 2,000-step
+teacher's training in tokens.* Three runs:
 
-| group | PRISM student ↔ teacher, steps 0 / 100 / 250 / 500 / 1000 / 1500 | baseline student ↔ same teacher | chance |
+- **enwik8, traced against the students' own teacher**
+  ([`dirs_only_20261022T172455Z.json`](results/dirs_only_20261022T172455Z.json)): the
+  PRISM student was initialised from that teacher's directions; the baseline student
+  never saw them.
+- **modern web, the same design**
+  ([`dirs_only_20261022T181750Z.json`](results/dirs_only_20261022T181750Z.json)).
+- **modern web, traced against an unrelated teacher**: the seed-1337 enwik8 teacher's
+  directions as the reference for every seed
+  ([`dirs_only_20261102T222126Z.json`](results/dirs_only_20261102T222126Z.json); training
+  is identical to the previous run, curve for curve, so the tracker does not perturb
+  training).
+
+**Overlap with the students' own teacher (medians of 3), steps 0 / 100 / 250 / 500 / 1000 / 1500:**
+
+| corpus | group | PRISM student ↔ teacher | baseline student ↔ same teacher | chance |
+|---|---|---|---|---|
+| enwik8 | attention | 0.827 / 0.817 / 0.826 / 0.829 / 0.803 / 0.779 | 0.047 / 0.116 / 0.211 / 0.257 / 0.259 / 0.249 | 0.028 |
+| enwik8 | attn_proj | 0.947 / 0.754 / 0.700 / 0.701 / 0.679 / 0.648 | 0.048 / 0.119 / 0.185 / 0.213 / 0.229 / 0.222 | 0.042 |
+| enwik8 | ffn_up | 0.588 / 0.643 / 0.689 / 0.741 / 0.789 / 0.801 | 0.046 / 0.147 / 0.353 / 0.416 / 0.389 / 0.359 | 0.026 |
+| enwik8 | ffn_down | 0.930 / 0.833 / 0.835 / 0.835 / 0.807 / 0.783 | 0.029 / 0.188 / 0.288 / 0.356 / 0.374 / 0.362 | 0.026 |
+| enwik8 | embedding | 0.769 / 0.821 / 0.853 / 0.891 / 0.914 / 0.904 | 0.114 / 0.263 / 0.472 / 0.594 / 0.602 / 0.601 | 0.052 |
+| modern web | attention | 0.827 / 0.816 / 0.803 / 0.776 / 0.709 / 0.664 | 0.045 / 0.070 / 0.197 / 0.219 / 0.217 / 0.211 | 0.028 |
+| modern web | attn_proj | 0.947 / 0.649 / 0.632 / 0.636 / 0.596 / 0.563 | 0.048 / 0.081 / 0.142 / 0.167 / 0.178 / 0.168 | 0.042 |
+| modern web | ffn_up | 0.588 / 0.649 / 0.746 / 0.807 / 0.787 / 0.744 | 0.046 / 0.143 / 0.359 / 0.408 / 0.385 / 0.362 | 0.026 |
+| modern web | ffn_down | 0.931 / 0.787 / 0.809 / 0.794 / 0.751 / 0.711 | 0.028 / 0.205 / 0.311 / 0.396 / 0.403 / 0.392 | 0.026 |
+| modern web | embedding | 0.769 / 0.836 / 0.864 / 0.902 / 0.884 / 0.846 | 0.118 / 0.253 / 0.527 / 0.634 / 0.671 / 0.657 | 0.052 |
+
+**Overlap with an unrelated teacher at step 1,500 (modern-web students vs the enwik8
+teacher), per seed 1337 / 1338 / 1339:**
+
+| group | PRISM student | baseline student | chance |
 |---|---|---|---|
-| attention | 0.827 / 0.817 / 0.826 / 0.829 / 0.803 / 0.779 | 0.047 / 0.116 / 0.211 / 0.257 / 0.259 / 0.249 | 0.028 |
-| attn_proj | 0.947 / 0.754 / 0.7 / 0.701 / 0.679 / 0.648 | 0.048 / 0.119 / 0.185 / 0.213 / 0.229 / 0.222 | 0.042 |
-| ffn_up | 0.588 / 0.643 / 0.689 / 0.741 / 0.789 / 0.801 | 0.046 / 0.147 / 0.353 / 0.416 / 0.389 / 0.359 | 0.026 |
-| ffn_down | 0.93 / 0.833 / 0.835 / 0.835 / 0.807 / 0.783 | 0.029 / 0.188 / 0.288 / 0.356 / 0.374 / 0.362 | 0.026 |
-| embedding | 0.769 / 0.821 / 0.853 / 0.891 / 0.914 / 0.904 | 0.114 / 0.263 / 0.472 / 0.594 / 0.602 / 0.601 | 0.052 |
+| attention | 0.095 / 0.030 / 0.030 | 0.097 / 0.030 / 0.029 | 0.028 |
+| attn_proj | 0.074 / 0.040 / 0.041 | 0.079 / 0.042 / 0.044 | 0.042 |
+| ffn_up | 0.220 / 0.052 / 0.052 | 0.229 / 0.053 / 0.052 | 0.026 |
+| ffn_down | 0.236 / 0.026 / 0.025 | 0.254 / 0.026 / 0.027 | 0.026 |
+| embedding | 0.393 / 0.198 / 0.195 | 0.387 / 0.184 / 0.191 | 0.052 |
 
-**Three readings.**
+**Readings.**
 
-1. **The transplanted signature decays slowly and never approaches chance.** After
-   1,500 steps (the full probe horizon, 1.4× the teacher's own training in tokens) the
-   PRISM student's attention subspaces still overlap the teacher's at ~0.78 against a
-   chance level of 0.03; the FFN groups at 0.6–0.8. A student initialised this way is
-   trivially identifiable as such by the published lineage detector for the whole of
-   this horizon — the IP question the alpha scan raised is real at probe scale, and
-   the fingerprint is the *directions*, not the 40-number spectrum.
-2. **The baseline student converges toward the teacher's geometry on its own.** From
-   chance (0.03–0.05) it climbs to 0.2–0.3 by step 500 and plateaus — two models trained
-   from different inits on the same data share a quarter of their top-16 subspace. That
-   plateau is the floor any lineage claim must beat, and the PRISM student sits 0.5
-   above it at every step.
-3. **Norms grow toward the teacher's; the student does not shrink back to its init.**
-   Attention Frobenius norm 13.302 → 18.598 (teacher 22.421); the baseline
-   reaches 30.267 by the same step. The trace metric alone would NOT separate the
-   two students (both ascend the same curve); the subspace metric does.
+1. **The transplanted signature decays slowly and stays far above both controls for
+   the whole horizon.** At step 1,500 the PRISM student's subspaces overlap its own
+   teacher's at 0.56–0.91 across groups and corpora. In every seed, on both corpora,
+   the PRISM student's lowest value exceeds the same-data baseline's highest by
+   0.31–0.51 in each non-embedding group (embedding: 0.15–0.26). The decay is faster on
+   modern web (attention 0.83 → 0.66) than on enwik8 (0.83 → 0.78).
+2. **Two models trained on the same data share part of their geometry on their own.**
+   The baseline student climbs from chance to 0.17–0.40 (embedding 0.60–0.69) by step
+   500 and plateaus. Any lineage claim has to beat that floor, not chance.
+3. **An unrelated teacher sits at chance unless it shares the random-init seed.** For
+   seeds 1338 and 1339, both students sit at chance against the enwik8 teacher in every
+   non-embedding group (0.025–0.053). The embedding sits at ~0.19 for both arms:
+   byte-embedding structure is partly shared across corpora. **Seed 1337 is
+   confounded:** the reference is the seed-1337 enwik8 teacher, which trained from the
+   same seed-1337 random init as the seed-1337 students. Both students show
+   0.07–0.25 (embedding 0.39) against it, with or without PRISM. That reference was
+   chosen when rebuilding the launch (the original flags were not recoverable;
+   `docs/ALPHA-MOVES-STATUS.md`). It shows that a shared random-init seed alone leaves
+   a measurable trace on this metric, which a detector would have to rule out.
+4. **The trace metric alone does not separate the students.** Norms grow toward the
+   teacher's in both arms (attention Frobenius norm 13.3 → 18.6 / 22.6 for PRISM on
+   enwik8 / modern web, 30.3 for the baseline; teacher 22.4). The subspace metric does
+   the separating.
 
-Implications are stated as open questions, not conclusions: whether a PRISM student's
-detectability survives a full training run (ours covers 1,500 steps), whether the
-"unrelated teacher" reference (a run with the enwik8 teacher's directions as the
-reference for modern-web students is in flight on the same volume) sits at the
-baseline's plateau or below it, and what counts as "initialization using a pre-trained
-model" under the EU GPAI compute-counting guidance are for the user and counsel. The
-modern-web lineage run and the unrelated-teacher control complete this section when
-they land.
+**Identifiability statement (what is and is not shown).** On this rig, at the
+1,500-step probe horizon, our re-implementation of the subspace-alignment metric
+separates a student initialised from a teacher's directions from (a) an independently
+initialised student trained on the same data and (b) an unrelated teacher with a
+different random-init seed, in every seed on both corpora. It does **not** show that
+the published detector would flag such a student (we did not run that detector), that
+the separation survives a full training run or larger scale, or what counts as
+"initialization using a pre-trained model" under the EU GPAI compute-counting guidance.
+Those questions are for the user and counsel.
 
 ## 23. The anchor inside GRPO (W4, single-seed probes): at LR 1e-6 nothing drifts; at LR 1e-5 the policy drifts but nothing forgets
 
