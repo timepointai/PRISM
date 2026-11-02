@@ -51,8 +51,8 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | AK | **Weight Selection, case 1 (§20)**: 12L/768 → 6L/384 by index selection (our re-implementation) — 4.0×, beats the projection |
 | AR | **Weight Selection, case 3 (§20)**: width-only 6L/384 → 6L/192 (our re-implementation) — 8.2×, beats the projection's 1.28× | [`init_state_20261102T214752Z.json`](results/init_state_20261102T214752Z.json) |
 | AQ | **Weight Selection, case 2 (§20)**: identical shapes, a near-copy of the trained teacher — 49×, degenerate upper bound (supersedes the 2-seed partial `init_state_20261022T175426Z.json`) | [`init_state_20261102T214129Z.json`](results/init_state_20261102T214129Z.json) | [`init_state_20261022T170647Z.json`](results/init_state_20261022T170647Z.json) |
-| AN | **W1 facts rig (§18)**: 23 arms × seeds 1337–1338 (partial) | [`finetune_20261022T143128Z.json`](results/finetune_20261022T143128Z.json) |
-| AO | **W5 run 2 (§21)**: 8 arms × seeds 1337–1338 (partial) | [`prior_20261022T170423Z.json`](results/prior_20261022T170423Z.json) |
+| AN | **W1 facts rig (§18)**: 23 arms × 3 seeds — SST/EWC/LoRA-4 block; nothing beats the weak anchor 3/3 (supersedes the 2-seed partial `finetune_20261022T143128Z.json`) | [`finetune_20261102T225917Z.json`](results/finetune_20261102T225917Z.json) |
+| AO | **W5 run 2 (§21)**: 8 arms × 3 seeds — exploratory (fails the prior-fidelity check) (supersedes the 2-seed partial `prior_20261022T170423Z.json`) | [`prior_20261102T214708Z.json`](results/prior_20261102T214708Z.json) |
 | AP | **W4 GRPO probe (§23)**: β0 / KL 0.04 / anchor, recycle:4, LR 1e-6, seed 1337 | [`rl_*_recycle4_s1337_w4_*.json`](results/) |
 | AS | **W4 GRPO probe, LR 1e-5 (§23)**: β0 / KL 0.04 / anchor × recycle:4 / stale:4, seed 1337 — drift without forgetting | [`rl_*_s1337_w4lr1e5_*.json`](results/) |
 | AM | **Lineage decay (§22)**: PRISM vs baseline students traced against the teacher's directions, enwik8 | [`dirs_only_20261022T172455Z.json`](results/dirs_only_20261022T172455Z.json) |
@@ -591,7 +591,7 @@ and this gate result is what authorizes spending on it (needs the sparse
 gather + block-edge backoff in `train.py`'s `_prior_logp`, then
 `prism_prior_eval` arms on enwik8).
 
-## 18. The injection-dial head-to-head (Runs AB–AE, AN) — catalog rig landed; facts rig on 2 of 3 seeds
+## 18. The injection-dial head-to-head (Runs AB–AE, AN): hard projection blocks injection on both rigs; self-distillation beats the weak anchor on catalog only
 
 *Alpha-moves W1 ([`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md) pre-registration
 of 2026-10-21). Competitors are our re-implementations (`src/prism_baselines.py`,
@@ -629,13 +629,17 @@ modernweb base, 2,000 + 1,000 steps, the §13 rig; medians of 3; forgetting = mo
 
 **The pre-registered readouts.**
 
-1. **Hard projection blocks injection like PRISM's strong band.** SST at its paper
-   default stores 3% of the task (per seed 12/2/3%), within 10 points of the 0.01
-   anchor (15%) and 97 points below plain. Even with half the spectrum free (r = 0.5,
-   the tuned setting) it stores 12%. EWC (Fisher-weighted) and LoRA r=4 block too.
-   The prediction the brief made from the literature holds: methods that keep the
-   update off the principal directions cannot write a new task into them.
-2. **One arm beats the weak anchor on both axes in 3 of 3 seeds: self-distillation.**
+1. **Hard projection blocks injection at least as hard as PRISM's strong band.** The
+   tuned SST (r = 0.5, half the spectrum free) stores 12% of the task, within 10 points
+   of the 0.01 anchor's 15%: *blocks* by rule 1. At its paper default (r = 0.99) SST
+   stores 3% (per seed 12/2/3%). That is 11.7 points *below* the 0.01 anchor, so by the
+   letter of rule 1 it is neither "blocks" (within 10 points of `raw_mid`) nor "injects
+   at parity". It blocks harder than the strong band, an outcome the rule's two
+   readings did not anticipate. Our re-implementations of EWC (Fisher-weighted) and
+   LoRA r=4 block too. The prediction the brief made from the literature holds:
+   methods that keep the update off the principal directions cannot write a new task
+   into them.
+2. **One arm beats the weak anchor on both axes in 3 of 3 seeds: self-distillation (our re-implementation).**
    α = 1.0 KL-to-the-frozen-base forgets 0.40 (vs 0.94) while storing 98% (vs 93%),
    per seed 0.399/0.407/0.373 vs 0.991/0.944/0.930 forgetting and 98/100/98% vs
    93/95/93% recall. It costs one base forward pass per micro-step — the very cost the
@@ -656,53 +660,74 @@ hurts injection (58%) and is dominated by the anchor alone; RP-SFT at the one
 setting that injects forgets like plain; LoRA r=16 learns the task but forgets
 *more* than full finetuning at this LR.
 
-**Facts rig, seeds 1337–1338 complete, seed 1339 at 19 of 24 arms when the Modal
-workspace hit its spend limit** ([`finetune_20261022T143128Z.json`](results/finetune_20261022T143128Z.json),
-`partial: true`; 120 synthetic facts, 2,000 + 1,000 steps; forgetting = modernweb val
-climb; seen = the trained template, held-out = the v1 held-out template, v2a/b/c = three
-further held-out paraphrase templates per fact, never trained; medians of 2):
+**Facts rig, 3 seeds** ([`finetune_20261102T225917Z.json`](results/finetune_20261102T225917Z.json);
+supersedes the 2-seed partial [`finetune_20261022T143128Z.json`](results/finetune_20261022T143128Z.json),
+which stays committed; 120 synthetic facts, 2,000 + 1,000 steps; forgetting = modernweb
+val climb; seen = the trained template, held-out = the v1 held-out template, v2a = a
+further never-trained paraphrase template; medians of 3; competitors are our
+re-implementations, at the settings recorded in `arm_specs[*].tuned_from`):
 
-| arm | forgetting ↓ | ×less than plain | seen ↑ | held-out ↑ | v2a ↑ | step time vs plain |
+| arm | forgetting ↓ | ×less than plain | seen ↑ | held-out ↑ (per seed) | v2a ↑ | step time vs plain |
 |---|---|---|---|---|---|---|
-| plain | 3.38 | 1.0× | 100% | 41% | 61% | 1.00 |
-| **weak anchor 0.0025** | **1.10** | **3.1×** | 98% | **90%** | **79%** | 1.06 |
-| mid anchor 0.01 | 0.52 | 6.6× | 4% | 3% | 0% | 1.06 |
-| anisotropic anchor (t2) | 1.90 | 1.8× | 100% | 75% | **98%** | 1.14 |
-| SST (tuned, r 0.99) | 1.51 | 2.3× | **5%** | 3% | 3% | 1.06 |
-| SST (paper default) | 1.58 | 2.2× | 3% | 2% | 1% | 1.06 |
-| RP-SFT (t2) | 2.60 | 1.4× | 100% | 67% | 69% | 1.03 |
-| EWC (t1) | 0.74 | 5.1× | 8% | 2% | 2% | 1.01 |
-| LoRA r=4 (t3) | 2.84 | 1.2× | 20% | 7% | 6% | 1.36 |
-| LoRA r=16 (t3) | 4.18 | 0.8× | 100% | 79% | 75% | 1.43 |
-| self-distillation (t2) | 0.57 | 6.2× | 100% | 25% | 33% | 1.06 |
-| Adam-ε control (out_eps) | 3.34 | 1.0× | 100% | 41% | 67% | 1.01 |
-| weak anchor, embedding excluded | 1.33 | 2.6× | 98% | 88% | 74% | 1.06 |
-| weak anchor, absent rows only | 1.29 | 2.7× | 98% | 87% | 76% | 1.06 |
-| weak anchor + Adam reset | 1.15 | 2.9× | 99% | 88% | 43% | 1.07 |
-| plain + Adam reset | 3.42 | 1.0× | 100% | 31% | 44% | 1.00 |
+| plain | 3.31 | 1.0× | 100% | 26% (26/41/19) | 42% | 1.00 |
+| **weak anchor 0.0025** (`raw_weak`) | **1.08** | **3.1×** | 96% | 25% (23/90/25) | 14% | 1.06 |
+| mid anchor 0.01 (`raw_mid`) | 0.49 | 6.7× | 3% | 0% | 0% | 1.06 |
+| anchor 0.0035 | 0.91 | 3.6× | 78% | 19% | 8% | 1.05 |
+| anchor 0.005 | 0.75 | 4.4× | 34% | 5% | 5% | 1.06 |
+| low-LR 1e-4 | 2.19 | 1.5× | 98% | 59% | 42% | 1.00 |
+| anisotropic anchor (k=32, 0.02 top / 0 rest; tuned t2) | 1.84 | 1.8× | 100% | **60% (60/75/32)** | **65%** | 1.12 |
+| SST, tuned r = 0.5 (`sst_t1`) | 1.47 | 2.3× | 5% | 2% | 2% | 1.05 |
+| SST, paper default r = 0.99 | 1.54 | 2.2× | 2% | 0% | 0% | 1.06 |
+| RP-SFT, λ = 1.0 (t2) | 2.44 | 1.4× | 98% | 29% | 30% | 1.01–1.03* |
+| EWC, λ = 0.1 (t1) | 0.65 | 5.1× | 5% | 0% | 2% | 1.00–1.01* |
+| LoRA r=4 (lr 3e-3) | 2.84 | 1.2× | 12% | 7% | 6% | 1.36* |
+| LoRA r=16 (lr 3e-3) | 4.09 | 0.8× | 100% | 32% | 59% | 1.42–1.43* |
+| self-distillation, α = 1.0 (t2) | **0.53** | **6.2×** | 96% (96/100/88) | 25% (9/25/41) | 24% | 1.06* |
+| Adam-ε control (`out_eps`) | 3.30 | 1.0× | 100% | 28% | 45% | 1.00 |
+| weak anchor, embedding excluded | 1.30 | 2.5× | 95% | 25% | 11% | 1.06 |
+| weak anchor, absent rows only | 1.26 | 2.6× | 95% | 24% | 12% | 1.05 |
+| weak anchor + Adam reset | 1.12 | 3.0× | 95% | 25% | 14% | 1.06 |
+| weak anchor + Adam-moment lerp | 1.02 | 3.2× | 96% | 25% | 14% | 1.20 |
+| plain + Adam reset | 3.34 | 1.0× | 100% | 30% | 40% | 1.00 |
 
-**Readouts against the pre-registered rules (2 of 3 seeds, so none is a verdict yet):**
+\* Seed 1339's runs of these five arms ran on an A10 after the L4 queue stalled
+(2026-11-02), so their step-time ratio against the L4 `plain` of that seed is not
+comparable. The column gives seeds 1337–1338 only. Loss and recall are unaffected by
+the GPU class beyond run-to-run noise.
 
-1. **SST blocks injection on the facts rig too** (seen recall 5% and 3%, within 10 points
-   of the mid anchor's 4%, both seeds). EWC and LoRA r=4 block as well. Same picture as
-   the catalog rig.
-2. **Self-distillation does NOT beat the weak anchor on this rig.** It wins forgetting
-   (0.57 vs 1.10) and ties on the trained template (100% vs 98%), but its held-out
-   recall is 25% against the anchor's 90% and its v2 paraphrase recall 33% against 79%.
-   It memorises the training phrasing. The catalog verdict (self-distillation wins both
-   axes) therefore does not transfer to facts; the two rigs disagree, which is the
-   honest state of the head-to-head.
-3. **The weak anchor more than doubles held-out recall over plain finetuning** (90% vs
-   41%; 79% vs 61% on the never-trained v2a templates), in both seeds. This was not a
-   pre-registered axis; it is reported as an observation. The anisotropic anchor pushes
-   v2a to 98% at the cost of forgetting 1.8× instead of 3.1× less.
-4. **Directionality controls:** excluding the embedding changes forgetting by +20.3%
-   (on the 20% bar exactly; the third seed decides), absent-row anchoring +17%, Adam
-   reset +4%, Adam-moment lerp −4%; the Adam-ε control is 1.0× again. Adam reset
-   alone does not touch forgetting but drops v2a recall (44% vs 61%).
+*The 2-seed version of this table (written 2026-10-22) reported the upper of the two
+seeds as "median of 2" (D15). That is how "the weak anchor doubles held-out recall"
+(90% vs 41%) and "self-distillation's held-out recall is 25% against the anchor's 90%"
+entered the record. Both are withdrawn: on 3 seeds the anchor's held-out median is 25%
+against plain's 26%, and self-distillation's is 25%.*
 
-The remaining five arms of seed 1339 are banked up to `rpsft` on volume `prism-alpha-a`;
-relaunching the same command completes the artifact for about one L4-hour.
+**The pre-registered readouts, facts rig:**
+
+1. **Rule 1: SST blocks.** Seen recall is 2% at the paper default and 5% tuned, both
+   within 10 points of the 0.01 anchor's 3%. Our re-implementations of EWC and LoRA r=4
+   block as well.
+2. **Rule 2: no arm beats the weak anchor in 3 of 3 seeds.** Self-distillation forgets
+   half as much in every seed (0.52/0.57/0.53 vs 1.08/1.10/1.04), but its seen recall is
+   lower in two seeds (96/100/88% vs 98/95/96%). So the catalog verdict does not
+   replicate here.
+3. **Rule 3: the embedding-exclusion control sits on the 20% bar and crosses it.**
+   Median forgetting is 1.301 with the tied embedding excluded, against 1.082:
+   **+20.3%, ≥ 20%**. By the rule, part of the facts rig's retention is *not*
+   directional: the anchor on the tied embedding contributes. (Read as the median of
+   the per-seed changes, 22.7/18.0/19.3%, it would be 19.3%; the ratio of medians is
+   used because rule 1 also compares medians.) Absent-row anchoring +16.7%, Adam reset
+   +3.2% and Adam-moment lerp −5.3% are under the bar. On the catalog rig all four are
+   under it (+11.5 / +10.2 / +3.8 / −9.8%), so retention there is directional.
+
+**What changes which claim (the pre-registered consequence).** README Finding 7 drops
+"the dial traces the frontier" only if a competitor beats `raw_weak` under rule 2 on
+*both* rigs. Self-distillation does so on catalog (3/3) but not on facts (1/3 on seen
+recall), so **the consequence does not fire**. Honest bounds still names
+self-distillation: it dominates the anchor on catalog and halves its forgetting on
+facts at a small seen-recall cost, for one base forward pass per step. No
+pre-registered rule concerned held-out recall. As an observation, the anisotropic
+anchor is the only arm whose held-out recall beats plain in every seed (60/75/32% vs
+26/41/19%), at 1.8× less forgetting instead of 3.1×.
 
 ## 19. Hardened controls for the core bet (W2a): the geometry survives a tuned baseline under AdamW; under Muon the multiplier shrinks to 1.4×
 
