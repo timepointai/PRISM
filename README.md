@@ -510,7 +510,7 @@ where PRISM sits:
 | [FRONT / SPA-FRONT](https://arxiv.org/abs/2603.07523) (learngene, '26) | low-frequency 3D-DCT coefficients of trained weights, truncated or padded to a new size | a trained source model; permutation alignment (SPA) | index-space transfer vs PRISM's SVD-space projection; our FRONT re-implementation from GPT-2 sits far below scratch in the byte-level cell (§20) |
 | [Residual-over-n-gram LMs](https://arxiv.org/pdf/2210.14431) (Li et al. '22) | the network learns the residual over a fixed n-gram prior fused at the logits | an n-gram model | the canonical form of Prior-Fused PRISM's logit fusion; PRISM's addition is the geometric init stacked on top, scored by time-to-target |
 | [Spectral Warmup null](https://arxiv.org/abs/2604.22778) (Apr '26) | correct spectra with random directions | a spectrum | trained 42.7% worse than standard init (reported); independently matches PRISM's spectrum-only null (§11) |
-| [CrossGMN](https://arxiv.org/abs/2610.01649) (Oct '26) | a learned cross-architecture init operator | a model zoo (≤210k-param nets) | reports 0.74× on attention-dim and 0.86× on head-count reduction; PRISM's analytic projection gets 1.28× and 3.7× on the analogous cells at 10.65M (§20) |
+| [CrossGMN](https://arxiv.org/abs/2610.01649) (Oct '26) | a learned cross-architecture init operator | a model zoo (≤210k-param nets) | reports 0.74× on attention-dim and 0.86× on head-count reduction; PRISM's analytic projection gets 1.28× on its width-only cell at 10.65M, which halves the head dimension with d_model, so the analogy is approximate (§20). Our "heads 12→6" cell changes no parameter shape, so its 3.7× is not comparable with a head-count *reduction* |
 | [108-statistic init](https://openreview.net/forum?id=DzLzZYD84Y) (ICLR'27 sub.) | layerwise scalar statistics imposed on a random init | a reference model's statistics | the W2a `statmatch` control imposes 70 teacher statistics with no directions; below the tuned baseline on both corpora, 3/3 seeds (§19) |
 
 What this repo adds is the artifact-backed decomposition — which half of the
@@ -638,10 +638,16 @@ a standalone, self-contained page served from GitHub Pages; source:
   the anchor avoids; the anchor remains the cheapest *weight-space* control, and
   hard-projection methods (SST, EWC, LoRA r=4) block injection like its strong band.
   The facts-rig replication is in progress.
-- **Cross-size projection fails across width (pre-registered criterion, §20).**
-  Projecting a 768-wide teacher onto a 384-wide student, or GPT-2 124M onto the
-  byte-level student, gives an early head start and no endpoint gain (1.0×). Only
-  the head cells transfer: head count 12→6 (3.7×) and head dimension 64→32 (1.28×).
+- **Cross-size projection: halving width and depth together gives no endpoint gain
+  (pre-registered criterion fails, §20).** Projecting a 12L/768 teacher onto a
+  6L/384 student, or GPT-2 124M onto the byte-level student, gives an early head
+  start and no endpoint gain (1.0×), and our re-implementation of Weight Selection
+  beats the projection in that cell (4.0×). Halving width alone (6L/384 → 6L/192,
+  head dimension halving with it) gives 1.28× in 3 of 3 seeds. The "heads 12→6"
+  cell (3.7×) changes no parameter shape, so it is the same-size effect under a
+  different head partition, not a size change. Whether the width + depth failure is
+  about depth, the combination or the wider teacher is untested (the isolating cells
+  need new compute).
 - **Under Muon the init advantage shrinks from 3.3× to 1.4× (§19).**
   Against a tuned AdamW baseline (LR 2e-3, warmup 300) `dirs_only` keeps 3.3×
   (modern web) and 3.1× (enwik8); with Muon on both arms the ratio is 1.4× / 1.5×,
@@ -700,10 +706,11 @@ The ranked, run-command-ready list lives in
    < 1.2×) is one command away and needs the user's Tier B authorization
    ([`docs/ALPHA-MOVES-STATUS.md`](docs/ALPHA-MOVES-STATUS.md)). The
    same-codebase tuned baseline and the Muon arm now exist at probe scale (§19).
-2. **Cross-size: the head cells** — width projection failed its pre-registered
-   bar (§20); head-count and head-dimension projection passed. The next cell is
-   a μP-native teacher/student pair and per-layer alignment for width, and
-   Pythia-1B → 160M/410M on the NeoX harness (prepared, Tier B).
+2. **Cross-size: separate depth from width** — the width + depth cell failed its
+   pre-registered bar and the width-only cell passed (§20). The isolating cells
+   (6L/768 → 6L/384 width-only from the wider teacher; 12L/384 → 6L/384 depth-only)
+   come first, then a μP-native pair and Pythia-1B → 160M/410M on the NeoX harness
+   (prepared, Tier B). All need the user's authorization.
 3. **The frontier against self-distillation** — self-distillation dominated the
    weak anchor on the catalog rig (§18); the composition (anchor + self-distillation,
    or the anisotropic anchor + self-distillation) and the facts-rig replication
