@@ -308,7 +308,8 @@ so the budget can stop it at any point. Under the W4 cap of $100.
 
 - **W1** — landed on both rigs, 3 seeds each; RESULTS §18. SST (our re-implementation)
   blocks injection on both rigs. On catalog its paper default stores 11.7 points *less*
-  than the strong band, outside rule 1's "within 10 points" reading. Self-distillation
+  than the strong band, outside rule 1's "within 10 points" reading. Self-distillation (our
+  re-implementation)
   beats the weak anchor under rule 2 on catalog (3/3) but not on facts (seen recall lower
   in 2/3), so the pre-registered consequence (needs both rigs) does not fire. Rule 3:
   embedding exclusion moves facts-rig forgetting by +20.3% (crosses the bar; catalog

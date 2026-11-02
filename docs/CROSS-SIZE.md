@@ -138,10 +138,10 @@ stands. The reading of it was corrected on 2026-11-02:
   only). That is new compute, listed for the user and not run.
 - Case 2 changes no parameter shape (12 × 32 vs 6 × 64 head channels in the same 384
   columns). Its 3.7× is the same-size effect (Run R: 3.3×) passed through a head
-  re-partition, not evidence about crossing sizes. Weight Selection in case 2 copies
+  re-partition, not evidence about crossing sizes. Weight Selection (our re-implementation) in case 2 copies
   every trained matrix and starts at 2.08 nats (scratch: 5.65); its 49× is a
   degenerate upper bound, not a competitor.
-- Weight Selection beats the projection in the width + depth cell (4.0× vs 1.0×), so,
+- Our re-implementation of Weight Selection beats the projection in the width + depth cell (4.0× vs 1.0×), so,
   per the pre-registration, any claim for case 1 narrows to "a basis-level operator
   that does not match index-space transfer there". Weight Selection also beats it in the width-only cell, by more (8.2× vs 1.28×, ending 0.21 vs 0.05 nats below scratch, 3/3). So in both size-changing cells, index-space copying beats the projection, and the claim narrows to "a basis-level operator that does not match index-space transfer at this scale". The projection transfers directions only and still beats scratch in the width-only cell.
 - The overlap traces show the operator imposed the directions in every case (step-0

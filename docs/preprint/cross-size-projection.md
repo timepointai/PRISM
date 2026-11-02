@@ -22,8 +22,9 @@ width through PCA of the hidden activations, and attention through the per-head
 QK and OV circuit products — the gauge-invariant objects — re-factored at the
 student's head dimension by a rank-truncated SVD. The projected matrices are
 then used only for their singular directions, which EigenTransfer blends into
-the fresh student. We evaluate four pre-registered cells against scratch,
-Weight Selection, FRONT's frequency-domain operator and mimetic initialization,
+the fresh student. We evaluate four pre-registered cells against scratch and
+against our re-implementations of Weight Selection, FRONT's frequency-domain
+operator and mimetic initialization,
 with steps-to-target, token-equivalent multipliers and subspace-overlap traces.
 The cells are width + depth halving, width-only halving (which also halves the
 head dimension, where learned cross-architecture operators fail), a head
@@ -32,9 +33,10 @@ At 10.65M parameters on byte-level web text (3 seeds), halving width alone
 (6L/384 → 6L/192) gives 1.28× to the scratch baseline's best loss in every seed.
 That is the cell where the learned CrossGMN operator reports 0.74×. Halving width
 and depth together (12L/768 → 6L/384) buys an early head start that is gone by the
-horizon (1.0×). Index-space Weight Selection beats the projection in both
+horizon (1.0×). Index-space Weight Selection (our re-implementation) beats the projection in both
 size-changing cells: 4.0× on width + depth and 8.2× on width only. Projecting
-from GPT-2 124M does nothing, and FRONT's truncated GPT-2 weights trail scratch by
+from GPT-2 124M does nothing, and FRONT's truncated GPT-2 weights (our
+re-implementation) trail scratch by
 0.59 nats. The head re-partition cell keeps the same-size effect (3.7×), but it
 changes no parameter shape, so it is not a size change. The pre-registered
 criterion (≥ 1.5× on the width + depth cell, > 1× on the width-only cell)
@@ -62,7 +64,7 @@ therefore fails on the first and passes on the second.
   the head-dimension case where the learned operator fails; (iii) the
   same-rig comparison against index-space transfer (Weight Selection, FRONT)
   and analytic init (mimetic), none of which had been run against an SVD-space
-  method. The headline number is the width-only cell: 1.28× (1.24–1.34) against scratch, 3/3, with directions only and no weights copied. Weight Selection beats it there (8.2×) and in the width + depth cell (4.0×, where the projection is a null). As pre-registered, the claim is therefore "a basis-level operator that does not match index-space transfer at this scale", not "beats".
+  method. The headline number is the width-only cell: 1.28× (1.24–1.34) against scratch, 3/3, with directions only and no weights copied. Weight Selection (our re-implementation) beats it there (8.2×) and in the width + depth cell (4.0×, where the projection is a null). As pre-registered, the claim is therefore "a basis-level operator that does not match index-space transfer at this scale", not "beats".
 
 ## 2. Method
 

@@ -50,7 +50,7 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | AJ | **FRONT from GPT-2 (§20)**: our re-implementation — far below scratch | [`init_state_20261022T041102Z.json`](results/init_state_20261022T041102Z.json) |
 | AK | **Weight Selection, case 1 (§20)**: 12L/768 → 6L/384 by index selection (our re-implementation) — 4.0×, beats the projection |
 | AR | **Weight Selection, case 3 (§20)**: width-only 6L/384 → 6L/192 (our re-implementation) — 8.2×, beats the projection's 1.28× | [`init_state_20261102T214752Z.json`](results/init_state_20261102T214752Z.json) |
-| AQ | **Weight Selection, case 2 (§20)**: identical shapes, a near-copy of the trained teacher — 49×, degenerate upper bound (supersedes the 2-seed partial `init_state_20261022T175426Z.json`) | [`init_state_20261102T214129Z.json`](results/init_state_20261102T214129Z.json) | [`init_state_20261022T170647Z.json`](results/init_state_20261022T170647Z.json) |
+| AQ | **Weight Selection, case 2 (§20)**: our re-implementation; identical shapes, a near-copy of the trained teacher — 49×, degenerate upper bound (supersedes the 2-seed partial `init_state_20261022T175426Z.json`) | [`init_state_20261102T214129Z.json`](results/init_state_20261102T214129Z.json) | [`init_state_20261022T170647Z.json`](results/init_state_20261022T170647Z.json) |
 | AN | **W1 facts rig (§18)**: 23 arms × 3 seeds — SST/EWC/LoRA-4 block; nothing beats the weak anchor 3/3 (supersedes the 2-seed partial `finetune_20261022T143128Z.json`) | [`finetune_20261102T225917Z.json`](results/finetune_20261102T225917Z.json) |
 | AO | **W5 run 2 (§21)**: 8 arms × 3 seeds — exploratory (fails the prior-fidelity check) (supersedes the 2-seed partial `prior_20261022T170423Z.json`) | [`prior_20261102T214708Z.json`](results/prior_20261102T214708Z.json) |
 | AP | **W4 GRPO probe (§23)**: β0 / KL 0.04 / anchor, recycle:4, LR 1e-6, seed 1337 | [`rl_*_recycle4_s1337_w4_*.json`](results/) |
@@ -708,7 +708,7 @@ against plain's 26%, and self-distillation's is 25%.*
 1. **Rule 1: SST blocks.** Seen recall is 2% at the paper default and 5% tuned, both
    within 10 points of the 0.01 anchor's 3%. Our re-implementations of EWC and LoRA r=4
    block as well.
-2. **Rule 2: no arm beats the weak anchor in 3 of 3 seeds.** Self-distillation forgets
+2. **Rule 2: no arm beats the weak anchor in 3 of 3 seeds.** Self-distillation (our re-implementation) forgets
    half as much in every seed (0.52/0.57/0.53 vs 1.08/1.10/1.04), but its seen recall is
    lower in two seeds (96/100/88% vs 98/95/96%). So the catalog verdict does not
    replicate here.
@@ -845,7 +845,7 @@ What changes is the reading:
 - **Case 2 is not a size change.** Its 3.7× is the same-size effect (Run R: 3.3×) passed
   through a head re-partition. It shows the circuit projection does not damage the
   directions, not that they cross sizes.
-- **Weight Selection's case-2 number is a near-copy of a trained model.** With identical
+- **Weight Selection's case-2 number (our re-implementation) is a near-copy of a trained model.** With identical
   shapes, uniform element selection copies every trained matrix; the student starts
   at 2.08 nats (scratch: 5.65). The 49× bounds what copying a same-shape teacher buys,
   and is not a competitor result.
