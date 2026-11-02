@@ -9,15 +9,15 @@ This file is the agent's memory: updated after every workstream.*
 
 | Move | Workstream | Status | Verdict (one sentence) | Artifacts |
 |---|---|---|---|---|
-| — | W0 shared infrastructure | **done** (code), golden check identical, selftest 67/67 | Anchor object, Muon/out_eps/μP optimizer builder, metrics, overlap tracker, recall v2, competitor hooks — all default-off. | — |
-| 1 | W1 injection-dial head-to-head | catalog 3-seed **done**; facts rig **2 of 3 seeds** (seed 1339 at 19/24 arms when compute halted) — RESULTS §18 | Catalog: SST (paper default) blocks injection like the 0.01 anchor; EWC and LoRA r=4 block; self-distillation beats the weak anchor on both axes 3/3. Facts (2 seeds): SST/EWC/LoRA-4 block again; **self-distillation does NOT beat the anchor** (held-out recall 25% vs 90%); the weak anchor doubles held-out recall over plain (90% vs 41%); embedding-exclusion control sits on the 20% bar | `finetune_20261022T043049Z.json`, `finetune_20261022T143128Z.json` (partial) |
-| 2a | W2a core-bet controls (probe scale) | **done** except small_qk/mimetic enwik8 (running); RESULTS §19 | Against the tuned baseline (LR 2e-3, warmup 300): dirs_only 3.3× (modernweb) / 3.1× (enwik8) under AdamW — the geometry survives tuning; under Muon the ratio falls to 1.4× / 1.5× (above the 1.2× line, barely); the no-imprint arm keeps 2.45×; statmatch and spectral_only sit below the baseline (1 seed so far). | `sweep_20261022T*`, `dirs_only_20261022T15{3244,3444,3457,3515}Z`, `dirs_pure_20261022T153518Z` |
-| 2b | W2b Pythia ladder (G1 port, runner) | **built + merged**, 18 selftests; dry run never scheduled (L4 shortage, then the spend limit) — G1 port is validated only on CPU smokes | — | `src/prism_neox.py`, `src/pythia_train.py`, `prism_modal_pythia.py` |
-| 3 | W3 cross-size SVD projection | cases 1–4 + FRONT + Weight Selection case 1 **done**; WS cases 2–3 running; preprint DRAFT not posted (RESULTS §20) | **Pre-registered success FAILS on case 1**: width 768→384 gives an early head start but no endpoint gain (1.0×); GPT-2→bytes null; FRONT far below scratch; **Weight Selection (index-space copy) wins the width cell at 4.0×**, so the claim narrows to the head cells: heads 12→6 transfers fully (3.7×, −0.11 nats), head-dim 64→32 gives 1.28× in 3/3 (CrossGMN's failure cell). | `dirs_only_20261022T0{35754,40349,40448,43832}Z`, `init_state_20261022T041102Z` |
-| 4 | W4 RL anchor pilot | default-LR recycle wave: β0 / KL 0.04 / anchor **done** (RESULTS §23, probe); the amended 10× LR wave (6 arms) was killed by the spend limit with no artifacts | at LR 1e-6 nothing drifts (KL 0.005–0.007); the KL reference forward costs 33% of the step, the anchor 0.1%; verdict for this regime: low need | `rl_*_recycle4_s1337_w4_*.json` |
-| 5 | W5 sparse prior / COUNT control | run 1 **VOID**; run 2 **2 of 3 seeds** (RESULTS §21) | fused init 1.40 nats (Act-1 dot, so the primary target is degenerate); train-time fusion ends 0.11 nats below inference-only fusion, whose curve rises during training; dirs_prior reaches dirs_only-best in 60–80 steps vs 470 for the prior alone but ends only 0.016 nats below it; COUNT embedding 0.08 nats above dirs_only | `prior_20261022T170423Z.json` (partial) |
-| 6 | W6 packaging, lineage decay, prior art | recipes + examples done; README mechanism-map rows done; lineage decay §22 written from enwik8 (modernweb + unrelated-teacher control running) | PRISM students keep ~0.8 overlap with the teacher's directions over 1,500 steps (chance 0.03); baseline students converge to 0.2–0.3 on their own | `dirs_only_20261022T172455Z.json` |
-| 7 | W7 cheap mechanism probes | not started | — | — |
+| — | W0 shared infrastructure | **done** (code), golden check identical, selftest **117/117** (2026-11-02) | Anchor object, Muon/out_eps/μP optimizer builder, metrics, overlap tracker, recall v2, competitor hooks — all default-off. | — |
+| 1 | W1 injection-dial head-to-head | catalog and facts rigs **done, 3 seeds each** (RESULTS §18) | Our re-implementations of SST, EWC and LoRA r=4 block injection on both rigs (catalog SST paper default is 11.7 points *below* the strong band, outside rule 1's "within 10" reading). Self-distillation beats the weak anchor on both axes on catalog (3/3) but not on facts (seen recall lower in 2/3), so the "drop the frontier claim" consequence (needs both rigs) does not fire. Embedding exclusion moves facts-rig forgetting +20.3% (crosses rule 3's bar); catalog all under. The 2-seed held-out-recall claims are withdrawn (D15). | `finetune_20261022T043049Z.json`, `finetune_20261102T225917Z.json` (supersedes the partial `finetune_20261022T143128Z.json`) |
+| 2a | W2a core-bet controls (probe scale) | **done** (RESULTS §19) | <<W2A_ROW>> | `sweep_20261022T*`, `dirs_only_20261022T15{3244,3444,3457,3515}Z`, `small_qk_20261102T215708Z`, <<W2A_ARTS>> |
+| 2b | W2b Pythia ladder (G1 port, runner) | **dry gate passed** on GPU (2026-11-02); G2+ not launched (Tier B, D13) | Both 70M arms run 20 real iterations on an L4 and write conforming `prism-pythia/1` artifacts; plumbing only, no ratio. | `pythia_20261022T143230Z.json`, `pythia_20261022T143231Z.json` |
+| 3 | W3 cross-size SVD projection | cases 1–4 + FRONT + Weight Selection cases 1–3 **done**; preprint DRAFT not posted (RESULTS §20) | Pre-registered criterion FAILS on case 1 (width + depth halving, 1.0×) and passes on case 3 (width-only halving, 1.28×). Case 2 changes no parameter shape (same-size effect, 3.7×). Our Weight Selection re-implementation beats the projection in both size-changing cells (4.0×, 8.2×); its case-2 49× is a degenerate upper bound. | `dirs_only_20261022T0{35754,40349,40448,43832}Z`, `init_state_20261022T041102Z`, `init_state_20261022T170647Z`, `init_state_20261102T214129Z`, `init_state_20261102T214752Z` |
+| 4 | W4 RL anchor pilot | LR 1e-6 recycle:4 wave and the LR 1e-5 wave (6 arms) **done**, single-seed probes (RESULTS §23); on-policy arms not run (D14) | At LR 1e-6 nothing drifts; at 1e-5 KL to init is 0.32–0.58 with no retention loss in any arm, so the anchor cannot beat β0 (low need). The anchor callback costs 6–7 ms per step. The earlier 33% reference-forward figure was a GPU-type confound and is withdrawn. | `rl_*_s1337_w4_*.json`, `rl_*_s1337_w4lr1e5_*.json` |
+| 5 | W5 sparse prior / COUNT control | run 1 **VOID**; run 2 **3 seeds, exploratory** (RESULTS §21) | Run 2 fails the pre-registered prior-fidelity check (1.9271 vs 1.9061 ± 0.02 bpb, by 0.0010). The decision rule and the composition gate are not evaluable as written (every fused arm starts below baseline-best). Exploratory: train-time fusion ends 0.10–0.15 nats below inference-only fusion in 3/3 seeds; dirs_prior is only 0.016–0.018 below prior alone; COUNT embedding 0.07–0.085 above dirs_only. | `prior_20261102T214708Z.json` (supersedes the partial `prior_20261022T170423Z.json`) |
+| 6 | W6 packaging, lineage decay, prior art | recipes + examples done (prime-rl patch replaced by a manual-edit note, FSDP unverified); lineage decay §22 **done** (enwik8, modern web, unrelated-teacher control) | Our re-implementation of the subspace metric separates a PRISM student from a same-data baseline (by 0.31–0.51 per non-embedding group) and from an unrelated teacher in every seed at the 1,500-step horizon (0.75× the teacher's tokens). A shared random-init seed alone lifts overlap to 0.07–0.25 (seed-1337 confound of the control, stated). | `dirs_only_20261022T172455Z.json`, `dirs_only_20261022T181750Z.json`, `dirs_only_20261102T222126Z.json` |
+| 7 | W7 cheap mechanism probes | CPU half of W7.2 **done**; GPU halves listed, not run (D13) | The imprinted DCT-8 curve's tail rises to its maximum (basis pinned at t→π); a 2-parameter stretched exponential reconstructs the teacher's spectra within 3–14%. | `w7_specfit_20261102T214437Z.json`, `docs/alpha/W7-NOTES.md` |
 
 ## Golden-run check (§3.5)
 
@@ -103,29 +103,40 @@ Catalog rig (`results/finetune_20261022T024927Z.json`):
 | selfdistill (α) | 0.3: 0.98, 0.55 | 1.0: 0.98, 0.38 | 3.0: 0.00, 0.30 | **t2 (α=1.0)** | beats raw_weak (0.93, 0.89) on BOTH axes on this seed — the 3-seed run decides |
 | raw_aniso | 32:0.01:0.0025 → 0.90, 0.57 | 32:0.02:0 → 0.95, 1.60 | 96:0.01:0.0025 → 0.85, 0.45 | **t1** | better forgetting than raw_weak at the parity boundary |
 
-Facts rig: pending (relaunched after a container preemption).
+Facts rig (`results/finetune_20261022T024917Z.json`, seed 1336; re-derived 2026-11-02
+from the artifact by the same rule; every pick matches `config.arm_overrides` of the
+3-seed run):
+
+| method | t1 | t2 | t3 | chosen | note |
+|---|---|---|---|---|---|
+| sst (r) | 0.5: seen 0.06, forget 1.44 | 0.9: 0.03, 1.53 | 0.99: 0.02, 1.58 | **t1 (r=0.5)** | none reaches 0.90 → highest seen |
+| rpsft (λ) | 0.1: 1.00, 2.96 | 1.0: 1.00, 2.43 | 10: 0.07, 1.46 | **t2 (λ=1.0)** | lowest forgetting at parity |
+| ewc (λ) | 0.1: 0.06, 0.55 | 1.0: 0.02, 0.44 | 10: 0.00, 0.36 | **t1 (λ=0.1)** | blocked at every grid point, as on catalog |
+| lora_r4 (lr) | 3e-4: 0.05, 2.01 | 1e-3: 0.06, 2.55 | 3e-3: 0.20, 2.84 | **t3 (lr 3e-3)** | none reaches 0.90; lr reused for r=16 |
+| selfdistill (α) | 0.3: 1.00, 0.78 | 1.0: 0.97, 0.56 | 3.0: 0.46, 0.45 | **t2 (α=1.0)** | |
+| raw_aniso | 32:0.01:0.0025 → 0.89, 0.69 | 32:0.02:0 → 1.00, 1.73 | 96:0.01:0.0025 → 0.29, 0.57 | **t2** | t1 just misses the 0.90 band |
 
 ## Spend ledger
 
 | launch | tier | GPU | est. hours | est. USD | actual USD | status |
 |---|---|---|---|---|---|---|
-| W1 tuning, facts rig, seed 1336, 21 arms (`prism_modal_alpha.py --rig facts --slot a --tag w1tune`, commit 630f181) | A | L4 | 1.9 | 1.55 | pending | running (ap-nayF5Hz8sMFe4G44aKTnHC) |
-| W1 tuning, catalog rig, seed 1336, 21 arms (`--rig catalog --slot b --tag w1tune`) | A | L4 | 1.9 | 1.55 | pending | running (ap-vRlsFc7SZGjYXLZXJLNAp9) |
-| W1 tuning facts — relaunch after a container preemption at arm lora_r4_t1 (resumes banked arms; runner now clears stale locks) | A | L4 | ~1.2 (remaining) | ~1.0 | pending | running (fc-01M5GVZF7XFXR6PDMWY4H3X1P2) |
-| W2a sweeps (seed 1336): modernweb baseline (ev-a), modernweb dirs_only (ev-b), enwik8 baseline (ev-c), enwik8 dirs_only (ev-d), Muon muon_lr for the baseline on modernweb (ev-e) and enwik8 (ev-f) | A | L4 | 0.9+1.1+0.9+1.1+0.3+0.3 = 4.6 | 3.66 | pending | running |
-| W5 enwik8 prior fusion, 8 arms × 3 seeds (`prism_modal_alpha_w5.py`, volume prism-alpha-w5) | A | L4 | 3.8 | 3.02 | pending | running (fc-01M5GW3EN2D0D5J0ZR9XQHZ59P) |
-| W3 wave 1: case 1 xsize (w3-a), case 2 xsize (w3-b), case 3 xsize (w3-c), case 4 xsize (w3-d), case 4 front (w3-e), all `--track_overlap=50` | A | L4 | 4.6+1.6+1.3+1.1+1.1 = 9.7 | 7.80 | pending | running |
-| W2b Pythia dry run (70M, 2 arms × 20 iters, L4; data fetch 84 MB) | A | L4 | ~0.3 | <1 | pending | launched (ap-KG24YiLp5Azd2dUYtZpuuQ) |
-| W1 catalog 3-seed result run, 23 arms + base, tuned overrides, `--track_overlap=50` (slot b, tag w1) | A | L4 | 9.7 (conservative) | 7.76 | pending | running (fc-01M5GXB5EKYZCR46YTQY6847RX) |
+| W1 tuning, facts rig, seed 1336, 21 arms (`prism_modal_alpha.py --rig facts --slot a --tag w1tune`, commit 630f181) | A | L4 | 1.9 | 1.55 | not itemised | done 10-22 (`finetune_20261022T024917Z.json`) |
+| W1 tuning, catalog rig, seed 1336, 21 arms (`--rig catalog --slot b --tag w1tune`) | A | L4 | 1.9 | 1.55 | not itemised | done 10-22 (`finetune_20261022T024927Z.json`) |
+| W1 tuning facts — relaunch after a container preemption at arm lora_r4_t1 (resumes banked arms; runner now clears stale locks) | A | L4 | ~1.2 (remaining) | ~1.0 | not itemised | done 10-22 (same artifact) |
+| W2a sweeps (seed 1336): modernweb baseline (ev-a), modernweb dirs_only (ev-b), enwik8 baseline (ev-c), enwik8 dirs_only (ev-d), Muon muon_lr for the baseline on modernweb (ev-e) and enwik8 (ev-f) | A | L4 | 0.9+1.1+0.9+1.1+0.3+0.3 = 4.6 | 3.66 | not itemised | done 10-22 (`sweep_20261022T*.json`) |
+| W5 enwik8 prior fusion, 8 arms × 3 seeds (`prism_modal_alpha_w5.py`, volume prism-alpha-w5) | A | L4 | 3.8 | 3.02 | not itemised | done 10-22; run 1 VOID (`prior_20261022T035740Z.json`) |
+| W3 wave 1: case 1 xsize (w3-a), case 2 xsize (w3-b), case 3 xsize (w3-c), case 4 xsize (w3-d), case 4 front (w3-e), all `--track_overlap=50` | A | L4 | 4.6+1.6+1.3+1.1+1.1 = 9.7 | 7.80 | not itemised | done 10-22 (cases 1–4 + FRONT artifacts) |
+| W2b Pythia dry run (70M, 2 arms × 20 iters, L4; data fetch 84 MB) | A | L4 | ~0.3 | <1 | not itemised | never ran on 10-22 (L4 shortage, then the spend limit); ran 11-02 |
+| W1 catalog 3-seed result run, 23 arms + base, tuned overrides, `--track_overlap=50` (slot b, tag w1) | A | L4 | 9.7 (conservative) | 7.76 | not itemised | done 10-22 (`finetune_20261022T043049Z.json`) |
 
 | W2a 3-seed arms: dirs_only / dirs_pure / recipe / spectral_only / mimetic / statmatch on modernweb, dirs_only / statmatch on enwik8 (AdamW); dirs_only / dirs_pure / spectral_only (Muon); Muon-teacher dirs_only (ev-a..f chains) | A | L4 | ~22 | ~17 | — | **done** (16 artifacts) |
-| W2a small_qk (modernweb, enwik8) + mimetic enwik8 chain (ev-e) | A | L4 | 3.7 | 3 | — | never scheduled (spend limit) |
-| W1 facts 3-seed result run, 23 arms + base, tuned overrides (slot a, tag w1) | A | L4 | 9.7 | 7.8 | — | **seeds 1337–1338 done, seed 1339 at 19/24 arms**; app stopped; relaunch below |
-| W3 wave 2: Weight Selection cases 1–3 (w3-a/b/c) | A | L4 | 4.6+1.6+1.3 | 6 | — | case 1 done; case 2 at 2/3 seeds (partial, committed); case 3 never scheduled |
-| W5 run 2 (`w5b`, same flags, fixed prior) | A | L4 | 3.8 | 3 | — | seeds 1337–1338 done; seed 1339 never scheduled; app stopped; relaunch below |
-| W6.2 lineage chain: enwik8 dirs_only tracked / modernweb dirs_only tracked / modernweb with the enwik8 teacher's directions as reference (ev-g) | A | L4 | 4 | 3.2 | — | run 1 done (§22); runs 2–3 never scheduled |
-| W4 pilot wave 1: β0 / KL 0.04 / anchor × on-policy / recycle:4, LR 1e-6 (`prism_modal_rl.py`) | A | A100-40 | 6 × 0.7 | ~9 | — | 3 recycle arms done (§23); 3 on-policy arms never scheduled |
-| W4 pilot wave 2 (pre-registered amendment): the same six at LR 1e-5 (tag `w4lr1e5`) | A | A100-40 | 6 × 0.7 | ~9 | — | **killed by the spend limit mid-run; no artifacts; ~$6 of A100 time lost** |
+| W2a small_qk (modernweb, enwik8) + mimetic enwik8 chain (ev-e) | A | L4 | 3.7 | 3 | — | never scheduled on 10-22 (spend limit); relaunched and done 11-02 |
+| W1 facts 3-seed result run, 23 arms + base, tuned overrides (slot a, tag w1) | A | L4 | 9.7 | 7.8 | — | seeds 1337–1338 + 19/24 arms of 1339 on 10-22; last 5 arms done 11-02 (A10) |
+| W3 wave 2: Weight Selection cases 1–3 (w3-a/b/c) | A | L4 | 4.6+1.6+1.3 | 6 | — | case 1 done 10-22; case 2 at 2/3 seeds on 10-22, seed 3 done 11-02; case 3 done 11-02 |
+| W5 run 2 (`w5b`, same flags, fixed prior) | A | L4 | 3.8 | 3 | — | seeds 1337–1338 on 10-22; seed 1339 done 11-02 |
+| W6.2 lineage chain: enwik8 dirs_only tracked / modernweb dirs_only tracked / modernweb with the enwik8 teacher's directions as reference (ev-g) | A | L4 | 4 | 3.2 | — | run 1 done 10-22; runs 2–3 done 11-02 |
+| W4 pilot wave 1: β0 / KL 0.04 / anchor × on-policy / recycle:4, LR 1e-6 (`prism_modal_rl.py`) | A | A100-40 | 6 × 0.7 | ~9 | — | 3 recycle arms done 10-22; the 3 on-policy arms ran 25–205 of 300 steps before the halt killed them and were not relaunched (D14) |
+| W4 pilot wave 2 (pre-registered amendment): the same six at LR 1e-5 (tag `w4lr1e5`) | A | A100-40 | 6 × 0.7 | ~9 | — | killed by the spend limit mid-run on 10-22 (no artifacts, ~$6 of A100 time lost); relaunched fresh and done 11-02 |
 
 **Compute halt (2026-10-22, 18:30 UTC).** Every launch after this point returned
 `Workspace ... has exceeded its spend limit`; containers already running were stopped
@@ -134,7 +145,7 @@ this session's GPU work, so **this session spent about $38 on Modal**, against t
 brief's $300 Tier A ceiling. The actual figure is on the Modal billing page (the CLI
 does not expose it). Nothing further was launched (D13).
 
-**To finish the in-flight work once the workspace limit is raised** (≈ $12 total, all
+**To finish the in-flight work once the workspace limit is raised** (historical, 10-22; executed 11-02, see "Finish-up session" below) (≈ $12 total, all
 Tier A, all resuming from banked stages on their volumes; commands run from the repo
 root on branch `alpha-moves`):
 
