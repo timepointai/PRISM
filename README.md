@@ -661,14 +661,29 @@ a standalone, self-contained page served from GitHub Pages; source:
   (modern web) and 3.1× (enwik8); with Muon on both arms the ratio is 1.4× / 1.5×,
   above the pre-registered 1.2× line but a different claim. The imprint is worth
   3.3× vs 2.45× (directions-only).
-- **Prior fusion is half re-earned (§21, 2 of 3 seeds).** The W5 control run was
-  voided by its own kill rule (a gather off-by-one in the sparse prior); the fixed
-  repeat shows, on enwik8 with an exact context-6 prior, that fusing the prior at
-  train time ends 0.11 nats below fusing it at inference only (whose curve *rises*
-  during training), and that directions + prior reach `dirs_only`'s best in 60–80
-  steps instead of 1,480 but end only 0.016 nats below the prior alone. The prior
-  sets the floor; the directions set the speed to it. The 30× of the Shakespeare
+- **Prior fusion is not re-earned by a pre-registered test (§21).** The first W5
+  control run was voided by its own kill rule (a gather off-by-one in the sparse
+  prior). The fixed repeat (3 seeds) fails its own prior-fidelity check by 0.001 bpb
+  (1.9271 vs 1.9061 ± 0.02), so it is exploratory. Its decision rule cannot be
+  evaluated as written either: every fused arm starts below the baseline's best. As
+  exploratory readouts, on enwik8 with an exact context-6 prior, train-time fusion
+  ends 0.10–0.15 nats below inference-only fusion (whose curve *rises* during
+  training) in 3 of 3 seeds. Directions + prior reach `dirs_only`'s best in 60–130
+  steps instead of ~1,480, but end only 0.016–0.018 nats below the prior alone. The
+  prior sets the floor; the directions set the speed to it. The 30× of the Shakespeare
   probe is a speed-to-a-low-target number, not an endpoint multiplier.
+- **The RL anchor has nothing to fix in the regimes probed (§23, single seed).** At
+  TRL's default LR (1e-6) GRPO does not move Qwen2.5-0.5B in 300 steps. At 1e-5 it
+  drifts (KL to the start policy 0.32–0.58) without losing retention in any arm, so
+  neither the anchor nor the KL penalty can show a retention benefit. The anchor's
+  callback costs 6–7 ms per step. The earlier "reference forward adds 33% to each
+  step" was a GPU-type confound and is withdrawn.
+- **The Spectral Imprint is not a faithful copy of the teacher's spectrum
+  ([`docs/alpha/W7-NOTES.md`](docs/alpha/W7-NOTES.md), reconstruction only).** The
+  8-coefficient DCT is pinned near softplus(0) at the end of the curve, so after
+  renormalisation the smallest singular values are imprinted at or near the largest in
+  three of five groups. Every imprint result (Finding 5, §19's 3.3× vs 2.45×) measures
+  this curve. Whether a faithful spectrum helps more or less is untested.
 
 ## Reproduce it
 
@@ -724,11 +739,14 @@ The ranked, run-command-ready list lives in
    seen-recall cost (§18). The composition (anchor + self-distillation, or the
    anisotropic anchor + self-distillation) decides whether the dial survives as a
    *cheap* point or as a point at all.
-4. **The RL anchor where RL drifts** — the W4 pilot (TRL GRPO, Qwen2.5-0.5B) is
-   running: default-LR arms do not drift at all in 300 steps; the 10× LR wave is
-   the first regime with something to control (§23 when it lands).
-5. **Prior fusion, re-earned or retired** — the voided W5 run is repeating; the
-   decision rule is train-time fusion vs inference-only fusion in 3/3 seeds (§21).
+4. **The RL anchor where RL forgets** — the W4 probes (TRL GRPO, Qwen2.5-0.5B) found
+   drift without forgetting (§23). A Tier B confirmation only makes sense with a
+   retention suite that degrades in some arm, and with the anchor strength re-located
+   for the RL learning rate; stale:4 is the one regime where both controls lowered KL.
+5. **Prior fusion, re-earned or retired** — run 2 is exploratory (prior-fidelity
+   check failed by 0.001 bpb; decision rule not evaluable because the fused arms start
+   below the target). A pre-registered rerun needs a prior within 0.02 bpb of Act 1 and
+   a target the fused arms do not already sit below (§21).
 6. **A truly far modality** and **frontier bookkeeping** (the sub-600-step low
    end, the wheel 2×2 mirror cell, power metering) — unchanged from before.
 
