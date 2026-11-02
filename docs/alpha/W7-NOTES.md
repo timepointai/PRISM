@@ -36,8 +36,10 @@ web. Artifact: [`results/w7_specfit_20261102T214437Z.json`](../../results/w7_spe
    renormalises to its maximum, the **smallest** singular values become the
    **largest** in three of five groups (attention, embedding and ffn_up have their
    maximum at the last index), and the head is flattened (embedding: 0.79 at index 0
-   against a true 1.0). The imprint blends this curve with a flat one at the imprint
-   strength (`flat + λ·(shaped − flat)`), so the student receives a partly rising tail.
+   against a true 1.0). Both teachers show the same argmax pattern. The imprint
+   blends this curve with a flat one (`flat + λ·(shaped − flat)`), and `train.py`
+   calls it with λ = 1.0, so the student receives the full curve, rising tail
+   included, rescaled to the fresh init's Frobenius norm.
 2. **Two parameters describe the actual curve better than the eight stored ones.**
    A stretched exponential is within 3–14% everywhere; the power law fits ffn_down
    best.
