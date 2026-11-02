@@ -71,13 +71,40 @@ Eval artifacts. **This directory is the evidence.** Committed runs:
   (RESULTS §19); `config.optim`, `teacher_optim`, `init_std`, `baseline_lr/warmup`
   record the schedule; both arms carry `overlap`.
 - `prior_20261022T035740Z.json` — W5 run 1, **VOID** (kept as a record; RESULTS §21).
-  `prior_*_w5b` is the valid rerun. New keys: `config.prior_info`, `config.eval_at`,
+  `prior_20261102T214708Z.json` (`w5b`) is the rerun; it fails the prior-fidelity check and is exploratory. New keys: `config.prior_info`, `config.eval_at`,
   per-arm `token_equivalent`, `arm_spec`, `step_ms`.
 - `rl_*.json` — schema **`prism-rl/1`** (`src/prism_rl_pilot.py`): one GRPO arm per
   file, single seed, `probe: true`; `rl_table_*.json` joins them.
 - `pythia_*.json` — schema **`prism-pythia/1`** (`src/pythia_train.py`): one ladder arm
   per file; `ratio_reportable` is false until the baseline reproduces the published
   checkpoints within the stated tolerance.
+
+### Finish-up artifacts (2026-11-02; `docs/ALPHA-MOVES-STATUS.md`, "Finish-up session")
+
+**Naming.** A harness stamps its artifact with the time its run_key was first created,
+so a run resumed from banked stages rewrites the partial's filename. Where that filename
+was already committed as a partial, the completed artifact is committed under its own
+completion stamp (`provenance.created_utc`), and the superseded partial stays committed
+beside it as a record. Elsewhere the harness filename is kept, even when its stamp is
+from 2026-10-22; `provenance.created_utc` gives the true date.
+
+| artifact | what | supersedes |
+|---|---|---|
+| `finetune_20261102T225917Z.json` | W1 facts rig, 23 arms × 3 seeds (seed 1339's rpsft/ewc/lora_r4/lora_r16/selfdistill on an A10) | `finetune_20261022T143128Z.json` (2-seed partial) |
+| `prior_20261102T214708Z.json` | W5 run 2, 8 arms × 3 seeds; **exploratory** (fails the prior-fidelity check) | `prior_20261022T170423Z.json` (2-seed partial) |
+| `init_state_20261102T214129Z.json` | W3 case 2 Weight Selection, 3 seeds (degenerate upper bound) | `init_state_20261022T175426Z.json` (2-seed partial) |
+| `init_state_20261102T214752Z.json` | W3 case 3 Weight Selection, 3 seeds | — |
+| `small_qk_20261102T215708Z.json` | W2a small_qk (σ_qk 1e-5), modern web, 3 seeds | — |
+| <<ENWIK8_ROWS>> |
+| `dirs_only_20261022T181750Z.json` | W6.2 lineage run 2, modern web (stamp from the 10-22 run_key; created 11-02) | — |
+| `dirs_only_20261102T222126Z.json` | W6.2 lineage run 3, unrelated-teacher control (`config.method_knobs.track_ref`) | — |
+| `rl_*_s1337_w4lr1e5_*.json` | W4 wave 2, LR 1e-5, six single-seed probes (`config.device` records the A100 variant) | — |
+| `pythia_20261022T143230Z.json`, `pythia_20261022T143231Z.json` | W2b Pythia 70M dry gate, baseline / prism (stamps from the 10-22 run_key; created 11-02) | — |
+| `w7_specfit_20261102T214437Z.json` | W7 spectrum-family fit, schema **`prism-w7-specfit/1`** (`w7_spectrum_fit.py`); reconstruction only, no training | — |
+
+**2-seed "medians".** The harnesses compute `median` as `sorted(v)[n // 2]`. That is
+correct for 3 seeds, but for a 2-seed partial it is the *upper* value. Read the
+`values` lists of any partial, not its `median`.
 
 Every existing `prism-*/1` reader keeps working: all additions are new keys or new
 schemas.
