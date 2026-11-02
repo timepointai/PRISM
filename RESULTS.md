@@ -53,7 +53,8 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | AQ | **Weight Selection, case 2 (§20)**: identical shapes, a near-copy of the trained teacher — 49×, degenerate upper bound (supersedes the 2-seed partial `init_state_20261022T175426Z.json`) | [`init_state_20261102T214129Z.json`](results/init_state_20261102T214129Z.json) | [`init_state_20261022T170647Z.json`](results/init_state_20261022T170647Z.json) |
 | AN | **W1 facts rig (§18)**: 23 arms × seeds 1337–1338 (partial) | [`finetune_20261022T143128Z.json`](results/finetune_20261022T143128Z.json) |
 | AO | **W5 run 2 (§21)**: 8 arms × seeds 1337–1338 (partial) | [`prior_20261022T170423Z.json`](results/prior_20261022T170423Z.json) |
-| AP | **W4 GRPO probe (§23)**: β0 / KL 0.04 / anchor, recycle:4, seed 1337 | [`rl_*_recycle4_s1337_w4_*.json`](results/) |
+| AP | **W4 GRPO probe (§23)**: β0 / KL 0.04 / anchor, recycle:4, LR 1e-6, seed 1337 | [`rl_*_recycle4_s1337_w4_*.json`](results/) |
+| AS | **W4 GRPO probe, LR 1e-5 (§23)**: β0 / KL 0.04 / anchor × recycle:4 / stale:4, seed 1337 — drift without forgetting | [`rl_*_s1337_w4lr1e5_*.json`](results/) |
 | AM | **Lineage decay (§22)**: PRISM vs baseline students traced against the teacher's directions, enwik8 | [`dirs_only_20261022T172455Z.json`](results/dirs_only_20261022T172455Z.json) |
 | AL | **W2a controls (§19)**: dirs_only / dirs_pure / recipe / spectral_only / mimetic / statmatch vs the tuned baseline; Muon arms | [`*_20261022T15*`, `*_20261022T16*`, `*_20261022T17*`](results/) |
 | — | **W5 run 1 (§21) — VOID** (gather off-by-one; kept as a record) | [`prior_20261022T035740Z.json`](results/prior_20261022T035740Z.json) |
@@ -961,35 +962,67 @@ model" under the EU GPAI compute-counting guidance are for the user and counsel.
 modern-web lineage run and the unrelated-teacher control complete this section when
 they land.
 
-## 23. The anchor inside GRPO: a probe in TRL's default regime (W4, single seed)
+## 23. The anchor inside GRPO (W4, single-seed probes): at LR 1e-6 nothing drifts; at LR 1e-5 the policy drifts but nothing forgets
 
 *Alpha-moves W4. Qwen2.5-0.5B-Instruct, TRL 1.16 `GRPOTrainer` on GSM8K, 300 optimizer
-steps, seed 1337, A100-40GB; `src/prism_rl_anchor.py` is the callback (W₀ captured at
-`on_train_begin`, lerp at `on_optimizer_step`), `src/prism_rl_pilot.py` the driver.
-Pre-registered 2026-10-21 with the single-seed status stated in advance: a probe, not a
-result. The amended 10× learning-rate wave (six arms) was launched and killed by the
-workspace spend limit before any arm finished; it is not reported.*
+steps, seed 1337, A100 (40 GB requested; Modal sometimes placed arms on 80 GB cards, as
+recorded in each artifact's `config.device`). `src/prism_rl_anchor.py` is the callback
+(W₀ captured at `on_train_begin`, lerp at `on_optimizer_step`); `src/prism_rl_pilot.py`
+is the driver. Pre-registered 2026-10-21, amended twice before launch
+([`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md) W4). **Every run is a single-seed
+probe.** The pre-registered rule needs 3 of 3 seeds (Tier B), so nothing here is a
+verdict. The three on-policy arms were not run (user decision on spend, D14). Retention
+is the mean of hellaswag / arc_easy / winogrande `acc_norm` (300 examples each); GSM8K is
+300 held-out problems, greedy.*
 
-| arm (recycle:4 — each batch of rollouts reused four times) | GSM8K before → after | KL to the start policy | relative weight drift | step time | drift-control cost per step |
-|---|---|---|---|---|---|
-| β = 0 (TRL default; no reference model) | 23.3% → 23.3% | 0.006 | 4.4e-5 | 7.3 s | 0 |
-| KL penalty β = 0.04 (reference forward) | 23.3% → 26.0% | 0.005 | 4.3e-5 | 10.9 s | **+3.6 s (33%)** |
-| anchor s = 0.0025 (lerp, no reference) | 23.3% → 24.3% | 0.007 | 4.8e-5 | 8.4 s | **7 ms (0.1%)** |
+| LR | regime | arm | GSM8K before → after | retention before → after | KL to the start policy | GPU | artifact |
+|---|---|---|---|---|---|---|---|
+| 1e-6 | recycle:4 | β = 0 (TRL default; no reference model) | 23.3% → 23.3% | 53.8% → 54.1% | 0.006 | A100-40 | [`rl_beta0_recycle4_s1337_w4_20261022T161944Z`](results/rl_beta0_recycle4_s1337_w4_20261022T161944Z.json) |
+| 1e-6 | recycle:4 | KL β = 0.04 (reference forward) | 23.3% → 26.0% | 53.8% → 54.2% | 0.005 | A100-80 | [`rl_kl_recycle4_s1337_w4_20261022T161954Z`](results/rl_kl_recycle4_s1337_w4_20261022T161954Z.json) |
+| 1e-6 | recycle:4 | anchor s = 0.0025 (lerp, no reference) | 23.3% → 24.3% | 53.8% → 54.4% | 0.007 | A100-40 | [`rl_anchor_recycle4_s1337_w4_20261022T171645Z`](results/rl_anchor_recycle4_s1337_w4_20261022T171645Z.json) |
+| 1e-5 | recycle:4 | β = 0 | 23.3% → 38.3% | 53.8% → 54.3% | 0.337 | A100-80 | [`rl_beta0_recycle4_s1337_w4lr1e5_20261102T213136Z`](results/rl_beta0_recycle4_s1337_w4lr1e5_20261102T213136Z.json) |
+| 1e-5 | recycle:4 | KL β = 0.04 | 23.3% → 36.7% | 53.8% → 54.7% | 0.356 | A100-80 | [`rl_kl_recycle4_s1337_w4lr1e5_20261102T213156Z`](results/rl_kl_recycle4_s1337_w4lr1e5_20261102T213156Z.json) |
+| 1e-5 | recycle:4 | anchor s = 0.0025 | 23.3% → 43.0% | 53.8% → 54.4% | 0.372 | A100-80 | [`rl_anchor_recycle4_s1337_w4lr1e5_20261102T213223Z`](results/rl_anchor_recycle4_s1337_w4lr1e5_20261102T213223Z.json) |
+| 1e-5 | stale:4 | β = 0 | 23.3% → 48.3% | 53.8% → 54.0% | **0.577** | A100-80 | [`rl_beta0_stale4_s1337_w4lr1e5_20261102T213149Z`](results/rl_beta0_stale4_s1337_w4lr1e5_20261102T213149Z.json) |
+| 1e-5 | stale:4 | KL β = 0.04 | 23.3% → 45.3% | 53.8% → 54.2% | **0.322** | A100-40 | [`rl_kl_stale4_s1337_w4lr1e5_20261102T213202Z`](results/rl_kl_stale4_s1337_w4lr1e5_20261102T213202Z.json) |
+| 1e-5 | stale:4 | anchor s = 0.0025 | 23.3% → 46.7% | 53.8% → 54.1% | **0.428** | A100-40 | [`rl_anchor_stale4_s1337_w4lr1e5_20261102T213233Z`](results/rl_anchor_stale4_s1337_w4lr1e5_20261102T213233Z.json) |
 
-[`rl_beta0_recycle4_s1337_w4_20261022T161944Z.json`](results/rl_beta0_recycle4_s1337_w4_20261022T161944Z.json),
-[`rl_kl_recycle4_s1337_w4_20261022T161954Z.json`](results/rl_kl_recycle4_s1337_w4_20261022T161954Z.json),
-[`rl_anchor_recycle4_s1337_w4_20261022T171645Z.json`](results/rl_anchor_recycle4_s1337_w4_20261022T171645Z.json).
+**What the probes indicate (single seed; for scale, the binomial standard error is
+~2.9 points on 300 GSM8K problems and ~1.7 points on the 900-example retention mean):**
 
-**Reading.** At TRL's default learning rate (1e-6) the policy does not move in 300
-steps even when rollouts are recycled four times: KL to the start policy is below
-0.01 and the weights drift by a few parts in 10⁵ in every arm, so there is nothing for
-either drift control to control, and the 2.7-point GSM8K spread is within the noise of
-a 300-problem evaluation. The one number that *is* measured cleanly is cost: the
-reference-model forward that the KL penalty needs adds a third to each step; the
-anchor adds 7 ms. The pre-registered honest verdict for this regime is "low need":
-the anchor's case rests on regimes that drift (higher LR, stale or long off-policy
-runs, zero-RL fine-tuning), and those arms did not complete. No retention claim is
-made for RL from this probe.
+1. **At LR 1e-6 (TRL's default) the policy does not move.** KL to the start policy stays
+   below 0.01, and weights drift by a few parts in 10⁵. There is nothing for either drift
+   control to control.
+2. **At LR 1e-5 the policy drifts, but nothing forgets.** KL to the start policy rises to
+   0.32–0.58 and GSM8K rises 13–25 points. Retention moves by at most +0.9 points in any
+   arm, inside its noise. Large movement in function space does not cost retention on
+   this suite in 300 steps.
+3. **Against the pre-registered rule, the anchor does not earn its keep in either
+   regime, because there is nothing to earn.** The rule asks the anchor to (i) match the
+   best KL arm's retention within noise at no reward cost, and (ii) beat β = 0 on
+   retention. (i) holds in both regimes. (ii) cannot hold, because β = 0 loses no
+   retention to beat. The pre-registered "low need" clause assumed a regime with no drift.
+   Here KL drift is large but retention loss is absent, and the honest reading is the
+   same: **low need at this scale and horizon.** This holds for one anchor strength
+   (s = 0.0025, carried over from 10.65M and never re-located; at LR 1e-5 it allows
+   ~10× more displacement than at 1e-6 — Amendment 2).
+4. **On the KL axis alone, stale:4 is the one regime where both controls bite.** β = 0
+   reaches KL 0.577, the KL penalty 0.322 (−44%) and the anchor 0.428 (−26%), at GSM8K
+   within noise of each other. In recycle:4 neither control lowers KL (0.337 / 0.356 /
+   0.372). This is a single-seed hint about where a drift control could matter, not a
+   retention result.
+5. **The cost comparison in the first version of this section was confounded.** It
+   reported that the KL penalty's reference forward "adds 33% to each step" (10.9 s vs
+   7.3 s). Those two arms ran on different GPU types (A100-80 vs A100-40). On matched
+   hardware at LR 1e-5 (recycle:4, all three on A100-80), the KL arm's step is 8.54 s
+   against β = 0's 7.36 s (+1.2 s). But the anchor arm is also +1.0 s (8.39 s), although its
+   callback costs 6 ms. Mean step time follows completion length, which differs by arm,
+   so a single seed cannot separate the reference forward's cost from that variation.
+   What *is* measured directly is the anchor callback itself: 6–7 ms per step.
+
+No retention claim for RL is made from these probes. The Tier B confirmation (3 seeds)
+would go to stale:4 if anywhere, and would need a retention suite that actually
+degrades in some arm.
 
 ## What this does NOT establish
 
