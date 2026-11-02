@@ -38,8 +38,13 @@ notes under each one).
 
 **The headline, against the field.** Growth-based efficient-pretraining
 methods report reaching the from-scratch baseline sooner, and every one of
-them stops there, at parity (y = 0). PRISM's points are the only ones that
-end *better* than the baseline. Each growth method needs a smaller pretrained
+them stops there, at parity (y = 0). Among the points on this chart, PRISM's are
+the only ones that end *better* than the baseline. That is a property of the
+peers' *reported* figures, not of every transfer method: in our own rig, our
+re-implementation of Weight Selection (index-space copying from a larger
+teacher) ends 0.09 nats (5.8%) below its scratch baseline, and reaches it 4.0×
+sooner, in the 12L/768 → 6L/384 cell (§20; not plotted, because the chart's
+x-axis is enwik8 wall-clock and that run is on modern web). Each growth method needs a smaller pretrained
 checkpoint from the same family; PRISM's teacher cost sits outside its
 percentages exactly as the peers' checkpoint cost sits outside theirs — and
 it amortizes across corpora (aqua: a fingerprint mined on a different corpus
@@ -597,7 +602,11 @@ a standalone, self-contained page served from GitHub Pages; source:
 - **The peer comparison is positioning, not a head-to-head.** The hollow
   points in the headline chart are stacking, bert2BERT, and LiGO's own
   reported figures at BERT/GPT-2 scale; none has been run in this rig, nor
-  PRISM in theirs. The same holds for every relative in the mechanism map
+  PRISM in theirs. The one weight-copying method we *did* run in-rig, our
+  re-implementation of Weight Selection, does not stop at parity: it ends 5.8%
+  below scratch and beats PRISM's cross-size projection in the width + depth
+  cell (§20). The "only points above parity" reading of the headline chart
+  holds for the plotted, reported figures only. The same holds for every relative in the mechanism map
   except the low-LR frontier. Classical-compressor lines (xz) are published
   whole-file figures — a different protocol, shown for orientation only.
 - **Energy is proxied by wall-clock on one GPU class** (no power metering),
