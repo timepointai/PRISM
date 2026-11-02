@@ -122,7 +122,7 @@ and the teacher's compute stated (6·N·D; for GPT-2, "donor = public weights").
 | 4 | GPT-2 → bytes | GPT-2 124M → 6L/384/6h (internal matrices) | **1.0× (1/3)** | 1.4900 vs 1.4892 | 2.57 vs 2.55 | `dirs_only_20261022T043832Z` |
 | 4 FRONT | — | GPT-2 → same student (3D-DCT truncation, r=1, our re-implementation) | never | 2.078 vs 1.4892 | 2.64 vs 2.55 | `init_state_20261022T041102Z` |
 | 1 WS | — | 12L/768/12h → 6L/384/6h, Weight Selection (our re-implementation) | **4.0× (3.2–4.7), 3/3** | 1.4026 vs 1.4892 | 1.73 vs 2.55 | `init_state_20261022T170647Z` |
-| 3 WS | — | 6L/384/6h → 6L/192/6h, Weight Selection (our re-implementation) | <<WS3_SCORE>> | <<WS3_BEST>> | <<WS3_S100>> | <<WS3_ART>> |
+| 3 WS | — | 6L/384/6h → 6L/192/6h, Weight Selection (our re-implementation) | **8.2× (7.5–8.3), 3/3** | 1.4323 vs 1.6384 | 1.91 vs 2.60 | `init_state_20261102T214752Z` |
 | 2 WS | — | identical shapes: a near-copy of the trained teacher | 49× (49.0–49.7), 3/3 — degenerate upper bound | 1.3679 vs 1.4892 | 1.45 vs 2.55 | `init_state_20261102T214129Z` |
 | ref | — | same-size dirs_only (Run R) | 3.3× (2.9–3.9) | 1.3794 vs 1.4892 | — | `dirs_only_20260727T154359Z` |
 
@@ -143,7 +143,7 @@ stands. The reading of it was corrected on 2026-11-02:
   degenerate upper bound, not a competitor.
 - Weight Selection beats the projection in the width + depth cell (4.0× vs 1.0×), so,
   per the pre-registration, any claim for case 1 narrows to "a basis-level operator
-  that does not match index-space transfer there". <<WS3_SENTENCE>>
+  that does not match index-space transfer there". Weight Selection also beats it in the width-only cell, by more (8.2× vs 1.28×, ending 0.21 vs 0.05 nats below scratch, 3/3). So in both size-changing cells, index-space copying beats the projection, and the claim narrows to "a basis-level operator that does not match index-space transfer at this scale". The projection transfers directions only and still beats scratch in the width-only cell.
 - The overlap traces show the operator imposed the directions in every case (step-0
   overlap with the projected reference 0.58–0.93 against chance ≈ 0.03). The student
   *keeps* them in case 2 (FFN-up overlap 0.65 → 0.81) and loses them in cases 1 and 4

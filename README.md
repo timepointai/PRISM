@@ -641,9 +641,11 @@ a standalone, self-contained page served from GitHub Pages; source:
 - **Cross-size projection: halving width and depth together gives no endpoint gain
   (pre-registered criterion fails, §20).** Projecting a 12L/768 teacher onto a
   6L/384 student, or GPT-2 124M onto the byte-level student, gives an early head
-  start and no endpoint gain (1.0×), and our re-implementation of Weight Selection
-  beats the projection in that cell (4.0×). Halving width alone (6L/384 → 6L/192,
-  head dimension halving with it) gives 1.28× in 3 of 3 seeds. The "heads 12→6"
+  start and no endpoint gain (1.0×). Halving width alone (6L/384 → 6L/192, head
+  dimension halving with it) gives 1.28× in 3 of 3 seeds. **Our re-implementation
+  of Weight Selection (index-space weight copying) beats the projection in both
+  size-changing cells** (4.0× and 8.2×), so the projection is not the best way to
+  use a larger teacher at this scale. The "heads 12→6"
   cell (3.7×) changes no parameter shape, so it is the same-size effect under a
   different head partition, not a size change. Whether the width + depth failure is
   about depth, the combination or the wider teacher is untested (the isolating cells

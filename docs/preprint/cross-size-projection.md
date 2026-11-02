@@ -32,7 +32,8 @@ At 10.65M parameters on byte-level web text (3 seeds), halving width alone
 (6L/384 → 6L/192) gives 1.28× to the scratch baseline's best loss in every seed.
 That is the cell where the learned CrossGMN operator reports 0.74×. Halving width
 and depth together (12L/768 → 6L/384) buys an early head start that is gone by the
-horizon (1.0×), and index-space Weight Selection wins that cell (4.0×). Projecting
+horizon (1.0×). Index-space Weight Selection beats the projection in both
+size-changing cells: 4.0× on width + depth and 8.2× on width only. Projecting
 from GPT-2 124M does nothing, and FRONT's truncated GPT-2 weights trail scratch by
 0.59 nats. The head re-partition cell keeps the same-size effect (3.7×), but it
 changes no parameter shape, so it is not a size change. The pre-registered
@@ -61,7 +62,7 @@ therefore fails on the first and passes on the second.
   the head-dimension case where the learned operator fails; (iii) the
   same-rig comparison against index-space transfer (Weight Selection, FRONT)
   and analytic init (mimetic), none of which had been run against an SVD-space
-  method. The headline number is the width-only cell: 1.28× (1.24–1.34) against scratch, 3/3. The width + depth cell is a reported null, and Weight Selection beats the projection there.
+  method. The headline number is the width-only cell: 1.28× (1.24–1.34) against scratch, 3/3, with directions only and no weights copied. Weight Selection beats it there (8.2×) and in the width + depth cell (4.0×, where the projection is a null). As pre-registered, the claim is therefore "a basis-level operator that does not match index-space transfer at this scale", not "beats".
 
 ## 2. Method
 
@@ -137,7 +138,7 @@ directions, donor compute (6·N·D).
 | 2 | xsize (pca), head partition 12 → 6 at identical shapes (same-size transfer) | 3.7× (2.9–3.9; 3/3) | 1.3827 vs 1.4892 | 1.78 vs 2.55 | `results/dirs_only_20261022T040349Z.json` |
 | 2 | weight selection (identical shapes: near-copy of the trained teacher; degenerate upper bound) | 49× (49.0–49.7; 3/3) | 1.3679 vs 1.4892 | 1.45 vs 2.55 | `results/init_state_20261102T214129Z.json` |
 | 3 | xsize (pca), width only 384 → 192 (head dim 64 → 32 with it) | **1.28× (1.24–1.34; 3/3)** | 1.5855 vs 1.6384 | 2.52 vs 2.60 | `results/dirs_only_20261022T040448Z.json` |
-| 3 | weight selection (our re-implementation) | <<WS3_SCORE>> | <<WS3_BEST>> | <<WS3_S100>> | <<WS3_ART>> |
+| 3 | weight selection (our re-implementation) | **8.2× (7.5–8.3; 3/3)** | **1.4323 vs 1.6384** | 1.91 vs 2.60 | `results/init_state_20261102T214752Z.json` |
 | 4 | xsize (pca, GPT-2 124M → bytes, internal matrices) | 1.0× (1/3) | 1.4900 vs 1.4892 | 2.57 vs 2.55 | `results/dirs_only_20261022T043832Z.json` |
 | 4 | FRONT (GPT-2, r = 1.0) | never reaches scratch-best | 2.078 vs 1.4892 | 2.64 vs 2.55 | `results/init_state_20261022T041102Z.json` |
 | ref | same-size dirs_only | 3.3× (2.9–3.9) | 1.3794 vs 1.4892 | — | `results/dirs_only_20260727T154359Z.json` |

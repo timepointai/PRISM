@@ -49,6 +49,7 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | AI | **Cross-size case 4 (§20)**: GPT-2 124M → byte student — null | [`dirs_only_20261022T043832Z.json`](results/dirs_only_20261022T043832Z.json) |
 | AJ | **FRONT from GPT-2 (§20)**: our re-implementation — far below scratch | [`init_state_20261022T041102Z.json`](results/init_state_20261022T041102Z.json) |
 | AK | **Weight Selection, case 1 (§20)**: 12L/768 → 6L/384 by index selection (our re-implementation) — 4.0×, beats the projection |
+| AR | **Weight Selection, case 3 (§20)**: width-only 6L/384 → 6L/192 (our re-implementation) — 8.2×, beats the projection's 1.28× | [`init_state_20261102T214752Z.json`](results/init_state_20261102T214752Z.json) |
 | AQ | **Weight Selection, case 2 (§20)**: identical shapes, a near-copy of the trained teacher — 49×, degenerate upper bound (supersedes the 2-seed partial `init_state_20261022T175426Z.json`) | [`init_state_20261102T214129Z.json`](results/init_state_20261102T214129Z.json) | [`init_state_20261022T170647Z.json`](results/init_state_20261022T170647Z.json) |
 | AN | **W1 facts rig (§18)**: 23 arms × seeds 1337–1338 (partial) | [`finetune_20261022T143128Z.json`](results/finetune_20261022T143128Z.json) |
 | AO | **W5 run 2 (§21)**: 8 arms × seeds 1337–1338 (partial) | [`prior_20261022T170423Z.json`](results/prior_20261022T170423Z.json) |
@@ -768,7 +769,7 @@ statmatch 1.5118, never ([`statmatch_20261022T162239Z`](results/statmatch_202610
   nats below the tuned baseline's *best* under AdamW and 0.03–0.05 under Muon.
 - Lineage traces (W6.2) from these runs are in §22.
 
-## 20. Cross-size SVD projection (Runs AF–AJ): halving width and depth together gives no endpoint gain; halving width alone gives 1.28×; the head-partition cell is same-size transfer
+## 20. Cross-size SVD projection (Runs AF–AK, AQ, AR): halving width and depth together gives no endpoint gain; halving width alone gives 1.28×; Weight Selection beats the projection in both size-changing cells; the head-partition cell is same-size transfer
 
 *Alpha-moves W3 ([`docs/CROSS-SIZE.md`](docs/CROSS-SIZE.md), pre-registered
 2026-10-21: success = ≥ 1.5× steps-to-target vs scratch on case 1 AND > 1× on case 3,
@@ -799,7 +800,7 @@ changes:
 | 4 GPT-2 | GPT-2 124M (public weights) → 6L/384/6h bytes, internal matrices only | **1.0× (1/3)** | 1.4900 vs 1.4892 | 5.67 vs 5.65 | 2.57 vs 2.55 | [`dirs_only_20261022T043832Z`](results/dirs_only_20261022T043832Z.json) |
 | 4 FRONT | GPT-2 → same student, 3D-DCT truncation (our re-implementation) | never reaches scratch-best | **2.078 vs 1.4892** | 5.58 vs 5.65 | 2.64 vs 2.55 | [`init_state_20261022T041102Z`](results/init_state_20261022T041102Z.json) |
 | 1 Weight Selection | 12L/768/12h → 6L/384/6h, uniform element selection (our re-implementation of arXiv 2311.18823) | **4.0× (3.2–4.7), 3/3** | **1.4026 vs 1.4892** | **3.80 vs 5.65** | 1.73 vs 2.55 | [`init_state_20261022T170647Z`](results/init_state_20261022T170647Z.json) |
-| 3 Weight Selection | 6L/384/6h → 6L/192/6h (our re-implementation) | <<WS3_SCORE>> | <<WS3_BEST>> | <<WS3_INIT>> | <<WS3_S100>> | <<WS3_ART>> |
+| 3 Weight Selection | 6L/384/6h → 6L/192/6h, uniform element selection (our re-implementation) | **8.2× (7.5–8.3), 3/3** | **1.4323 vs 1.6384** | **3.14 vs 5.61** | 1.91 vs 2.60 | [`init_state_20261102T214752Z`](results/init_state_20261102T214752Z.json) |
 | 2 Weight Selection | 6L/384/12h → 6L/384/6h: identical shapes, so the selection copies every trained matrix | 49× (49.0–49.7), 3/3 — **degenerate upper bound** | 1.3679 vs 1.4892 | 2.08 vs 5.65 | 1.45 vs 2.55 | [`init_state_20261102T214129Z`](results/init_state_20261102T214129Z.json) (supersedes the 2-seed partial [`init_state_20261022T175426Z`](results/init_state_20261022T175426Z.json)) |
 
 **Verdict: the pre-registered success criterion FAILS on case 1** (1.0×, below the
@@ -827,7 +828,16 @@ What changes is the reading:
   the pre-registration this narrows any claim for the projection on case 1: index-space
   weight transfer beats our basis-level projection there. As far as we know this is
   also the first language-model data point for Weight Selection (its paper is
-  vision-only, reported). <<WS3_SENTENCE>>
+  vision-only, reported).
+- **Weight Selection also wins the width-only cell (case 3), by more.** Copying every
+  other residual coordinate of the trained 384-wide teacher into the 192-wide student
+  reaches scratch-best 8.2× faster (7.5–8.3, 3/3) and ends 0.21 nats below scratch,
+  against the projection's 1.28× and 0.05 nats. **In both cells that actually change
+  size, index-space weight copying beats PRISM's basis-level projection in 3 of 3
+  seeds.** By the pre-registration, the cross-size claim narrows to "a basis-level
+  operator that does not match index-space transfer at this scale". What the
+  projection keeps is that it transfers *directions only* (no weights copied) and
+  still beats scratch in the width-only cell.
 - GPT-2's directions projected onto the byte-level student do nothing at any step.
   FRONT's truncated weights from GPT-2 hurt (0.59 nats behind scratch at the end),
   consistent with an index-space operator meeting a mismatched vocabulary and depth.
