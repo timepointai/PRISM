@@ -234,7 +234,8 @@ mimetic arms are comparable with the committed W2a arms.
 
 | launch (2026-11-02) | volume | branch @ commit | app | GPU | est. L4/A100-h | est. USD |
 |---|---|---|---|---|---|---|
-| W1 facts seed 1339, 5 arms left (rpsft, ewc, lora_r4, lora_r16, selfdistill) | prism-alpha-a | exp/alpha-w1 @ 5e5420a | ap-NAgTZZD6EJ1OKa2dQ7Cyjo | L4 | ~1 | ~0.8 |
+| W1 facts seed 1339, 5 arms left (rpsft, ewc, lora_r4, lora_r16, selfdistill) — first launch; never scheduled in ~2 h of L4 queueing, stopped unrun | prism-alpha-a | exp/alpha-w1 @ 5e5420a | ap-NAgTZZD6EJ1OKa2dQ7Cyjo | L4 | 0 | 0 |
+| W1 facts, the same command with `--gpu A10G` (identical flags and run_key; the 19 banked seed-1339 arms reused); done in ~19 min | prism-alpha-a | exp/alpha-w1 @ 5e5420a | ap-n1GAUmYy1TN5wRWU2AYcZP | **A10** | ~0.3 | ~0.4 |
 | W5 run 2 seed 1339 (`w5b`) | prism-alpha-w5 | exp/alpha-w5 @ 7c3e7f2 | ap-lCth9uCIuY8Amj8onUlefu | L4 | ~1.3 | ~1.0 |
 | W3 Weight Selection case 2, seed 1339 (seeds 1337–1338 banked) | w3-b | exp/alpha-w3 @ d37226a | ap-VWeU2btn6r6VibE1rGLUGb | L4 | ~0.6 | ~0.5 |
 | W3 Weight Selection case 3, 3 seeds | w3-c | exp/alpha-w3 @ d37226a | ap-mbeKacVmOSHFMul3yH8LNz | L4 | ~1.3 | ~1.0 |
@@ -243,8 +244,10 @@ mimetic arms are comparable with the committed W2a arms.
 | W2b Pythia 70M dry gate (2 arms × 20 iters, micro-batch 4); a first non-detached launch (ap-t4MQhTow9wGySh92BgnMn1) cancelled its spawned arms when the entrypoint returned, ≈ $0 | prism-alpha-pythia | exp/alpha-w2b @ 5419d2d | ap-5m8iXEXAehLF84LPtXAHab | L4 | ~0.3 | <1 |
 | W4 wave 2, LR 1e-5, {β0, KL 0.04, anchor 0.0025} × {recycle:4, stale:4}, tag `w4lr1e5` | prism-alpha-rl | exp/alpha-w4 @ 7dbc332 | ap-5GetjdeQ7dstIqiy8zFZ8D, ap-A1pEXApW5SCyPBJrNgjXg4, ap-3GbwPoUTy46LuQHmK4ZMi4, ap-Ji7pkMgmHdOQ0qKLRnN3WX, ap-jevZpoqaHjFU3T9L3olW5C, ap-KFm9KFWqhR7RsmIuSr1geo | A100-40 | 6 × ~1.2 | ~15 |
 
-Projected session spend ≈ $24 (≈ $9 L4 + ≈ $15 A100); cumulative since 10-22 ≈ $62
-of the $100 cap. Actual figures: from the Modal billing page (the CLI does not expose
+Projected session spend ≈ $24 (≈ $9 L4/A10 + ≈ $15 A100); cumulative since 10-22 ≈ $62
+of the $100 cap. GPU class: W1's last five seed-1339 arms ran on an A10, not an L4 (their
+step-time ratios are excluded from RESULTS §18); four W4 wave-2 arms were placed on
+A100-80GB cards although the runner requests A100-40GB (`config.device` in each artifact). Actual figures: from the Modal billing page (the CLI does not expose
 billing).
 
 - **D14 (2026-11-02)** W4 on-policy arms (wave 1, LR 1e-6, 3 arms) are **not run**: the
