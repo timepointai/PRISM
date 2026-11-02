@@ -1,4 +1,4 @@
-# W2b — the Pythia ladder: G1 port, harness and gated runner (prepared, not launched)
+# W2b — the Pythia ladder: G1 port, harness and gated runner (dry gate passed 2026-11-02; G2+ not launched)
 
 *Alpha-moves workstream W2b (brief §5). Built 2026-10-21 on branch `exp/alpha-w2b`.
 Nothing here has run on a GPU; every number below is an estimate and is labelled
@@ -107,11 +107,32 @@ Memory: 410M in bf16 autocast with fp32 master weights and AdamW states ≈ 6.5 
 activations at micro-batch 32 × 2,048 — fits an 80 GB H100 (drop `--micro_bs` to
 16 if not).
 
+## Dry-gate outcome (2026-11-02)
+
+The dry gate ran on Modal (L4, `exp/alpha-w2b` @ 5419d2d, micro-batch 4). Artifacts:
+[`results/pythia_20261022T143230Z.json`](../../results/pythia_20261022T143230Z.json)
+(baseline) and [`results/pythia_20261022T143231Z.json`](../../results/pythia_20261022T143231Z.json)
+(prism). The file stamps come from the run_key banked on 10-22; `provenance.created_utc`
+is 2026-11-02.
+
+| arm | init | holdout loss @ 0 / 10 / 20 iters | step time | wall |
+|---|---|---|---|---|
+| baseline | `EleutherAI/pythia-70m@step0` | 11.083 / 10.779 / 10.269 | 36.6 s/iter | 740 s |
+| prism | step0 + the step-143000 checkpoint's fingerprint (align 0.75, imprint on) | 10.964 / 10.719 / 10.264 | 36.6 s/iter | 739 s |
+
+**Gate verdict: passed as a plumbing check.** Both arms load the published step-0
+weights, train 20 real iterations at the published batch (1,024 × 2,048 tokens per
+iteration, via 256 micro-batches of 4), evaluate on the holdout slice, and write
+conforming `prism-pythia/1` artifacts. Twenty iterations say nothing about the ratio:
+`published_curve_on_holdout` and `lm_eval` are off at this gate by design. The L4 step
+time (36.6 s/iter at micro-batch 4) is not a guide to G2's H100 cost. G2 and above stay
+unlaunched (Tier B; D13).
+
 ## Launch commands (G2+ only with Tier B/C authorization)
 
 ```bash
 # push the branch first — the runner clones exp/alpha-w2b at run time
-modal run prism_modal_pythia.py --gate dry          # Tier A: real 70M, 20 iters, L4, artifact check
+modal run --detach prism_modal_pythia.py --gate dry # Tier A: real 70M, 20 iters, L4, artifact check (without --detach the entrypoint's exit cancels the spawned arms)
 modal run --detach prism_modal_pythia.py --gate g2  # Tier B
 modal run --detach prism_modal_pythia.py --gate g3  # Tier B, after G2 passes and W2a's controls have landed
 modal run --detach prism_modal_pythia.py --gate g4  # Tier C — needs /work/pile/control_init_410m.pt from W2a's strongest control
