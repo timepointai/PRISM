@@ -176,3 +176,72 @@ A10 $1.10/h, L40S $1.95/h, A100-40 $2.10/h, A100-80 $2.50/h, H100 $3.95/h.
 capped at $100 total through 2026-11-21. Finish the runs already in flight, open the PR,
 and launch nothing else: no Tier B (Pythia G2, 1B retention study, W4 3-seed
 confirmations) and no 124M replication before 2026-11-21.
+
+## Finish-up session (2026-11-02, branch `alpha-moves-finish`)
+
+Scope: finish only the runs in flight or queued at the 2026-10-22 halt, fix the
+write-ups, open a PR. D13's cap binds ($100 of PRISM GPU spend 2026-10-22 →
+2026-11-21; ≈ $38 was spent on 10-22).
+
+**Modal inventory before any launch (2026-11-02).** 14 apps from 10-22 were still
+listed as `ephemeral (detached)` with 0 tasks and no running containers; their logs
+had expired. None had resumed after the workspace limit was lifted. All 14 were
+stopped (user decision, 2026-11-02) so that no volume could get a second live app
+(the runners clear `lock.json` at container start). No banked stage was lost: stages
+live on the volumes.
+
+| app | runner | volume / slot | what it was | state on 11-02 | action |
+|---|---|---|---|---|---|
+| ap-PVFEXhdivOiaC8QkWVfki2 | prism-alpha | prism-alpha-a | W1 facts 3-seed | stopped 10-22 | relaunched (below) |
+| ap-iaZkONgiY15HcfOoUeXtJI | prism-alpha-w5 | prism-alpha-w5 | W5 run 2 (`w5b`) | stopped 10-22 | relaunched |
+| ap-7g18xr2AppUnNrae0Lt6vp | prism-alpha-eval | ev-e | small_qk + mimetic chain | queued, 0 tasks | stopped, relaunched |
+| ap-3UO0oC4yhJjib1GZh2AwLb | prism-alpha-eval | ev-g | lineage runs 2–3 | queued, 0 tasks (run 2 had banked s1337 baseline) | stopped, relaunched |
+| ap-GL3nOvZxg0XSIFByA0uMMY | prism-alpha-w3 | w3-b | WS case 2 (seed 1339 in flight at the halt) | queued, 0 tasks | stopped, relaunched |
+| ap-NmzjFJioloRQhl08ke0SXb | prism-alpha-w3 | w3-c | WS case 3 | queued, 0 tasks | stopped, relaunched |
+| ap-Of6Hsb8KOYdTAEKNyZxp3D | prism-alpha-pythia | prism-alpha-pythia | Pythia 70M dry gate | queued, 0 tasks | stopped, relaunched |
+| ap-pWScoE56pZsirkjFI0EfJb, ap-rk7sZuXJIYjQXYyQL5JKnK, ap-TJTnQWJFJQ8uFCYuSBIazB | prism-alpha-rl | prism-alpha-rl | W4 wave 1 on-policy arms (had run ~25–205 of 300 steps when killed; the RL driver does not resume) | queued, 0 tasks | stopped; **not relaunched** (user decision on spend) |
+| ap-LBEFuUgatS6qufESjfkV0p, ap-EFO6oLEP2amzi5N1U02cch, ap-uuXKm7fIdVuhMn3mSGMytJ, ap-kMgqXmlFWC98hPVugiIAHX, ap-UE7uAcvIN6kYQ2Vxeld8Iw, ap-63sjcUB3Mw26QksoMecpsm | prism-alpha-rl | prism-alpha-rl | W4 wave 2, LR 1e-5 (nothing banked) | queued, 0 tasks | stopped, relaunched fresh |
+
+**Launch flags.** W1 and W5 use the commands recorded above (the `--arm_overrides`
+string matches `config.arm_overrides` in `finetune_20261022T143128Z.json`, and the W5
+flags reproduce the run_key of `prior_20261022T170423Z.json`). The other launches were
+rebuilt from the committed artifacts' configs, the banked run_keys on each volume and
+the runners' own flag builders, not copied from the 10-22 session transcript. Where a
+flag could not be recovered it is stated: the lineage unrelated-teacher control uses
+the seed-1337 enwik8 teacher's `directions.pt` as the single tracker reference
+(`--track_ref=.prism_cache/ev-enwik8_teacher_s1337_t2000/directions.pt`), and both
+`small_qk` arms pass `--qk_sigma=1e-5` explicitly. `--extra` values that begin with
+`--` must be passed as `--extra=...` (click otherwise parses them as options).
+
+**Code identity.** Every runner resets to its branch head at container start. Heads on
+11-02 equal the 10-22 heads (`exp/alpha-w1` 5e5420a, `-w2a` 7a436db, `-w2b` 5419d2d,
+`-w3` d37226a, `-w4` 7dbc332, `-w5` 7c3e7f2). The banked partials were produced at
+exactly these commits, except the W2a arms (d37226a). The d37226a → 7a436db diff
+touches only the overlap tracker (`--track_ref`, the `[trace]` line, an extra `S` key in
+`directions.pt`), which does not change any training trajectory, so the new small_qk /
+mimetic arms are comparable with the committed W2a arms.
+
+| launch (2026-11-02) | volume | branch @ commit | app | GPU | est. L4/A100-h | est. USD |
+|---|---|---|---|---|---|---|
+| W1 facts seed 1339, 5 arms left (rpsft, ewc, lora_r4, lora_r16, selfdistill) | prism-alpha-a | exp/alpha-w1 @ 5e5420a | ap-NAgTZZD6EJ1OKa2dQ7Cyjo | L4 | ~1 | ~0.8 |
+| W5 run 2 seed 1339 (`w5b`) | prism-alpha-w5 | exp/alpha-w5 @ 7c3e7f2 | ap-lCth9uCIuY8Amj8onUlefu | L4 | ~1.3 | ~1.0 |
+| W3 Weight Selection case 2, seed 1339 (seeds 1337–1338 banked) | w3-b | exp/alpha-w3 @ d37226a | ap-VWeU2btn6r6VibE1rGLUGb | L4 | ~0.6 | ~0.5 |
+| W3 Weight Selection case 3, 3 seeds | w3-c | exp/alpha-w3 @ d37226a | ap-mbeKacVmOSHFMul3yH8LNz | L4 | ~1.3 | ~1.0 |
+| W2a small_qk modernweb → small_qk enwik8 → mimetic enwik8 | ev-e | exp/alpha-w2a @ 7a436db | ap-32E69VJOroFKGEmgIDHNre | L4 | ~3 | ~2.4 |
+| W6.2 lineage: modernweb tracked → modernweb vs the enwik8 teacher's directions | ev-g | exp/alpha-w2a @ 7a436db | ap-oHgyVsMkL1tAWDAwZKmARh | L4 | ~2 | ~1.6 |
+| W2b Pythia 70M dry gate (2 arms × 20 iters, micro-batch 4); a first non-detached launch (ap-t4MQhTow9wGySh92BgnMn1) cancelled its spawned arms when the entrypoint returned, ≈ $0 | prism-alpha-pythia | exp/alpha-w2b @ 5419d2d | ap-5m8iXEXAehLF84LPtXAHab | L4 | ~0.3 | <1 |
+| W4 wave 2, LR 1e-5, {β0, KL 0.04, anchor 0.0025} × {recycle:4, stale:4}, tag `w4lr1e5` | prism-alpha-rl | exp/alpha-w4 @ 7dbc332 | ap-5GetjdeQ7dstIqiy8zFZ8D, ap-A1pEXApW5SCyPBJrNgjXg4, ap-3GbwPoUTy46LuQHmK4ZMi4, ap-Ji7pkMgmHdOQ0qKLRnN3WX, ap-jevZpoqaHjFU3T9L3olW5C, ap-KFm9KFWqhR7RsmIuSr1geo | A100-40 | 6 × ~1.2 | ~15 |
+
+Projected session spend ≈ $24 (≈ $9 L4 + ≈ $15 A100); cumulative since 10-22 ≈ $62
+of the $100 cap. Actual figures: from the Modal billing page (the CLI does not expose
+billing).
+
+- **D14 (2026-11-02)** W4 on-policy arms (wave 1, LR 1e-6, 3 arms) are **not run**: the
+  measured on-policy step is ~36 s on the A100-40 (vs 7.3 s recycled), so the three arms
+  cost ≈ $21, not the ≈ $4 the handoff estimated. The user chose the LR 1e-5 wave only.
+- **D15 (2026-11-02)** The harnesses' `median` is `sorted(v)[n // 2]`: correct for
+  3 seeds, but for 2 seeds it returns the **upper** value. Every number labelled
+  "median of 2" that was read from a partial artifact's `summary` (the W1 facts table in
+  RESULTS §18 and the WS case-2 49×) was the better seed, not a median. The W5 §21 table
+  used means of 2. All partial citations below give per-seed values instead. The code is
+  unchanged (the 3-seed artifacts are correct).
