@@ -630,14 +630,20 @@ a standalone, self-contained page served from GitHub Pages; source:
   the dial's shape between 0.0025 and 0.01 unmapped.
 - **Finetune-retention shows old-domain retention**, not new-domain overfit
   prevention, and trades a little late adaptation for it.
-- **The dial does not own the retention↔injection frontier (2026-10-22, catalog
-  rig, 3 seeds, pre-registered).** A self-distillation baseline (KL to the frozen
-  base, α = 1) beats the weak anchor on *both* axes in 3 of 3 seeds — 7.6× less
-  forgetting than plain at 98% task recall vs the anchor's 3.1× at 93%
-  ([`RESULTS.md`](RESULTS.md) §18). It pays one base forward pass per step, the cost
-  the anchor avoids; the anchor remains the cheapest *weight-space* control, and
-  hard-projection methods (SST, EWC, LoRA r=4) block injection like its strong band.
-  The facts-rig replication is in progress.
+- **The dial does not own the retention↔injection frontier on the catalog rig;
+  on the facts rig nothing beats it (§18, 3 seeds each, pre-registered).** On
+  catalog, our re-implementation of self-distillation (KL to the frozen base, α = 1)
+  beats the weak anchor on *both* axes in 3 of 3 seeds: 7.6× less forgetting than
+  plain at 98% task recall, against the anchor's 3.1× at 93%. On facts it halves the
+  anchor's forgetting in every seed but stores less in two of three (seen recall
+  96/100/88% vs 98/95/96%), so it does not beat the anchor there. The pre-registered
+  consequence (drop "the dial traces the frontier" if a competitor wins on *both*
+  rigs) therefore does not fire, but the dial is clearly not the only good point.
+  Self-distillation pays one base forward pass per step, the cost the anchor avoids.
+  The anchor remains the cheapest *weight-space* control. Our re-implementations of
+  the hard-projection methods (SST, EWC, LoRA r=4) block injection on both rigs.
+  Held-out paraphrase recall is high-variance on the facts rig, and the weak anchor
+  does not raise it over plain (median 25% vs 26%).
 - **Cross-size projection: halving width and depth together gives no endpoint gain
   (pre-registered criterion fails, §20).** Projecting a 12L/768 teacher onto a
   6L/384 student, or GPT-2 124M onto the byte-level student, gives an early head
@@ -714,9 +720,10 @@ The ranked, run-command-ready list lives in
    come first, then a μP-native pair and Pythia-1B → 160M/410M on the NeoX harness
    (prepared, Tier B). All need the user's authorization.
 3. **The frontier against self-distillation** — self-distillation dominated the
-   weak anchor on the catalog rig (§18); the composition (anchor + self-distillation,
-   or the anisotropic anchor + self-distillation) and the facts-rig replication
-   decide whether the dial survives as a *cheap* point or as a point at all.
+   weak anchor on the catalog rig and halved its forgetting on facts at a small
+   seen-recall cost (§18). The composition (anchor + self-distillation, or the
+   anisotropic anchor + self-distillation) decides whether the dial survives as a
+   *cheap* point or as a point at all.
 4. **The RL anchor where RL drifts** — the W4 pilot (TRL GRPO, Qwen2.5-0.5B) is
    running: default-LR arms do not drift at all in 300 steps; the 10× LR wave is
    the first regime with something to control (§23 when it lands).
