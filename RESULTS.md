@@ -999,8 +999,8 @@ teacher), per seed 1337 / 1338 / 1339:**
    0.31–0.51 in each non-embedding group (embedding: 0.15–0.26). The decay is faster on
    modern web (attention 0.83 → 0.66) than on enwik8 (0.83 → 0.78).
 2. **Two models trained on the same data share part of their geometry on their own.**
-   The baseline student climbs from chance to 0.17–0.40 (embedding 0.60–0.69) by step
-   500 and plateaus. Any lineage claim has to beat that floor, not chance.
+   The baseline student climbs from chance to 0.17–0.42 (embedding 0.59–0.63) by step
+   500 and plateaus (0.17–0.40, embedding 0.60–0.66, at step 1,500). Any lineage claim has to beat that floor, not chance.
 3. **An unrelated teacher sits at chance unless it shares the random-init seed.** For
    seeds 1338 and 1339, both students sit at chance against the enwik8 teacher in every
    non-embedding group (0.025–0.053). The embedding sits at ~0.19 for both arms:
