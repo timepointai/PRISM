@@ -145,6 +145,23 @@ is < 1.2× under Muon, the core bet is labelled "AdamW-only until shown otherwis
 **Cost.** Sweeps ≈ 4.6 L4-h (≈ $4); the 3-seed arms ≈ 2 corpora × 13 runs × ~0.7 L4-h
 ≈ 18 L4-h (≈ $15). Tier A.
 
+**Amendment (2026-11-02, before the small_qk / enwik8-mimetic launch; nothing removed or
+weakened).** The `small_qk` σ sweep ran on modern web only
+([`sweep_20261022T153248Z.json`](../results/sweep_20261022T153248Z.json): σ_qk = 1e-5
+chosen). The enwik8 `small_qk` arm reuses σ_qk = 1e-5 without an enwik8 sweep (a new
+sweep is new compute and was not authorised). This is a deviation from the per-corpus
+tuning rule above. It can only make the enwik8 control *weaker*, so it biases the enwik8
+ratio in `dirs_only`'s favour, and every citation of it says so. Both `small_qk` arms and
+enwik8 `mimetic` run at the tuned schedule (LR 2e-3, warmup 300) with `--track_overlap=50`,
+like every other W2a control arm.
+
+**Design flaw, recorded after the fact (2026-11-02; the rule is not changed).** The
+token-equivalent multiplier's RMSE tolerance of 0.01 nats sits below the evaluation noise
+of a 50-batch validation estimate. The baseline curve's fit RMSE was 0.022–0.049 on every
+seed, so the metric could never return a number on this rig. Its "refused" result
+therefore carries no information about `dirs_only`. It is not re-scored at a looser
+tolerance.
+
 ### W3 — cross-size SVD projection (pre-registered 2026-10-21, before any launch)
 
 The full method, cases, baselines and decision rule live in
@@ -258,6 +275,21 @@ wave at **LR 1e-5** (10× the default; a drift regime by construction) is ADDED:
 completion and are reported as "the stacks' default". The rule above applies
 unchanged to every arm; nothing is removed or weakened. Measured cost: 7.3 s/step
 on the A100-40, ≈ $1.3 per 300-step arm, so the whole pilot stays near $20.
+
+**Amendment 2 (2026-11-02, before the LR 1e-5 wave is relaunched; no arm added,
+nothing weakened).** The anchor strengths in this pilot (s ∈ {0.0025, 0.01, 0.02}) are
+the 10.65M-model bands carried over unchanged. They were **never re-located** for the
+0.5B model or for its learning rate, although `docs/ANCHOR-RECIPES.md` and Outcome 2 G1
+say the weak band must be re-located per model and optimizer scale. With a per-step lerp
+toward W₀ after an Adam step of size ~lr per coordinate, a persistent gradient direction
+reaches equilibrium where s·d ≈ lr, so the displacement the anchor allows is roughly
+d ≈ lr/s. At s = 0.0025 that is ~4e-4 per coordinate at LR 1e-6 and ~4e-3 at LR 1e-5:
+the "same" anchor is ten times looser in the second wave. The LR 1e-5 wave therefore
+tests one anchor strength in a regime it was not chosen for. A null or a reward cost
+there is a statement about s = 0.0025 at LR 1e-5, not about the anchor in general. Per
+the user's decision of 2026-11-02 (spend), **only the LR 1e-5 wave runs**: {β0, KL 0.04,
+anchor 0.0025} × {recycle:4, stale:4}. The three on-policy default-LR arms are not run
+(≈ $21 at the measured 36 s/step), so the on-policy regime has no arm in this pilot.
 
 **Cost.** ≈ 12 arms × ~1.5 A100-h × $2.10 ≈ $35–40 for the full pilot; launched in
 priority order (on-policy β0 / KL 0.04 / anchor 0.0025, then the recycle:4 cross)
