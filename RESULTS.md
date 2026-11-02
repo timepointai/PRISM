@@ -842,7 +842,7 @@ students' top-16 subspaces overlap the projected reference at 0.58–0.93 (chanc
 are adopted and then abandoned. The Procrustes, μP and per-layer-PCA variants are
 prepared, not run. The draft preprint in `docs/preprint/` is NOT to be posted.
 
-## 21. Prior fusion against the COUNT control (W5) — run 1 void; run 2 on 2 of 3 seeds
+## 21. Prior fusion against the COUNT control (W5) — run 1 void; run 2 exploratory (fails the prior-fidelity check), decision rule not evaluable as written
 
 [`prior_20261022T035740Z.json`](results/prior_20261022T035740Z.json) is kept as a
 record and is **void**: its own kill condition fired (`prior` never reached
@@ -851,49 +851,57 @@ the sparse prior's in-window gather, which fed the logits a confident prediction
 of the *current* byte (details in [`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md),
 W5 block). Fixed and selftested; the identical run repeated under tag `w5b`.
 
-**Run 2** ([`prior_20261022T170423Z.json`](results/prior_20261022T170423Z.json),
-`partial: true`, seeds 1337–1338; seed 1339 did not start before the workspace spend
-limit). enwik8, exact context-6 sparse prior (standalone 1.927 bpb on the student's
-slot), 2,000-step teacher, 1,500-step students, eval every 10; medians of 2:
+**Run 2** ([`prior_20261102T214708Z.json`](results/prior_20261102T214708Z.json), 3 of 3
+seeds; supersedes the 2-seed partial [`prior_20261022T170423Z.json`](results/prior_20261022T170423Z.json),
+which stays committed) **is exploratory, not the pre-registered test.** The
+pre-registration voids the run unless the prior's standalone validation score is
+within 0.02 bpb of Act 1's 1.9061. Run 2's `prior_info` reports 1.9271 bpb, which
+**fails the pre-registered prior-fidelity check by 0.0010 bpb** (a 0.0210 gap). The
+prior was counted on the student's training slot (71M symbols) rather than Act 1's
+full bytes, and that is the likely source of the gap. Nothing below is a verdict.
 
-| arm | init loss | best loss (nats) | best bpb | steps to baseline-best | steps to `dirs_only`-best |
+enwik8, exact context-6 sparse prior, 2,000-step teacher, 1,500-step students, eval
+every 10; medians of 3 (per-seed values in the artifact):
+
+| arm | init loss | best loss (nats) | best bpb | steps to baseline-best (per seed) | steps to `dirs_only`-best (post-hoc target, per seed) |
 |---|---|---|---|---|---|
-| baseline | 5.65 | 1.5103 | 2.179 | 1,490 / 1,500 | never |
-| dirs_only | 4.21 | 1.3173 | 1.900 | 370 / 360 (**4.2×**) | 1,490 / 1,480 |
-| prior (train-time fusion) | **1.40** | 1.2904 | 1.862 | 0 (at init) | 470 / 410 |
-| **dirs_prior** | 1.42 | **1.2736** | **1.837** | 0 (at init) | **80 / 60** |
-| baseline + prior at inference only | 1.40 | 1.4015 | 2.022 | 0 (at init) | never |
-| dirs_only + prior at inference only | 1.42 | 1.4114 | 2.036 | 0 (at init) | never |
-| COUNT embedding | 4.62 | 1.3957 | 2.014 | 370 / 360 (4.2×) | never |
-| COUNT embedding + dirs | 4.66 | 1.3915 | 2.008 | 300 / 260 (5.8×) | never |
+| baseline | 5.60 | 1.5124 | 2.182 | 1,490 / 1,500 / 1,490 | never |
+| dirs_only | 4.21 | 1.3185 | 1.902 | 370 / 360 / 290 (4.2×, 4.0–5.1) | 1,490 / 1,480 / 1,480 |
+| prior (train-time fusion) | **1.40** | 1.2944 | 1.867 | 0 / 0 / 0 (at init) | 470 / 410 / 550 |
+| **dirs_prior** | 1.41 | **1.2776** | **1.843** | 0 / 0 / 0 (at init) | **80 / 60 / 130** |
+| baseline + prior at inference only | 1.40 | 1.4014 | 2.022 | 0 / 0 / 0 (at init) | never |
+| dirs_only + prior at inference only | 1.41 | 1.4057 | 2.028 | 0 / 0 / 0 (at init) | never |
+| COUNT embedding (our re-implementation) | 4.62 | 1.3978 | 2.017 | 370 / 360 / 260 (4.2×, 4.0–5.7) | never |
+| COUNT embedding + dirs | 4.59 | 1.3954 | 2.013 | 300 / 260 / 230 (5.8×, 5.0–6.5) | never |
 
-**Readouts (2 of 3 seeds; the pre-registered rules need 3/3):**
+**Against the pre-registered rules:**
 
-1. **The pre-registered primary target is degenerate here.** Every arm that fuses the
-   prior starts at 1.40 nats, below the baseline's best at step 1,500 — the Act-1 dot
-   again, now on enwik8 with an exact prior. Steps-to-baseline-best is 0 for all of
-   them and cannot rank them. The table therefore also reports steps to
-   `dirs_only`-best, a post-hoc target chosen after the fact and labelled as such.
-2. **Train-time fusion beats inference-only fusion in both seeds**, by 0.11 nats
-   (prior vs baseline + prior at inference) and 0.13–0.15 nats (dirs_prior vs its
-   inference-only twin). The inference-only curves *rise* during training (1.40 → 1.65
-   at step 500 → 1.55 at the end): the plain student learns the n-gram statistics
-   itself and the late fusion double-counts them. Fusing at train time lets the network
-   learn the residual. This is the mechanism claim of `docs/PRIOR-FUSED-PRISM.md`,
-   now with a control.
-3. **Composition saturates.** dirs_prior ends 0.016–0.018 nats below prior alone and
-   0.04–0.05 below dirs_only; in speed to `dirs_only`-best it is 6–7× faster than the
-   prior alone (80 vs 470 steps). The pre-registered composition gate (≥ 1.5× over the
-   stronger single ingredient) passes on the speed reading and fails on the endpoint
-   reading; the 30× of the Shakespeare probe does not reappear as a multiplier of
-   endpoints. The honest summary is "the prior sets the floor, the directions set the
-   speed to it".
-4. **COUNT's input-embedding form is weaker than fusion at this scale.** It speeds the
-   baseline 4.2× (same as directions) but ends 0.08 nats *above* dirs_only, and adding
-   directions to it gains speed (5.8×) at an endpoint still 0.07 nats above dirs_only.
-   Logit-space fusion of the same counts (the `prior` arm) is 0.1 nats better.
+1. **The decision rule is not evaluable as written.** It needs `prior` to beat
+   `baseline_inffuse`, and `dirs_prior` to beat `dirs_inffuse`, on steps to
+   baseline-best. Every arm that fuses the prior starts at ~1.40 nats, already below
+   the baseline's best at step 1,500 (the Act-1 dot again, now on enwik8 with an exact
+   prior). So all four reach the target at step 0 and steps-to-target cannot separate
+   them. This is "not evaluable", not a pass or a fail.
+2. **The composition gate is not evaluable as written either.** `dirs_prior`'s
+   steps-to-target ratio is left-censored at step 0, so it cannot be compared with
+   `dirs_only`'s 4.2×.
 
-Seed 1339 completes this run for about one L4-hour.
+**Exploratory readouts (secondary metrics and a post-hoc target, labelled as such):**
+
+- **Train-time fusion ends below inference-only fusion in 3 of 3 seeds.** Best loss:
+  `prior` is 0.105–0.115 nats below `baseline_inffuse`, and `dirs_prior` is 0.127–0.149
+  below `dirs_inffuse`. The inference-only curves *rise* during training (best at
+  step 0; 1.54–1.57 at the end for the baseline, 1.46–1.47 with directions): the plain student learns the n-gram statistics
+  itself, and late fusion double-counts them. This is the mechanism claim of
+  `docs/PRIOR-FUSED-PRISM.md`, now with a control, but on an exploratory run.
+- **Composition saturates at the endpoint.** `dirs_prior` ends 0.016–0.018 nats below
+  `prior` alone and 0.037–0.050 below `dirs_only`, in 3 of 3 seeds. On the post-hoc
+  target (`dirs_only`-best) it is 4–7× faster than the prior alone (60–130 vs 410–550
+  steps). "The prior sets the floor; the directions set the speed to it."
+- **COUNT's input-embedding form is weaker than logit fusion here.** It speeds the
+  baseline about as much as directions do (4.2×), but ends 0.07–0.085 nats *above*
+  `dirs_only`. Adding directions gains speed (5.8×) but leaves the endpoint 0.07–0.08
+  above `dirs_only`. Logit fusion of the same counts (`prior`) ends ~0.10 nats lower.
 
 ## 22. Lineage decay: how long a student carries its teacher's signature (Run AM)
 

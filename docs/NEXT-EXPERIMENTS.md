@@ -224,6 +224,15 @@ along (1.927 bpb, within the 0.02 bpb of Act 1 the rule allows), which is why th
 build check passed. Fixed in `prism_prior.py`; the run is repeated unchanged
 under tag `w5b`. Nothing in the pre-registration above changes.
 
+**Correction (2026-11-02).** The note above says the standalone score (1.927 bpb) is
+"within the 0.02 bpb of Act 1 the rule allows". It is not: 1.9271 − 1.9061 = 0.0210 bpb,
+which is outside the void rule by 0.0010 bpb. The same prior is built for every `w5b` seed,
+so **run 2 fails the pre-registered prior-fidelity check as well** and is reported as
+exploratory (RESULTS §21). The likely cause is that the prior is counted on the student's
+71M-symbol training slot, not on Act 1's full bytes. The threshold is not relaxed. A
+pre-registered run would need the prior built to within 0.02 bpb of 1.9061, which is new
+compute and is listed for the user.
+
 ### W4 — the RL anchor where RL drifts: single-seed pilot (pre-registered 2026-10-22, before any launch)
 
 **Why.** TRL GRPO defaults β = 0.0 and loads no reference model; prime-rl has no
