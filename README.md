@@ -486,27 +486,28 @@ W  ←  (1 − s)·W  +  s·W₀        # after each step; W₀ = pre-finetune w
 ## Where PRISM sits: the mechanism map
 
 Every one of PRISM's individual operations has published relatives. This is
-literature positioning, not a head-to-head: no external mechanism has been
-run in this rig (except the low-LR frontier), and published numbers come
-from different scales and tasks. What each family moves, what it needs, and
-where PRISM sits:
+mostly literature positioning, not a head-to-head. Published numbers come from
+different scales and tasks. Rows that cite §18–§21 were also run in this rig as
+**our re-implementations** (deviations listed in `src/prism_baselines.py` and the
+W3/W5 notes), at probe scale. What each family moves, what it needs, and where
+PRISM sits:
 
 | mechanism family | what moves / constrains | what it needs | relation to PRISM |
 |---|---|---|---|
 | Classic init (Xavier / He / orthogonal) | variance & isometry at init | nothing | the baseline arm — the gray point in every chart above |
-| [Mimetic init](https://arxiv.org/abs/2305.09828) (Trockman & Kolter '23) | analytic "pretrained-looking" attention products | nothing | drawn structure that works on ViTs; the untested open cell against the §15 refutation of smooth bases |
+| [Mimetic init](https://arxiv.org/abs/2305.09828) (Trockman & Kolter '23) | analytic "pretrained-looking" attention products | nothing | drawn structure that works on ViTs; our re-implementation (char-level values) ends *above* the tuned baseline on modern web (+0.02 nats) and enwik8 (+0.05), 3/3 seeds (§19) |
 | [μP / μTransfer](https://arxiv.org/abs/2203.03466) | hyperparameters across width | a small-model tuning run | orthogonal axis; likely composable, untested |
-| [LiGO](https://arxiv.org/abs/2303.00980) / Net2Net / stacking | weights, via growth maps | a same-family smaller checkpoint | copies content (up to ~50% savings); PRISM moves geometry only, crosses corpora, saves 42–58% at probe scale |
-| Distillation (Hinton '15) | the teacher's function, per step | teacher forward passes during training | continuous teacher cost vs. one amortized extraction |
-| [L2-SP](https://arxiv.org/abs/1802.01483) / [EWC](https://arxiv.org/abs/1612.00796) | pull toward init (uniform / Fisher-weighted) | the init snapshot | the anchor's family; PRISM adds the directional-vs-spectral attribution, the placebo, and the dial's measured bands |
-| [LoRA](https://arxiv.org/abs/2405.09673) (Biderman '24 tradeoff) | rank of the update | nothing | "learns less, forgets less" — same axis, rank constraint vs. pull strength; the weak band claims learn-at-parity at probe scale |
+| [LiGO](https://arxiv.org/abs/2303.00980) / Net2Net / stacking | weights, via growth maps | a same-family smaller checkpoint | copies content (up to ~50% savings); PRISM moves geometry only, crosses corpora, saves 42–58% at probe scale. The large → small relative, Weight Selection (index-space copying, our re-implementation), beats PRISM's cross-size projection in both size-changing cells (4.0×, 8.2×; §20) |
+| Distillation (Hinton '15) | the teacher's function, per step | teacher forward passes during training | continuous teacher cost vs. one amortized extraction. Self-distillation (KL to the frozen base, our re-implementation) beats the weak anchor on both axes on the catalog rig and halves its forgetting on facts at a small seen-recall cost (§18) |
+| [L2-SP](https://arxiv.org/abs/1802.01483) / [EWC](https://arxiv.org/abs/1612.00796) | pull toward init (uniform / Fisher-weighted) | the init snapshot | the anchor's family; PRISM adds the directional-vs-spectral attribution, the placebo, and the dial's measured bands. Our EWC re-implementation blocks injection at all three pre-registered λ on both rigs (§18) |
+| [LoRA](https://arxiv.org/abs/2405.09673) (Biderman '24 tradeoff) | rank of the update | nothing | "learns less, forgets less" — same axis, rank constraint vs. pull strength; the weak band claims learn-at-parity at probe scale. Our re-implementation: r=4 blocks injection; r=16 injects but forgets more than plain finetuning (§18) |
 | [Elastic Reset](https://arxiv.org/abs/2312.07551) / WiSE-FT / task vectors | weight-space merges toward the base | base weights | periodic or post-hoc where the anchor is continuous; the zero-forward alternative to KL-to-reference is the specced GRPO test |
 | ROME / MEMIT (+ [Hase '23](https://arxiv.org/abs/2301.04213)) | closed-form fact writes | a localization pass | editing vs. training; Hase's storage ≠ edit-site finding matches the facts-store-anywhere result (§12) |
 | [kNN-LM](https://arxiv.org/abs/1911.00172) / ∞-gram | inference-time statistics | a datastore at inference | PRISM fixes the prior at training (residual learning) and compounds it with the geometric init below the prior's floor |
 | [WARP](https://arxiv.org/abs/2406.16768) (Ramé et al. '24) | EMA policy as the KL anchor; SLERP merges; end interpolation toward init | a reference forward pass per step (KL) | the anchor's EMA target and WARP's LITI are implemented as *lerp* variants with no KL (`prism_rl_anchor.py`); head-to-head is the W4 pilot |
 | [Rotation-Preserving SFT](https://arxiv.org/html/2605.10973v1) (May '26) | soft penalty on the pretrained top-k singular block of each matrix | SVD of W₀ once | the closest published relative of the anchor; a loss, so Adam-coupled; our re-implementation is the `rpsft` arm of §18 |
-| [SST — Subspace Tuning](https://arxiv.org/abs/2610.22293) (Oct '26) | projects each applied update off W_ref's top-k singular subspace, refreshed every K steps | an SVD per matrix per refresh | hard projection to the anchor's soft pull; blocks fact/task injection like the anchor's strong band (§18: 3% recall at the paper default) |
-| [The COUNT](https://arxiv.org/abs/2610.20456) (Oct '26) | parameter-free n-gram embedding from count statistics, added at the input | an offline count table in host memory | input-side statistics vs PRISM's logit-side prior; COUNT reports logit fusion ≈ inference-only at 190M — the W5 control re-tests that on time-to-target (§21) |
+| [SST — Subspace Tuning](https://arxiv.org/abs/2610.22293) (Oct '26) | projects each applied update off W_ref's top-k singular subspace, refreshed every K steps | an SVD per matrix per refresh | hard projection to the anchor's soft pull; our re-implementation blocks fact/task injection at least as hard as the anchor's strong band on both rigs (§18: 2–3% seen recall at the paper default) |
+| [The COUNT](https://arxiv.org/abs/2610.20456) (Oct '26) | parameter-free n-gram embedding from count statistics, added at the input | an offline count table in host memory | input-side statistics vs PRISM's logit-side prior; COUNT reports logit fusion ≈ inference-only at 190M. Our re-implementation of its embedding ends 0.07–0.085 nats above `dirs_only` on enwik8, and the W5 control run that re-tests the logit-fusion claim is exploratory (it failed its prior-fidelity check; §21) |
 | [FRONT / SPA-FRONT](https://arxiv.org/abs/2603.07523) (learngene, '26) | low-frequency 3D-DCT coefficients of trained weights, truncated or padded to a new size | a trained source model; permutation alignment (SPA) | index-space transfer vs PRISM's SVD-space projection; our FRONT re-implementation from GPT-2 sits far below scratch in the byte-level cell (§20) |
 | [Residual-over-n-gram LMs](https://arxiv.org/pdf/2210.14431) (Li et al. '22) | the network learns the residual over a fixed n-gram prior fused at the logits | an n-gram model | the canonical form of Prior-Fused PRISM's logit fusion; PRISM's addition is the geometric init stacked on top, scored by time-to-target |
 | [Spectral Warmup null](https://arxiv.org/abs/2604.22778) (Apr '26) | correct spectra with random directions | a spectrum | trained 42.7% worse than standard init (reported); independently matches PRISM's spectrum-only null (§11) |
@@ -656,11 +657,13 @@ a standalone, self-contained page served from GitHub Pages; source:
   different head partition, not a size change. Whether the width + depth failure is
   about depth, the combination or the wider teacher is untested (the isolating cells
   need new compute).
-- **Under Muon the init advantage shrinks from 3.3× to 1.4× (§19).**
-  Against a tuned AdamW baseline (LR 2e-3, warmup 300) `dirs_only` keeps 3.3×
-  (modern web) and 3.1× (enwik8); with Muon on both arms the ratio is 1.4× / 1.5×,
-  above the pre-registered 1.2× line but a different claim. The imprint is worth
-  3.3× vs 2.45× (directions-only).
+- **Under Muon the init advantage shrinks to 1.4× (§19).** Against the strongest
+  AdamW control (our re-implementation of small-QK init on modern web, 0.007 nats
+  better than the tuned baseline; the tuned baseline itself on enwik8), `dirs_only`
+  keeps 3.2× and 3.1×. With Muon on both arms the ratio is 1.4× / 1.5×, above the
+  pre-registered 1.2× line but a different claim. The imprint is worth 3.3× vs 2.45×
+  (directions-only), and that imprint is the DCT-8 curve with a rising tail, not the
+  teacher's literal spectrum (W7).
 - **Prior fusion is not re-earned by a pre-registered test (§21).** The first W5
   control run was voided by its own kill rule (a gather off-by-one in the sparse
   prior). The fixed repeat (3 seeds) fails its own prior-fidelity check by 0.001 bpb
