@@ -314,7 +314,7 @@ so the budget can stop it at any point. Under the W4 cap of $100.
   in 2/3), so the pre-registered consequence (needs both rigs) does not fire. Rule 3:
   embedding exclusion moves facts-rig forgetting by +20.3% (crosses the bar; catalog
   +11.5%).
-- **W2a** — landed; RESULTS §19. <<W2A_LANDED>> The token-equivalent multiplier is
+- **W2a** — landed; RESULTS §19. The strongest control is `small_qk` on modern web (below the tuned baseline in 3/3 seeds) and the tuned baseline on enwik8 (small_qk, mimetic and statmatch end above it there; enwik8 small_qk is untuned, as amended). `dirs_only` beats it 3.2× (modern web, recomputed cross-artifact with `prism_metrics.steps_to_target_ratio`) and 3.1× (enwik8) under AdamW, and 1.4× / 1.5× under Muon. All are above the 1.2× line, so the bet is not labelled AdamW-only and nothing enters Honest bounds under that rule. The token-equivalent multiplier is
   refused on every seed; its 0.01-nat tolerance sits below 50-batch eval noise, a
   design flaw recorded in the W2a amendment above.
 - **W3** — landed; RESULTS §20, `docs/CROSS-SIZE.md`. The success criterion FAILS on

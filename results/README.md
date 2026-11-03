@@ -95,7 +95,8 @@ from 2026-10-22; `provenance.created_utc` gives the true date.
 | `init_state_20261102T214129Z.json` | W3 case 2 Weight Selection, 3 seeds (degenerate upper bound) | `init_state_20261022T175426Z.json` (2-seed partial) |
 | `init_state_20261102T214752Z.json` | W3 case 3 Weight Selection, 3 seeds | — |
 | `small_qk_20261102T215708Z.json` | W2a small_qk (σ_qk 1e-5), modern web, 3 seeds | — |
-| <<ENWIK8_ROWS>> |
+| `small_qk_20261102T224802Z.json` | W2a small_qk, enwik8, 3 seeds (σ carried from the modern-web sweep, untuned on enwik8) | — |
+| `mimetic_20261102T233902Z.json` | W2a mimetic init (our re-implementation), enwik8, 3 seeds | — |
 | `dirs_only_20261022T181750Z.json` | W6.2 lineage run 2, modern web (stamp from the 10-22 run_key; created 11-02) | — |
 | `dirs_only_20261102T222126Z.json` | W6.2 lineage run 3, unrelated-teacher control (`config.method_knobs.track_ref`) | — |
 | `rl_*_s1337_w4lr1e5_*.json` | W4 wave 2, LR 1e-5, six single-seed probes (`config.device` records the A100 variant) | — |
