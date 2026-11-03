@@ -731,7 +731,7 @@ pre-registered rule concerned held-out recall. As an observation, the anisotropi
 anchor is the only arm whose held-out recall beats plain in every seed (60/75/32% vs
 26/41/19%), at 1.8× less forgetting instead of 3.1×.
 
-## 19. Hardened controls for the core bet (W2a): the geometry survives a tuned baseline under AdamW; under Muon the multiplier shrinks to 1.4×
+## 19. Hardened controls for the core bet (W2a): the geometry beats the strongest control (small_qk on modern web, the tuned baseline on enwik8) by 3.2× / 3.1× under AdamW; under Muon the multiplier shrinks to 1.4×
 
 *Alpha-moves W2a, pre-registered 2026-10-21. Every arm tuned on seed 1336 only
 (`results/sweep_20261022T*.json`, 8 settings for baseline and `dirs_only`, 3 for
@@ -742,7 +742,9 @@ Muon LR, 3 for σ_qk); results on seeds 1337–1339, PROBE rig, eval every 10.*
 LR 2e-3 with warmup 300 (1.4802 vs 1.4902 on modern web, 1.3183 vs 1.3272 on enwik8,
 seed 1336). `dirs_only` prefers LR 1e-3 (modern web) / 5e-4 (enwik8) at σ 0.02;
 σ 0.01 hurts every arm. Muon: LR 0.01 for both arms on both corpora. `small_qk`:
-σ_qk = 1e-5 beat the tuned baseline by 0.008 nats on seed 1336 (3-seed run pending).
+σ_qk = 1e-5 beat the tuned baseline by 0.008 nats on seed 1336 (modern web). The σ sweep
+ran on modern web only. The enwik8 `small_qk` arm reuses σ_qk = 1e-5 untuned, which
+favours `dirs_only` on enwik8 (amendment of 2026-11-02, written before the launch).
 
 **Modern web, AdamW, every arm against the tuned baseline (medians of 3):**
 
@@ -755,10 +757,15 @@ seed 1336). `dirs_only` prefers LR 1e-3 (modern web) / 5e-4 (enwik8) at σ 0.02;
 | spectral_only | 1.7623 | never | [`spectral_only_20261022T162500Z`](results/spectral_only_20261022T162500Z.json) |
 | mimetic (Trockman & Kolter, char-level values) | 1.5074 | never | [`mimetic_20261022T170532Z`](results/mimetic_20261022T170532Z.json) |
 | statmatch (70 teacher statistics, no directions) | 1.5994 | never | [`statmatch_20261022T162209Z`](results/statmatch_20261022T162209Z.json) |
+| **small_qk** (σ_qk 1e-5) | **1.4778** | 1.06× (1.00–1.08); best below the tuned baseline in 3/3 seeds | [`small_qk_20261102T215708Z`](results/small_qk_20261102T215708Z.json) |
+| **dirs_only vs small_qk** (the strongest control; `prism_metrics.steps_to_target_ratio` at small_qk's best, per seed) | — | **3.2× (2.5–3.2), 3/3** | cross-artifact |
 
 **enwik8, AdamW:** tuned baseline 1.3294; `dirs_only` 1.2296, **3.1× (2.9–3.1), 3/3**
-([`dirs_only_20261022T153444Z`](results/dirs_only_20261022T153444Z.json));
-statmatch 1.5118, never ([`statmatch_20261022T162239Z`](results/statmatch_20261022T162239Z.json)).
+([`dirs_only_20261022T153444Z`](results/dirs_only_20261022T153444Z.json)). Every other
+control ends above the tuned baseline and never reaches it: `small_qk` 1.3385 (σ untuned
+on enwik8; [`small_qk_20261102T224802Z`](results/small_qk_20261102T224802Z.json)), mimetic
+1.3788 ([`mimetic_20261102T233902Z`](results/mimetic_20261102T233902Z.json)), statmatch
+1.5118 ([`statmatch_20261022T162239Z`](results/statmatch_20261022T162239Z.json)).
 
 **Muon (LR 0.01, both arms):**
 
@@ -772,14 +779,21 @@ statmatch 1.5118, never ([`statmatch_20261022T162239Z`](results/statmatch_202610
 
 **Verdicts against the pre-registered rules.**
 
-- **The strongest control is the tuned baseline itself.** Every analytic or
-  statistics-matched init ran *below* it: mimetic +0.02 nats, statmatch +0.11 nats
-  (modern web) and +0.18 (enwik8), spectral-only +0.28. The 108-statistic worry
-  (that statistics alone explain init gains) does not reproduce on decoder LMs at
-  this scale with the 70 statistics we matched. So the ratio against the strongest
-  control is the ratio against the tuned baseline: **3.3× / 3.1×, above the 1.2×
-  line on both corpora.** (`small_qk` may yet edge the baseline; its 3-seed run is
-  pending and cannot change the verdict's sign.)
+- **The strongest control differs by corpus (decided by the pre-registered rule:
+  lowest median best val among tuned baseline / small_qk / mimetic / statmatch).** On
+  modern web it is **`small_qk`** (1.4778, 0.007 nats below the tuned baseline, below it
+  in 3/3 seeds). Against it, `dirs_only` reaches small_qk's best **3.2× faster (2.5–3.2),
+  3/3**, recomputed cross-artifact with `prism_metrics.steps_to_target_ratio`. On enwik8
+  it is the **tuned baseline**: small_qk (untuned σ there, a bias in `dirs_only`'s
+  favour), mimetic and statmatch all end above it. Against it, `dirs_only` keeps **3.1×**.
+  Both ratios are above the pre-registered 1.2× line, so nothing goes into Honest bounds
+  under that rule. The other analytic and statistics-matched inits ran *below* the tuned
+  baseline (modern web: mimetic +0.02 nats, statmatch +0.11, spectral-only +0.28; enwik8:
+  mimetic +0.05, statmatch +0.18). The 108-statistic worry (that statistics alone explain
+  init gains) does not reproduce on decoder LMs at this scale with the 70 statistics we
+  matched. *(The 10-22 version of this bullet named the tuned baseline as the strongest
+  control on both corpora before small_qk's 3-seed run existed; that was premature, as
+  D12 said.)*
 - **Under Muon the core bet is "AdamW-strong, Muon-weak".** Muon's baseline is
   0.05 nats better than AdamW's, and `dirs_only` under Muon gains only 0.03 nats and
   1.4× / 1.5× in steps — above the pre-registered 1.2× line, so the bet is not
@@ -789,10 +803,14 @@ statmatch 1.5118, never ([`statmatch_20261022T162239Z`](results/statmatch_202610
   (1.4× vs 1.2×).
 - **The mod wheel is confirmed as a brake on adequate data:** `recipe` never reaches
   the tuned baseline's best (as in §11, now against a tuned baseline).
-- **Token-equivalent multiplier: refused.** The pre-registered power-law fit
-  tolerance (RMSE ≤ 0.01 nats) is not met on any seed (fit RMSE 0.022–0.029 under
-  AdamW, 0.037–0.049 under Muon; eval noise at 50 eval batches dominates), so
-  `prism_metrics.token_equivalent_multiplier` returns no number, by design. The
+- **Token-equivalent multiplier: refused, and it could never have fired (design flaw).**
+  The pre-registered power-law fit tolerance (RMSE ≤ 0.01 nats) is not met on any seed
+  (fit RMSE 0.022–0.029 under AdamW, 0.037–0.049 under Muon), so
+  `prism_metrics.token_equivalent_multiplier` returns no number. The tolerance sits
+  below the evaluation noise of a 50-batch validation estimate, so the metric could not
+  return a number on this rig whatever the arms did. The refusal carries no information
+  about `dirs_only`. This is recorded as a design flaw, not re-scored at a looser
+  tolerance (NEXT-EXPERIMENTS W2a amendment). The
   end-of-training gap carries the same information here: `dirs_only` ends 0.09–0.10
   nats below the tuned baseline's *best* under AdamW and 0.03–0.05 under Muon.
 - Lineage traces (W6.2) from these runs are in §22.
