@@ -268,3 +268,11 @@ billing).
   RESULTS §18 and the WS case-2 49×) was the better seed, not a median. The W5 §21 table
   used means of 2. All partial citations below give per-seed values instead. The code is
   unchanged (the 3-seed artifacts are correct).
+- **D16 (2026-11-02)** D12 resolved by the 3-seed runs: the strongest W2a control is
+  `small_qk` on modern web (1.4778 vs the tuned baseline's 1.4848, lower in 3/3 seeds) and
+  the tuned baseline on enwik8. `dirs_only`'s ratio against small_qk was recomputed
+  cross-artifact with `prism_metrics.steps_to_target_ratio` at small_qk's per-seed best:
+  3.2× (2.5–3.2). The pre-registered below-1.2× rule does not fire on either corpus.
+- **D17 (2026-11-02)** Completed partials are committed under their completion stamp
+  when the harness filename collides with a committed partial; the partial stays
+  (`results/README.md`, "Naming").
