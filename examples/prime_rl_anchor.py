@@ -1,10 +1,12 @@
 """prime-rl plugin: attach the PRISM anchor to the trainer's optimizer with one call.
-Keep this file outside prime-rl (e.g. on PYTHONPATH) and apply prime_rl_anchor.patch,
-which inserts the single `attach_anchor(...)` line after `setup_optimizer(...)` in
-src/prime_rl/trainer/rl/train.py. Strength comes from PRISM_ANCHOR_S (0 = off).
+Keep this file outside prime-rl (e.g. on PYTHONPATH) and make the manual edit in
+prime_rl_anchor_EDIT.md, which adds one `attach_anchor(...)` call after
+`setup_optimizer(...)` in src/prime_rl/trainer/rl/train.py. Strength comes from
+PRISM_ANCHOR_S (0 = off).
 
-Under FSDP every rank sees its own parameter shards; capturing W0 per shard and
-lerping per shard is the same operation as on the full tensor.
+Not run inside prime-rl; FSDP behaviour is unverified. Only parameters with
+dim >= 2 are anchored, so a wrapper that exposes flattened 1-D shards would
+leave nothing anchored (check the printed tensor count).
 """
 import os
 import torch

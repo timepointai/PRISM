@@ -145,6 +145,23 @@ is < 1.2× under Muon, the core bet is labelled "AdamW-only until shown otherwis
 **Cost.** Sweeps ≈ 4.6 L4-h (≈ $4); the 3-seed arms ≈ 2 corpora × 13 runs × ~0.7 L4-h
 ≈ 18 L4-h (≈ $15). Tier A.
 
+**Amendment (2026-11-02, before the small_qk / enwik8-mimetic launch; nothing removed or
+weakened).** The `small_qk` σ sweep ran on modern web only
+([`sweep_20261022T153248Z.json`](../results/sweep_20261022T153248Z.json): σ_qk = 1e-5
+chosen). The enwik8 `small_qk` arm reuses σ_qk = 1e-5 without an enwik8 sweep (a new
+sweep is new compute and was not authorised). This is a deviation from the per-corpus
+tuning rule above. It can only make the enwik8 control *weaker*, so it biases the enwik8
+ratio in `dirs_only`'s favour, and every citation of it says so. Both `small_qk` arms and
+enwik8 `mimetic` run at the tuned schedule (LR 2e-3, warmup 300) with `--track_overlap=50`,
+like every other W2a control arm.
+
+**Design flaw, recorded after the fact (2026-11-02; the rule is not changed).** The
+token-equivalent multiplier's RMSE tolerance of 0.01 nats sits below the evaluation noise
+of a 50-batch validation estimate. The baseline curve's fit RMSE was 0.022–0.049 on every
+seed, so the metric could never return a number on this rig. Its "refused" result
+therefore carries no information about `dirs_only`. It is not re-scored at a looser
+tolerance.
+
 ### W3 — cross-size SVD projection (pre-registered 2026-10-21, before any launch)
 
 The full method, cases, baselines and decision rule live in
@@ -207,6 +224,15 @@ along (1.927 bpb, within the 0.02 bpb of Act 1 the rule allows), which is why th
 build check passed. Fixed in `prism_prior.py`; the run is repeated unchanged
 under tag `w5b`. Nothing in the pre-registration above changes.
 
+**Correction (2026-11-02).** The note above says the standalone score (1.927 bpb) is
+"within the 0.02 bpb of Act 1 the rule allows". It is not: 1.9271 − 1.9061 = 0.0210 bpb,
+which is outside the void rule by 0.0010 bpb. The same prior is built for every `w5b` seed,
+so **run 2 fails the pre-registered prior-fidelity check as well** and is reported as
+exploratory (RESULTS §21). The likely cause is that the prior is counted on the student's
+71M-symbol training slot, not on Act 1's full bytes. The threshold is not relaxed. A
+pre-registered run would need the prior built to within 0.02 bpb of 1.9061, which is new
+compute and is listed for the user.
+
 ### W4 — the RL anchor where RL drifts: single-seed pilot (pre-registered 2026-10-22, before any launch)
 
 **Why.** TRL GRPO defaults β = 0.0 and loads no reference model; prime-rl has no
@@ -259,28 +285,59 @@ completion and are reported as "the stacks' default". The rule above applies
 unchanged to every arm; nothing is removed or weakened. Measured cost: 7.3 s/step
 on the A100-40, ≈ $1.3 per 300-step arm, so the whole pilot stays near $20.
 
+**Amendment 2 (2026-11-02, before the LR 1e-5 wave is relaunched; no arm added,
+nothing weakened).** The anchor strengths in this pilot (s ∈ {0.0025, 0.01, 0.02}) are
+the 10.65M-model bands carried over unchanged. They were **never re-located** for the
+0.5B model or for its learning rate, although `docs/ANCHOR-RECIPES.md` and Outcome 2 G1
+say the weak band must be re-located per model and optimizer scale. With a per-step lerp
+toward W₀ after an Adam step of size ~lr per coordinate, a persistent gradient direction
+reaches equilibrium where s·d ≈ lr, so the displacement the anchor allows is roughly
+d ≈ lr/s. At s = 0.0025 that is ~4e-4 per coordinate at LR 1e-6 and ~4e-3 at LR 1e-5:
+the "same" anchor is ten times looser in the second wave. The LR 1e-5 wave therefore
+tests one anchor strength in a regime it was not chosen for. A null or a reward cost
+there is a statement about s = 0.0025 at LR 1e-5, not about the anchor in general. Per
+the user's decision of 2026-11-02 (spend), **only the LR 1e-5 wave runs**: {β0, KL 0.04,
+anchor 0.0025} × {recycle:4, stale:4}. The three on-policy default-LR arms are not run
+(≈ $21 at the measured 36 s/step), so the on-policy regime has no arm in this pilot.
+
 **Cost.** ≈ 12 arms × ~1.5 A100-h × $2.10 ≈ $35–40 for the full pilot; launched in
 priority order (on-policy β0 / KL 0.04 / anchor 0.0025, then the recycle:4 cross)
 so the budget can stop it at any point. Under the W4 cap of $100.
 
-### Landed (2026-10-22, written after the runs)
+### Landed (2026-10-22; completed 2026-11-02; written after the runs)
 
-- **W2a** — landed; RESULTS §19. The strongest control is the tuned baseline itself
-  (mimetic, statmatch, spectral-only and recipe all sit below it); `dirs_only` keeps
-  3.3× / 3.1× under AdamW and 1.4× / 1.5× under Muon (above the 1.2× line, so the
-  bet is not labelled AdamW-only). The token-equivalent multiplier is refused at the
-  pre-registered RMSE tolerance on every seed (eval noise), by design.
-- **W3** — landed; RESULTS §20, `docs/CROSS-SIZE.md`. Success criterion FAILS on
-  width (1.0×); passes on heads (3.7×) and head-dim (1.28×); Weight Selection wins the
-  width cell at 4.0×. Preprint draft narrowed accordingly, not posted.
-- **W6.2 lineage** — RESULTS §22 (enwik8; modern-web and unrelated-teacher runs pending).
-- **W5** — run 1 void (above); run 2 landed on seeds 1337–1338 at the time of writing,
-  RESULTS §21 carries the verdict when seed 1339 lands. Note for the record: the
-  pre-registered primary target (baseline-best) sits above the step-0 loss of every
-  prior-fused arm (the Act-1 dot), so steps-to-target cannot separate them; the
-  secondary readouts (end loss; steps to `dirs_only`-best as a post-hoc, labelled
-  target) carry the comparison.
-- **W1 facts, W4 10× wave** — pending at the time of writing.
+- **W1** — landed on both rigs, 3 seeds each; RESULTS §18. SST (our re-implementation)
+  blocks injection on both rigs. On catalog its paper default stores 11.7 points *less*
+  than the strong band, outside rule 1's "within 10 points" reading. Self-distillation (our
+  re-implementation)
+  beats the weak anchor under rule 2 on catalog (3/3) but not on facts (seen recall lower
+  in 2/3), so the pre-registered consequence (needs both rigs) does not fire. Rule 3:
+  embedding exclusion moves facts-rig forgetting by +20.3% (crosses the bar; catalog
+  +11.5%).
+- **W2a** — landed; RESULTS §19. The strongest control is `small_qk` on modern web (below the tuned baseline in 3/3 seeds) and the tuned baseline on enwik8 (small_qk, mimetic and statmatch end above it there; enwik8 small_qk is untuned, as amended). `dirs_only` beats it 3.2× (modern web, recomputed cross-artifact with `prism_metrics.steps_to_target_ratio`) and 3.1× (enwik8) under AdamW, and 1.4× / 1.5× under Muon. All are above the 1.2× line, so the bet is not labelled AdamW-only and nothing enters Honest bounds under that rule. The token-equivalent multiplier is
+  refused on every seed; its 0.01-nat tolerance sits below 50-batch eval noise, a
+  design flaw recorded in the W2a amendment above.
+- **W3** — landed; RESULTS §20, `docs/CROSS-SIZE.md`. The success criterion FAILS on
+  case 1 (width and depth halved together, 1.0×) and passes on case 3 (width halved
+  alone, 1.28×). Case 2 changes no parameter shape, so its 3.7× is the same-size
+  effect. Weight Selection (our re-implementation) beats the projection in both
+  size-changing cells (4.0×, 8.2×), so the claim narrows as pre-registered. Preprint
+  draft revised, not posted.
+- **W4** — LR 1e-6 recycle:4 wave and the LR 1e-5 wave landed, single-seed probes;
+  RESULTS §23. At 1e-5 the policy drifts (KL 0.32–0.58) with no retention loss in any
+  arm, so the anchor cannot beat β0: "low need" at this scale and horizon. On-policy
+  arms not run (spend). The 33% reference-forward figure was a GPU-type confound.
+- **W5** — run 1 void; run 2 (3 seeds) **fails the pre-registered prior-fidelity check by
+  0.0010 bpb** and is exploratory; the decision rule and composition gate are not
+  evaluable as written (every fused arm starts below baseline-best). Exploratory
+  readouts in RESULTS §21.
+- **W6.2 lineage** — RESULTS §22, enwik8 and modern web plus the unrelated-teacher
+  control. Our re-implementation of the subspace metric separates a PRISM student from
+  both controls in every seed at the probe horizon; a shared random-init seed alone
+  lifts overlap (the seed-1337 control is confounded, stated).
+- **W2b** — the Pythia 70M dry gate passed (plumbing only); G2+ not launched.
+- **W7** — CPU half of the fingerprint-redundancy probe: the imprinted DCT-8 curve's
+  tail rises to its maximum (`docs/alpha/W7-NOTES.md`); GPU halves not run.
 
 ## Status update (2026-07-27): the modern-web probe ran — read it first
 

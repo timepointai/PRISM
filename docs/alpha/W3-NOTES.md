@@ -154,3 +154,14 @@ baseline = step0 as-is. Cost sits with G2/G3 in `docs/NEXT-EXPERIMENTS.md`
 - Case 2's teacher (6L/384/12h) and case 1's (12L/768/12h) are *new* teachers
   trained inside the run; only case 3 reuses Run R's teacher shape.
 - FRONT+ refinement and Weight Selection + distillation are out of scope (operator-only re-implementations).
+
+## What each case changes (2026-11-02, after the runs)
+
+The case labels used at launch ("width", "heads", "head-dim") describe intent. The
+parameter shapes say what each case changes: case 1 halves width and depth together;
+case 3 halves width alone (d_model 384 → 192 at fixed depth and heads; the head
+dimension halves with it); case 2 changes no parameter shape (only the head partition of
+the same 384 attention channels), so it is same-size transfer. Weight Selection (our
+re-implementation) ran on cases 1–3: 4.0×, 49× (a near-copy of the same-shape trained
+teacher, a degenerate upper bound) and 8.2×. It beats the projection in both
+size-changing cells. RESULTS §20 and `docs/CROSS-SIZE.md` carry the numbers.

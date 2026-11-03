@@ -43,16 +43,21 @@ reproducible from an artifact in [`results/`](results/). Earlier writeups:
 | AC | **W1 tuning, facts (§18)**: 21 arms, seed 1336 | [`finetune_20261022T024917Z.json`](results/finetune_20261022T024917Z.json) |
 | AD | **W1 catalog head-to-head (§18)**: 23 arms × 3 seeds — SST / RP-SFT / EWC / LoRA / self-distillation vs the dial | [`finetune_20261022T043049Z.json`](results/finetune_20261022T043049Z.json) |
 | — | W2a tuning sweeps (§19), seed 1336: baseline / dirs_only grids, Muon LR | [`sweep_20261022T*.json`](results/) |
-| AF | **Cross-size case 1 (§20)**: width 768→384 — early head start, no endpoint gain | [`dirs_only_20261022T035754Z.json`](results/dirs_only_20261022T035754Z.json) |
-| AG | **Cross-size case 2 (§20)**: heads 12→6 — 3.7×, −0.11 nats | [`dirs_only_20261022T040349Z.json`](results/dirs_only_20261022T040349Z.json) |
-| AH | **Cross-size case 3 (§20)**: head-dim 64→32 — 1.28× in 3/3 | [`dirs_only_20261022T040448Z.json`](results/dirs_only_20261022T040448Z.json) |
+| AF | **Cross-size case 1 (§20)**: width + depth halving (12L/768 → 6L/384) — early head start, no endpoint gain | [`dirs_only_20261022T035754Z.json`](results/dirs_only_20261022T035754Z.json) |
+| AG | **Cross-size case 2 (§20)**: head partition 12h→6h at identical shapes — 3.7×, the same-size effect, not a size change | [`dirs_only_20261022T040349Z.json`](results/dirs_only_20261022T040349Z.json) |
+| AH | **Cross-size case 3 (§20)**: width-only halving 6L/384 → 6L/192 (head dim 64→32 with it) — 1.28× in 3/3 | [`dirs_only_20261022T040448Z.json`](results/dirs_only_20261022T040448Z.json) |
 | AI | **Cross-size case 4 (§20)**: GPT-2 124M → byte student — null | [`dirs_only_20261022T043832Z.json`](results/dirs_only_20261022T043832Z.json) |
 | AJ | **FRONT from GPT-2 (§20)**: our re-implementation — far below scratch | [`init_state_20261022T041102Z.json`](results/init_state_20261022T041102Z.json) |
-| AK | **Weight Selection, case 1 (§20)**: 768→384 by index selection — 4.0×, beats the projection | [`init_state_20261022T170647Z.json`](results/init_state_20261022T170647Z.json) |
-| AN | **W1 facts rig (§18)**: 23 arms × seeds 1337–1338 (partial) | [`finetune_20261022T143128Z.json`](results/finetune_20261022T143128Z.json) |
-| AO | **W5 run 2 (§21)**: 8 arms × seeds 1337–1338 (partial) | [`prior_20261022T170423Z.json`](results/prior_20261022T170423Z.json) |
-| AP | **W4 GRPO probe (§23)**: β0 / KL 0.04 / anchor, recycle:4, seed 1337 | [`rl_*_recycle4_s1337_w4_*.json`](results/) |
+| AK | **Weight Selection, case 1 (§20)**: 12L/768 → 6L/384 by index selection (our re-implementation) — 4.0×, beats the projection |
+| AR | **Weight Selection, case 3 (§20)**: width-only 6L/384 → 6L/192 (our re-implementation) — 8.2×, beats the projection's 1.28× | [`init_state_20261102T214752Z.json`](results/init_state_20261102T214752Z.json) |
+| AQ | **Weight Selection, case 2 (§20)**: our re-implementation; identical shapes, a near-copy of the trained teacher — 49×, degenerate upper bound (supersedes the 2-seed partial `init_state_20261022T175426Z.json`) | [`init_state_20261102T214129Z.json`](results/init_state_20261102T214129Z.json) | [`init_state_20261022T170647Z.json`](results/init_state_20261022T170647Z.json) |
+| AN | **W1 facts rig (§18)**: 23 arms × 3 seeds — SST/EWC/LoRA-4 block; nothing beats the weak anchor 3/3 (supersedes the 2-seed partial `finetune_20261022T143128Z.json`) | [`finetune_20261102T225917Z.json`](results/finetune_20261102T225917Z.json) |
+| AO | **W5 run 2 (§21)**: 8 arms × 3 seeds — exploratory (fails the prior-fidelity check) (supersedes the 2-seed partial `prior_20261022T170423Z.json`) | [`prior_20261102T214708Z.json`](results/prior_20261102T214708Z.json) |
+| AP | **W4 GRPO probe (§23)**: β0 / KL 0.04 / anchor, recycle:4, LR 1e-6, seed 1337 | [`rl_*_recycle4_s1337_w4_*.json`](results/) |
+| AS | **W4 GRPO probe, LR 1e-5 (§23)**: β0 / KL 0.04 / anchor × recycle:4 / stale:4, seed 1337 — drift without forgetting | [`rl_*_s1337_w4lr1e5_*.json`](results/) |
 | AM | **Lineage decay (§22)**: PRISM vs baseline students traced against the teacher's directions, enwik8 | [`dirs_only_20261022T172455Z.json`](results/dirs_only_20261022T172455Z.json) |
+| AT | **Lineage decay, modern web (§22)**: same design | [`dirs_only_20261022T181750Z.json`](results/dirs_only_20261022T181750Z.json) |
+| AU | **Lineage control (§22)**: modern-web students traced against an unrelated (enwik8) teacher | [`dirs_only_20261102T222126Z.json`](results/dirs_only_20261102T222126Z.json) |
 | AL | **W2a controls (§19)**: dirs_only / dirs_pure / recipe / spectral_only / mimetic / statmatch vs the tuned baseline; Muon arms | [`*_20261022T15*`, `*_20261022T16*`, `*_20261022T17*`](results/) |
 | — | **W5 run 1 (§21) — VOID** (gather off-by-one; kept as a record) | [`prior_20261022T035740Z.json`](results/prior_20261022T035740Z.json) |
 
@@ -588,7 +593,7 @@ and this gate result is what authorizes spending on it (needs the sparse
 gather + block-edge backoff in `train.py`'s `_prior_logp`, then
 `prism_prior_eval` arms on enwik8).
 
-## 18. The injection-dial head-to-head (Runs AB–AE, AN) — catalog rig landed; facts rig on 2 of 3 seeds
+## 18. The injection-dial head-to-head (Runs AB–AE, AN): hard projection blocks injection on both rigs; self-distillation beats the weak anchor on catalog only
 
 *Alpha-moves W1 ([`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md) pre-registration
 of 2026-10-21). Competitors are our re-implementations (`src/prism_baselines.py`,
@@ -626,13 +631,17 @@ modernweb base, 2,000 + 1,000 steps, the §13 rig; medians of 3; forgetting = mo
 
 **The pre-registered readouts.**
 
-1. **Hard projection blocks injection like PRISM's strong band.** SST at its paper
-   default stores 3% of the task (per seed 12/2/3%), within 10 points of the 0.01
-   anchor (15%) and 97 points below plain. Even with half the spectrum free (r = 0.5,
-   the tuned setting) it stores 12%. EWC (Fisher-weighted) and LoRA r=4 block too.
-   The prediction the brief made from the literature holds: methods that keep the
-   update off the principal directions cannot write a new task into them.
-2. **One arm beats the weak anchor on both axes in 3 of 3 seeds: self-distillation.**
+1. **Hard projection blocks injection at least as hard as PRISM's strong band.** The
+   tuned SST (r = 0.5, half the spectrum free) stores 12% of the task, within 10 points
+   of the 0.01 anchor's 15%: *blocks* by rule 1. At its paper default (r = 0.99) SST
+   stores 3% (per seed 12/2/3%). That is 11.7 points *below* the 0.01 anchor, so by the
+   letter of rule 1 it is neither "blocks" (within 10 points of `raw_mid`) nor "injects
+   at parity". It blocks harder than the strong band, an outcome the rule's two
+   readings did not anticipate. Our re-implementations of EWC (Fisher-weighted) and
+   LoRA r=4 block too. The prediction the brief made from the literature holds:
+   methods that keep the update off the principal directions cannot write a new task
+   into them.
+2. **One arm beats the weak anchor on both axes in 3 of 3 seeds: self-distillation (our re-implementation).**
    α = 1.0 KL-to-the-frozen-base forgets 0.40 (vs 0.94) while storing 98% (vs 93%),
    per seed 0.399/0.407/0.373 vs 0.991/0.944/0.930 forgetting and 98/100/98% vs
    93/95/93% recall. It costs one base forward pass per micro-step — the very cost the
@@ -653,55 +662,76 @@ hurts injection (58%) and is dominated by the anchor alone; RP-SFT at the one
 setting that injects forgets like plain; LoRA r=16 learns the task but forgets
 *more* than full finetuning at this LR.
 
-**Facts rig, seeds 1337–1338 complete, seed 1339 at 19 of 24 arms when the Modal
-workspace hit its spend limit** ([`finetune_20261022T143128Z.json`](results/finetune_20261022T143128Z.json),
-`partial: true`; 120 synthetic facts, 2,000 + 1,000 steps; forgetting = modernweb val
-climb; seen = the trained template, held-out = the v1 held-out template, v2a/b/c = three
-further held-out paraphrase templates per fact, never trained; medians of 2):
+**Facts rig, 3 seeds** ([`finetune_20261102T225917Z.json`](results/finetune_20261102T225917Z.json);
+supersedes the 2-seed partial [`finetune_20261022T143128Z.json`](results/finetune_20261022T143128Z.json),
+which stays committed; 120 synthetic facts, 2,000 + 1,000 steps; forgetting = modernweb
+val climb; seen = the trained template, held-out = the v1 held-out template, v2a = a
+further never-trained paraphrase template; medians of 3; competitors are our
+re-implementations, at the settings recorded in `arm_specs[*].tuned_from`):
 
-| arm | forgetting ↓ | ×less than plain | seen ↑ | held-out ↑ | v2a ↑ | step time vs plain |
+| arm | forgetting ↓ | ×less than plain | seen ↑ | held-out ↑ (per seed) | v2a ↑ | step time vs plain |
 |---|---|---|---|---|---|---|
-| plain | 3.38 | 1.0× | 100% | 41% | 61% | 1.00 |
-| **weak anchor 0.0025** | **1.10** | **3.1×** | 98% | **90%** | **79%** | 1.06 |
-| mid anchor 0.01 | 0.52 | 6.6× | 4% | 3% | 0% | 1.06 |
-| anisotropic anchor (t2) | 1.90 | 1.8× | 100% | 75% | **98%** | 1.14 |
-| SST (tuned, r 0.99) | 1.51 | 2.3× | **5%** | 3% | 3% | 1.06 |
-| SST (paper default) | 1.58 | 2.2× | 3% | 2% | 1% | 1.06 |
-| RP-SFT (t2) | 2.60 | 1.4× | 100% | 67% | 69% | 1.03 |
-| EWC (t1) | 0.74 | 5.1× | 8% | 2% | 2% | 1.01 |
-| LoRA r=4 (t3) | 2.84 | 1.2× | 20% | 7% | 6% | 1.36 |
-| LoRA r=16 (t3) | 4.18 | 0.8× | 100% | 79% | 75% | 1.43 |
-| self-distillation (t2) | 0.57 | 6.2× | 100% | 25% | 33% | 1.06 |
-| Adam-ε control (out_eps) | 3.34 | 1.0× | 100% | 41% | 67% | 1.01 |
-| weak anchor, embedding excluded | 1.33 | 2.6× | 98% | 88% | 74% | 1.06 |
-| weak anchor, absent rows only | 1.29 | 2.7× | 98% | 87% | 76% | 1.06 |
-| weak anchor + Adam reset | 1.15 | 2.9× | 99% | 88% | 43% | 1.07 |
-| plain + Adam reset | 3.42 | 1.0× | 100% | 31% | 44% | 1.00 |
+| plain | 3.31 | 1.0× | 100% | 26% (26/41/19) | 42% | 1.00 |
+| **weak anchor 0.0025** (`raw_weak`) | **1.08** | **3.1×** | 96% | 25% (23/90/25) | 14% | 1.06 |
+| mid anchor 0.01 (`raw_mid`) | 0.49 | 6.7× | 3% | 0% | 0% | 1.06 |
+| anchor 0.0035 | 0.91 | 3.6× | 78% | 19% | 8% | 1.05 |
+| anchor 0.005 | 0.75 | 4.4× | 34% | 5% | 5% | 1.06 |
+| low-LR 1e-4 | 2.19 | 1.5× | 98% | 59% | 42% | 1.00 |
+| anisotropic anchor (k=32, 0.02 top / 0 rest; tuned t2) | 1.84 | 1.8× | 100% | **60% (60/75/32)** | **65%** | 1.12 |
+| SST, tuned r = 0.5 (`sst_t1`) | 1.47 | 2.3× | 5% | 2% | 2% | 1.05 |
+| SST, paper default r = 0.99 | 1.54 | 2.2× | 2% | 0% | 0% | 1.06 |
+| RP-SFT, λ = 1.0 (t2) | 2.44 | 1.4× | 98% | 29% | 30% | 1.01–1.03* |
+| EWC, λ = 0.1 (t1) | 0.65 | 5.1× | 5% | 0% | 2% | 1.00–1.01* |
+| LoRA r=4 (lr 3e-3) | 2.84 | 1.2× | 12% | 7% | 6% | 1.36* |
+| LoRA r=16 (lr 3e-3) | 4.09 | 0.8× | 100% | 32% | 59% | 1.42–1.43* |
+| self-distillation, α = 1.0 (t2) | **0.53** | **6.2×** | 96% (96/100/88) | 25% (9/25/41) | 24% | 1.06* |
+| Adam-ε control (`out_eps`) | 3.30 | 1.0× | 100% | 28% | 45% | 1.00 |
+| weak anchor, embedding excluded | 1.30 | 2.5× | 95% | 25% | 11% | 1.06 |
+| weak anchor, absent rows only | 1.26 | 2.6× | 95% | 24% | 12% | 1.05 |
+| weak anchor + Adam reset | 1.12 | 3.0× | 95% | 25% | 14% | 1.06 |
+| weak anchor + Adam-moment lerp | 1.02 | 3.2× | 96% | 25% | 14% | 1.20 |
+| plain + Adam reset | 3.34 | 1.0× | 100% | 30% | 40% | 1.00 |
 
-**Readouts against the pre-registered rules (2 of 3 seeds, so none is a verdict yet):**
+\* Seed 1339's runs of these five arms ran on an A10 after the L4 queue stalled
+(2026-11-02), so their step-time ratio against the L4 `plain` of that seed is not
+comparable. The column gives seeds 1337–1338 only. Loss and recall are unaffected by
+the GPU class beyond run-to-run noise.
 
-1. **SST blocks injection on the facts rig too** (seen recall 5% and 3%, within 10 points
-   of the mid anchor's 4%, both seeds). EWC and LoRA r=4 block as well. Same picture as
-   the catalog rig.
-2. **Self-distillation does NOT beat the weak anchor on this rig.** It wins forgetting
-   (0.57 vs 1.10) and ties on the trained template (100% vs 98%), but its held-out
-   recall is 25% against the anchor's 90% and its v2 paraphrase recall 33% against 79%.
-   It memorises the training phrasing. The catalog verdict (self-distillation wins both
-   axes) therefore does not transfer to facts; the two rigs disagree, which is the
-   honest state of the head-to-head.
-3. **The weak anchor more than doubles held-out recall over plain finetuning** (90% vs
-   41%; 79% vs 61% on the never-trained v2a templates), in both seeds. This was not a
-   pre-registered axis; it is reported as an observation. The anisotropic anchor pushes
-   v2a to 98% at the cost of forgetting 1.8× instead of 3.1× less.
-4. **Directionality controls:** excluding the embedding changes forgetting by +20.3%
-   (on the 20% bar exactly; the third seed decides), absent-row anchoring +17%, Adam
-   reset +4%, Adam-moment lerp −4%; the Adam-ε control is 1.0× again. Adam reset
-   alone does not touch forgetting but drops v2a recall (44% vs 61%).
+*The 2-seed version of this table (written 2026-10-22) reported the upper of the two
+seeds as "median of 2" (D15). That is how "the weak anchor doubles held-out recall"
+(90% vs 41%) and "self-distillation's held-out recall is 25% against the anchor's 90%"
+entered the record. Both are withdrawn: on 3 seeds the anchor's held-out median is 25%
+against plain's 26%, and self-distillation's is 25%.*
 
-The remaining five arms of seed 1339 are banked up to `rpsft` on volume `prism-alpha-a`;
-relaunching the same command completes the artifact for about one L4-hour.
+**The pre-registered readouts, facts rig:**
 
-## 19. Hardened controls for the core bet (W2a): the geometry survives a tuned baseline under AdamW; under Muon the multiplier shrinks to 1.4×
+1. **Rule 1: SST blocks.** Seen recall is 2% at the paper default and 5% tuned, both
+   within 10 points of the 0.01 anchor's 3%. Our re-implementations of EWC and LoRA r=4
+   block as well.
+2. **Rule 2: no arm beats the weak anchor in 3 of 3 seeds.** Self-distillation (our re-implementation) forgets
+   half as much in every seed (0.52/0.57/0.53 vs 1.08/1.10/1.04), but its seen recall is
+   lower in two seeds (96/100/88% vs 98/95/96%). So the catalog verdict does not
+   replicate here.
+3. **Rule 3: the embedding-exclusion control sits on the 20% bar and crosses it.**
+   Median forgetting is 1.301 with the tied embedding excluded, against 1.082:
+   **+20.3%, ≥ 20%**. By the rule, part of the facts rig's retention is *not*
+   directional: the anchor on the tied embedding contributes. (Read as the median of
+   the per-seed changes, 22.7/18.0/19.3%, it would be 19.3%; the ratio of medians is
+   used because rule 1 also compares medians.) Absent-row anchoring +16.7%, Adam reset
+   +3.2% and Adam-moment lerp −5.3% are under the bar. On the catalog rig all four are
+   under it (+11.5 / +10.2 / +3.8 / −9.8%), so retention there is directional.
+
+**What changes which claim (the pre-registered consequence).** README Finding 7 drops
+"the dial traces the frontier" only if a competitor beats `raw_weak` under rule 2 on
+*both* rigs. Self-distillation does so on catalog (3/3) but not on facts (1/3 on seen
+recall), so **the consequence does not fire**. Honest bounds still names
+self-distillation: it dominates the anchor on catalog and halves its forgetting on
+facts at a small seen-recall cost, for one base forward pass per step. No
+pre-registered rule concerned held-out recall. As an observation, the anisotropic
+anchor is the only arm whose held-out recall beats plain in every seed (60/75/32% vs
+26/41/19%), at 1.8× less forgetting instead of 3.1×.
+
+## 19. Hardened controls for the core bet (W2a): the geometry beats the strongest control (small_qk on modern web, the tuned baseline on enwik8) by 3.2× / 3.1× under AdamW; under Muon the multiplier shrinks to 1.4×
 
 *Alpha-moves W2a, pre-registered 2026-10-21. Every arm tuned on seed 1336 only
 (`results/sweep_20261022T*.json`, 8 settings for baseline and `dirs_only`, 3 for
@@ -712,7 +742,9 @@ Muon LR, 3 for σ_qk); results on seeds 1337–1339, PROBE rig, eval every 10.*
 LR 2e-3 with warmup 300 (1.4802 vs 1.4902 on modern web, 1.3183 vs 1.3272 on enwik8,
 seed 1336). `dirs_only` prefers LR 1e-3 (modern web) / 5e-4 (enwik8) at σ 0.02;
 σ 0.01 hurts every arm. Muon: LR 0.01 for both arms on both corpora. `small_qk`:
-σ_qk = 1e-5 beat the tuned baseline by 0.008 nats on seed 1336 (3-seed run pending).
+σ_qk = 1e-5 beat the tuned baseline by 0.008 nats on seed 1336 (modern web). The σ sweep
+ran on modern web only. The enwik8 `small_qk` arm reuses σ_qk = 1e-5 untuned, which
+favours `dirs_only` on enwik8 (amendment of 2026-11-02, written before the launch).
 
 **Modern web, AdamW, every arm against the tuned baseline (medians of 3):**
 
@@ -725,10 +757,15 @@ seed 1336). `dirs_only` prefers LR 1e-3 (modern web) / 5e-4 (enwik8) at σ 0.02;
 | spectral_only | 1.7623 | never | [`spectral_only_20261022T162500Z`](results/spectral_only_20261022T162500Z.json) |
 | mimetic (Trockman & Kolter, char-level values) | 1.5074 | never | [`mimetic_20261022T170532Z`](results/mimetic_20261022T170532Z.json) |
 | statmatch (70 teacher statistics, no directions) | 1.5994 | never | [`statmatch_20261022T162209Z`](results/statmatch_20261022T162209Z.json) |
+| **small_qk** (σ_qk 1e-5) | **1.4778** | 1.06× (1.00–1.08); best below the tuned baseline in 3/3 seeds | [`small_qk_20261102T215708Z`](results/small_qk_20261102T215708Z.json) |
+| **dirs_only vs small_qk** (the strongest control; `prism_metrics.steps_to_target_ratio` at small_qk's best, per seed) | — | **3.2× (2.5–3.2), 3/3** | cross-artifact |
 
 **enwik8, AdamW:** tuned baseline 1.3294; `dirs_only` 1.2296, **3.1× (2.9–3.1), 3/3**
-([`dirs_only_20261022T153444Z`](results/dirs_only_20261022T153444Z.json));
-statmatch 1.5118, never ([`statmatch_20261022T162239Z`](results/statmatch_20261022T162239Z.json)).
+([`dirs_only_20261022T153444Z`](results/dirs_only_20261022T153444Z.json)). Every other
+control ends above the tuned baseline and never reaches it: `small_qk` 1.3385 (σ untuned
+on enwik8; [`small_qk_20261102T224802Z`](results/small_qk_20261102T224802Z.json)), mimetic
+1.3788 ([`mimetic_20261102T233902Z`](results/mimetic_20261102T233902Z.json)), statmatch
+1.5118 ([`statmatch_20261022T162239Z`](results/statmatch_20261022T162239Z.json)).
 
 **Muon (LR 0.01, both arms):**
 
@@ -742,14 +779,21 @@ statmatch 1.5118, never ([`statmatch_20261022T162239Z`](results/statmatch_202610
 
 **Verdicts against the pre-registered rules.**
 
-- **The strongest control is the tuned baseline itself.** Every analytic or
-  statistics-matched init ran *below* it: mimetic +0.02 nats, statmatch +0.11 nats
-  (modern web) and +0.18 (enwik8), spectral-only +0.28. The 108-statistic worry
-  (that statistics alone explain init gains) does not reproduce on decoder LMs at
-  this scale with the 70 statistics we matched. So the ratio against the strongest
-  control is the ratio against the tuned baseline: **3.3× / 3.1×, above the 1.2×
-  line on both corpora.** (`small_qk` may yet edge the baseline; its 3-seed run is
-  pending and cannot change the verdict's sign.)
+- **The strongest control differs by corpus (decided by the pre-registered rule:
+  lowest median best val among tuned baseline / small_qk / mimetic / statmatch).** On
+  modern web it is **`small_qk`** (1.4778, 0.007 nats below the tuned baseline, below it
+  in 3/3 seeds). Against it, `dirs_only` reaches small_qk's best **3.2× faster (2.5–3.2),
+  3/3**, recomputed cross-artifact with `prism_metrics.steps_to_target_ratio`. On enwik8
+  it is the **tuned baseline**: small_qk (untuned σ there, a bias in `dirs_only`'s
+  favour), mimetic and statmatch all end above it. Against it, `dirs_only` keeps **3.1×**.
+  Both ratios are above the pre-registered 1.2× line, so nothing goes into Honest bounds
+  under that rule. The other analytic and statistics-matched inits ran *below* the tuned
+  baseline (modern web: mimetic +0.02 nats, statmatch +0.11, spectral-only +0.28; enwik8:
+  mimetic +0.05, statmatch +0.18). The 108-statistic worry (that statistics alone explain
+  init gains) does not reproduce on decoder LMs at this scale with the 70 statistics we
+  matched. *(The 10-22 version of this bullet named the tuned baseline as the strongest
+  control on both corpora before small_qk's 3-seed run existed; that was premature, as
+  D12 said.)*
 - **Under Muon the core bet is "AdamW-strong, Muon-weak".** Muon's baseline is
   0.05 nats better than AdamW's, and `dirs_only` under Muon gains only 0.03 nats and
   1.4× / 1.5× in steps — above the pre-registered 1.2× line, so the bet is not
@@ -759,69 +803,102 @@ statmatch 1.5118, never ([`statmatch_20261022T162239Z`](results/statmatch_202610
   (1.4× vs 1.2×).
 - **The mod wheel is confirmed as a brake on adequate data:** `recipe` never reaches
   the tuned baseline's best (as in §11, now against a tuned baseline).
-- **Token-equivalent multiplier: refused.** The pre-registered power-law fit
-  tolerance (RMSE ≤ 0.01 nats) is not met on any seed (fit RMSE 0.022–0.029 under
-  AdamW, 0.037–0.049 under Muon; eval noise at 50 eval batches dominates), so
-  `prism_metrics.token_equivalent_multiplier` returns no number, by design. The
+- **Token-equivalent multiplier: refused, and it could never have fired (design flaw).**
+  The pre-registered power-law fit tolerance (RMSE ≤ 0.01 nats) is not met on any seed
+  (fit RMSE 0.022–0.029 under AdamW, 0.037–0.049 under Muon), so
+  `prism_metrics.token_equivalent_multiplier` returns no number. The tolerance sits
+  below the evaluation noise of a 50-batch validation estimate, so the metric could not
+  return a number on this rig whatever the arms did. The refusal carries no information
+  about `dirs_only`. This is recorded as a design flaw, not re-scored at a looser
+  tolerance (NEXT-EXPERIMENTS W2a amendment). The
   end-of-training gap carries the same information here: `dirs_only` ends 0.09–0.10
   nats below the tuned baseline's *best* under AdamW and 0.03–0.05 under Muon.
 - Lineage traces (W6.2) from these runs are in §22.
 
-## 20. Cross-size SVD projection (Runs AF–AJ): heads and head-dims transfer, width does not
+## 20. Cross-size SVD projection (Runs AF–AK, AQ, AR): halving width and depth together gives no endpoint gain; halving width alone gives 1.28×; Weight Selection beats the projection in both size-changing cells; the head-partition cell is same-size transfer
 
 *Alpha-moves W3 ([`docs/CROSS-SIZE.md`](docs/CROSS-SIZE.md), pre-registered
 2026-10-21: success = ≥ 1.5× steps-to-target vs scratch on case 1 AND > 1× on case 3,
 3 of 3 seeds). Operator: residual-stream PCA projection of the teacher's matrices
 into the student's coordinates, per-head QK/OV circuit projection, uniform layer
 selection, then the ordinary EigenTransfer (`src/prism_crosssize.py`). Modern web,
-PROBE rig, 3 seeds, overlap traces every 50 steps.*
+PROBE rig, 3 seeds, overlap traces every 50 steps. Weight Selection and FRONT are our
+re-implementations.*
+
+**What each case changes.** The case names in the pre-registration ("width", "heads",
+"head-dim") describe the intent; the parameter shapes say what each case actually
+changes:
+
+- **case 1** (12L/768/12h → 6L/384/6h) halves **width and depth together** (head dim
+  fixed at 64);
+- **case 3** (6L/384/6h → 6L/192/6h) halves **width only** (d_model 384 → 192) at fixed
+  depth and head count; the head dimension halves with it (64 → 32);
+- **case 2** (6L/384/12h → 6L/384/6h) changes **no parameter shape**. Every matrix is
+  the same size in teacher and student; only the grouping of the 384 attention
+  channels into heads differs (12 × 32 vs 6 × 64). It is same-size transfer under a
+  different head partition, not a size change.
 
 | case | teacher → student | steps-to-target vs scratch (median, range) | best loss vs scratch | init loss vs scratch | step-100 loss vs scratch | artifact |
 |---|---|---|---|---|---|---|
-| 1 width | 12L/768/12h (trained here, 2,000 steps) → 6L/384/6h | **1.0× (reached in 1/3 seeds)** | 1.4924 vs 1.4892 | 5.74 vs 5.65 | **2.25 vs 2.55** | [`dirs_only_20261022T035754Z`](results/dirs_only_20261022T035754Z.json) |
-| 2 heads | 6L/384/**12h** → 6L/384/**6h** | **3.7× (2.9–3.9), 3/3** | **1.3827 vs 1.4892** | 4.64 vs 5.65 | 1.78 vs 2.55 | [`dirs_only_20261022T040349Z`](results/dirs_only_20261022T040349Z.json) |
-| 3 head-dim | 6L/384/6h → 6L/**192**/6h (scratch baseline at 192) | **1.28× (1.24–1.34), 3/3** | 1.5855 vs 1.6384 | 5.36 vs 5.61 | 2.52 vs 2.60 | [`dirs_only_20261022T040448Z`](results/dirs_only_20261022T040448Z.json) |
+| 1 width + depth | 12L/768/12h (trained here, 2,000 steps) → 6L/384/6h | **1.0× (reached in 1/3 seeds)** | 1.4924 vs 1.4892 | 5.74 vs 5.65 | **2.25 vs 2.55** | [`dirs_only_20261022T035754Z`](results/dirs_only_20261022T035754Z.json) |
+| 3 width only | 6L/384/6h → 6L/**192**/6h (scratch baseline at 192) | **1.28× (1.24–1.34), 3/3** | 1.5855 vs 1.6384 | 5.36 vs 5.61 | 2.52 vs 2.60 | [`dirs_only_20261022T040448Z`](results/dirs_only_20261022T040448Z.json) |
+| 2 head partition, no shape change | 6L/384/**12h** → 6L/384/**6h** | 3.7× (2.9–3.9), 3/3 — the same-size effect | 1.3827 vs 1.4892 | 4.64 vs 5.65 | 1.78 vs 2.55 | [`dirs_only_20261022T040349Z`](results/dirs_only_20261022T040349Z.json) |
 | 4 GPT-2 | GPT-2 124M (public weights) → 6L/384/6h bytes, internal matrices only | **1.0× (1/3)** | 1.4900 vs 1.4892 | 5.67 vs 5.65 | 2.57 vs 2.55 | [`dirs_only_20261022T043832Z`](results/dirs_only_20261022T043832Z.json) |
 | 4 FRONT | GPT-2 → same student, 3D-DCT truncation (our re-implementation) | never reaches scratch-best | **2.078 vs 1.4892** | 5.58 vs 5.65 | 2.64 vs 2.55 | [`init_state_20261022T041102Z`](results/init_state_20261022T041102Z.json) |
 | 1 Weight Selection | 12L/768/12h → 6L/384/6h, uniform element selection (our re-implementation of arXiv 2311.18823) | **4.0× (3.2–4.7), 3/3** | **1.4026 vs 1.4892** | **3.80 vs 5.65** | 1.73 vs 2.55 | [`init_state_20261022T170647Z`](results/init_state_20261022T170647Z.json) |
+| 3 Weight Selection | 6L/384/6h → 6L/192/6h, uniform element selection (our re-implementation) | **8.2× (7.5–8.3), 3/3** | **1.4323 vs 1.6384** | **3.14 vs 5.61** | 1.91 vs 2.60 | [`init_state_20261102T214752Z`](results/init_state_20261102T214752Z.json) |
+| 2 Weight Selection | 6L/384/12h → 6L/384/6h: identical shapes, so the selection copies every trained matrix | 49× (49.0–49.7), 3/3 — **degenerate upper bound** | 1.3679 vs 1.4892 | 2.08 vs 5.65 | 1.45 vs 2.55 | [`init_state_20261102T214129Z`](results/init_state_20261102T214129Z.json) (supersedes the 2-seed partial [`init_state_20261022T175426Z`](results/init_state_20261022T175426Z.json)) |
 
-**Weight Selection wins case 1 outright.** Copying evenly-spaced rows and columns
-of the 768-wide teacher's weights into the 384-wide student (content, not
-geometry) reaches scratch-best 4.0× faster in every seed and ends 0.09 nats below
-it — faster than same-size `dirs_only` (3.3×) though not as low (1.4026 vs 1.3794).
-Per the pre-registration this narrows the cross-size claim to the head cells: for
-width, index-space weight transfer beats our basis-level projection at this scale,
-and this is also, as far as we know, the first language-model data point for Weight
-Selection (its paper is vision-only, reported). The GPT-2 case cannot copy weights
-(the vocabularies differ), which is where a geometry-only operator would have to
-earn its place; it did not here.
+**Verdict: the pre-registered success criterion FAILS on case 1** (1.0×, below the
+1.5× bar) and **passes on case 3** (1.28× in 3 of 3 seeds). The criterion is unchanged.
+What changes is the reading:
 
-**Verdict: the pre-registered success criterion FAILS on case 1.** Projecting a
-twice-as-wide teacher's directions through its residual-stream PCA onto the
-student buys a real early-window head start (0.31 nats at step 100, 3/3 seeds)
-that is gone by the horizon: the projected student never beats scratch-best in
-2 of 3 seeds and ends 0.003 nats behind. GPT-2's directions projected onto the
-byte-level student do nothing at any step. Two projections *do* transfer:
-halving the head count at fixed width keeps the full same-size effect (3.7×
-against the same-size 3.3× of §11, best loss 0.11 nats below scratch), and
-halving the head dimension gives 1.28× in every seed — the cell CrossGMN reports
-0.74× on (reported by arXiv 2610.01649; different scale and task). FRONT's
-truncated weights from GPT-2 actively hurt here (0.59 nats behind scratch at the
-end), consistent with it being an index-space operator meeting a mismatched
-vocabulary and depth.
+- **"Cross-size fails across width" is not what the data shows.** The cell that
+  halves width alone (case 3) transfers in every seed. The cell that fails (case 1)
+  halves width and depth together, from a teacher trained at a different shape. These
+  cells cannot tell whether the depth halving, the combination, or the 768-wide
+  teacher is responsible. The isolating cells are width-only from the wider teacher at
+  fixed depth (6L/768 → 6L/384) and depth-only at fixed width (12L/384 → 6L/384). They
+  need new compute and are listed for the user, not run.
+- **Case 2 is not a size change.** Its 3.7× is the same-size effect (Run R: 3.3×) passed
+  through a head re-partition. It shows the circuit projection does not damage the
+  directions, not that they cross sizes.
+- **Weight Selection's case-2 number (our re-implementation) is a near-copy of a trained model.** With identical
+  shapes, uniform element selection copies every trained matrix; the student starts
+  at 2.08 nats (scratch: 5.65). The 49× bounds what copying a same-shape teacher buys,
+  and is not a competitor result.
+- **Weight Selection wins the width + depth cell (case 1).** Copying evenly-spaced rows
+  and columns of the 768-wide teacher's weights into the 384-wide, half-depth student
+  reaches scratch-best 4.0× faster in every seed and ends 0.09 nats below it. That is
+  faster than same-size `dirs_only` (3.3×), though not as low (1.4026 vs 1.3794). Per
+  the pre-registration this narrows any claim for the projection on case 1: index-space
+  weight transfer beats our basis-level projection there. As far as we know this is
+  also the first language-model data point for Weight Selection (its paper is
+  vision-only, reported).
+- **Weight Selection also wins the width-only cell (case 3), by more.** Copying every
+  other residual coordinate of the trained 384-wide teacher into the 192-wide student
+  reaches scratch-best 8.2× faster (7.5–8.3, 3/3) and ends 0.21 nats below scratch,
+  against the projection's 1.28× and 0.05 nats. **In both cells that actually change
+  size, index-space weight copying beats PRISM's basis-level projection in 3 of 3
+  seeds.** By the pre-registration, the cross-size claim narrows to "a basis-level
+  operator that does not match index-space transfer at this scale". What the
+  projection keeps is that it transfers *directions only* (no weights copied) and
+  still beats scratch in the width-only cell.
+- GPT-2's directions projected onto the byte-level student do nothing at any step.
+  FRONT's truncated weights from GPT-2 hurt (0.59 nats behind scratch at the end),
+  consistent with an index-space operator meeting a mismatched vocabulary and depth.
+- Case 3 is the cell CrossGMN reports 0.74× on (attention-dimension reduction,
+  reported by arXiv 2610.01649 at ~210k parameters, different task). Our case 3
+  halves the head dimension and d_model together, so the comparison is approximate.
 
 The overlap traces say the operator did impose the directions: at step 0 the
 students' top-16 subspaces overlap the projected reference at 0.58–0.93 (chance
 0.03). In case 2 the FFN-up overlap *rises* during training (0.65 → 0.81); in cases
-1 and 4 it decays toward chance (0.58 → 0.16, 0.58 → 0.07). Directions that a
-wider model uses in its own coordinates are adopted and then abandoned; the
-problem is the coordinate map, not the transplant. Whether a μP-native teacher,
-a per-layer PCA or Procrustes alignment changes that is the next cell (the
-Procrustes and Weight-Selection baselines for cases 1–3 are running as this is
-written). The draft preprint in `docs/preprint/` is NOT to be posted; it will
-be revised to lead with the head/head-dim result and the width null.
+1 and 4 it decays toward chance (0.58 → 0.16, 0.58 → 0.07). In case 1 the directions
+are adopted and then abandoned. The Procrustes, μP and per-layer-PCA variants are
+prepared, not run. The draft preprint in `docs/preprint/` is NOT to be posted.
 
-## 21. Prior fusion against the COUNT control (W5) — run 1 void; run 2 on 2 of 3 seeds
+## 21. Prior fusion against the COUNT control (W5) — run 1 void; run 2 exploratory (fails the prior-fidelity check), decision rule not evaluable as written
 
 [`prior_20261022T035740Z.json`](results/prior_20261022T035740Z.json) is kept as a
 record and is **void**: its own kill condition fired (`prior` never reached
@@ -830,127 +907,204 @@ the sparse prior's in-window gather, which fed the logits a confident prediction
 of the *current* byte (details in [`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md),
 W5 block). Fixed and selftested; the identical run repeated under tag `w5b`.
 
-**Run 2** ([`prior_20261022T170423Z.json`](results/prior_20261022T170423Z.json),
-`partial: true`, seeds 1337–1338; seed 1339 did not start before the workspace spend
-limit). enwik8, exact context-6 sparse prior (standalone 1.927 bpb on the student's
-slot), 2,000-step teacher, 1,500-step students, eval every 10; medians of 2:
+**Run 2** ([`prior_20261102T214708Z.json`](results/prior_20261102T214708Z.json), 3 of 3
+seeds; supersedes the 2-seed partial [`prior_20261022T170423Z.json`](results/prior_20261022T170423Z.json),
+which stays committed) **is exploratory, not the pre-registered test.** The
+pre-registration voids the run unless the prior's standalone validation score is
+within 0.02 bpb of Act 1's 1.9061. Run 2's `prior_info` reports 1.9271 bpb, which
+**fails the pre-registered prior-fidelity check by 0.0010 bpb** (a 0.0210 gap). The
+prior was counted on the student's training slot (71M symbols) rather than Act 1's
+full bytes, and that is the likely source of the gap. Nothing below is a verdict.
 
-| arm | init loss | best loss (nats) | best bpb | steps to baseline-best | steps to `dirs_only`-best |
+enwik8, exact context-6 sparse prior, 2,000-step teacher, 1,500-step students, eval
+every 10; medians of 3 (per-seed values in the artifact):
+
+| arm | init loss | best loss (nats) | best bpb | steps to baseline-best (per seed) | steps to `dirs_only`-best (post-hoc target, per seed) |
 |---|---|---|---|---|---|
-| baseline | 5.65 | 1.5103 | 2.179 | 1,490 / 1,500 | never |
-| dirs_only | 4.21 | 1.3173 | 1.900 | 370 / 360 (**4.2×**) | 1,490 / 1,480 |
-| prior (train-time fusion) | **1.40** | 1.2904 | 1.862 | 0 (at init) | 470 / 410 |
-| **dirs_prior** | 1.42 | **1.2736** | **1.837** | 0 (at init) | **80 / 60** |
-| baseline + prior at inference only | 1.40 | 1.4015 | 2.022 | 0 (at init) | never |
-| dirs_only + prior at inference only | 1.42 | 1.4114 | 2.036 | 0 (at init) | never |
-| COUNT embedding | 4.62 | 1.3957 | 2.014 | 370 / 360 (4.2×) | never |
-| COUNT embedding + dirs | 4.66 | 1.3915 | 2.008 | 300 / 260 (5.8×) | never |
+| baseline | 5.60 | 1.5124 | 2.182 | 1,490 / 1,500 / 1,490 | never |
+| dirs_only | 4.21 | 1.3185 | 1.902 | 370 / 360 / 290 (4.2×, 4.0–5.1) | 1,490 / 1,480 / 1,480 |
+| prior (train-time fusion) | **1.40** | 1.2944 | 1.867 | 0 / 0 / 0 (at init) | 470 / 410 / 550 |
+| **dirs_prior** | 1.41 | **1.2776** | **1.843** | 0 / 0 / 0 (at init) | **80 / 60 / 130** |
+| baseline + prior at inference only | 1.40 | 1.4014 | 2.022 | 0 / 0 / 0 (at init) | never |
+| dirs_only + prior at inference only | 1.41 | 1.4057 | 2.028 | 0 / 0 / 0 (at init) | never |
+| COUNT embedding (our re-implementation) | 4.62 | 1.3978 | 2.017 | 370 / 360 / 260 (4.2×, 4.0–5.7) | never |
+| COUNT embedding + dirs | 4.59 | 1.3954 | 2.013 | 300 / 260 / 230 (5.8×, 5.0–6.5) | never |
 
-**Readouts (2 of 3 seeds; the pre-registered rules need 3/3):**
+**Against the pre-registered rules:**
 
-1. **The pre-registered primary target is degenerate here.** Every arm that fuses the
-   prior starts at 1.40 nats, below the baseline's best at step 1,500 — the Act-1 dot
-   again, now on enwik8 with an exact prior. Steps-to-baseline-best is 0 for all of
-   them and cannot rank them. The table therefore also reports steps to
-   `dirs_only`-best, a post-hoc target chosen after the fact and labelled as such.
-2. **Train-time fusion beats inference-only fusion in both seeds**, by 0.11 nats
-   (prior vs baseline + prior at inference) and 0.13–0.15 nats (dirs_prior vs its
-   inference-only twin). The inference-only curves *rise* during training (1.40 → 1.65
-   at step 500 → 1.55 at the end): the plain student learns the n-gram statistics
-   itself and the late fusion double-counts them. Fusing at train time lets the network
-   learn the residual. This is the mechanism claim of `docs/PRIOR-FUSED-PRISM.md`,
-   now with a control.
-3. **Composition saturates.** dirs_prior ends 0.016–0.018 nats below prior alone and
-   0.04–0.05 below dirs_only; in speed to `dirs_only`-best it is 6–7× faster than the
-   prior alone (80 vs 470 steps). The pre-registered composition gate (≥ 1.5× over the
-   stronger single ingredient) passes on the speed reading and fails on the endpoint
-   reading; the 30× of the Shakespeare probe does not reappear as a multiplier of
-   endpoints. The honest summary is "the prior sets the floor, the directions set the
-   speed to it".
-4. **COUNT's input-embedding form is weaker than fusion at this scale.** It speeds the
-   baseline 4.2× (same as directions) but ends 0.08 nats *above* dirs_only, and adding
-   directions to it gains speed (5.8×) at an endpoint still 0.07 nats above dirs_only.
-   Logit-space fusion of the same counts (the `prior` arm) is 0.1 nats better.
+1. **The decision rule is not evaluable as written.** It needs `prior` to beat
+   `baseline_inffuse`, and `dirs_prior` to beat `dirs_inffuse`, on steps to
+   baseline-best. Every arm that fuses the prior starts at ~1.40 nats, already below
+   the baseline's best at step 1,500 (the Act-1 dot again, now on enwik8 with an exact
+   prior). So all four reach the target at step 0 and steps-to-target cannot separate
+   them. This is "not evaluable", not a pass or a fail.
+2. **The composition gate is not evaluable as written either.** `dirs_prior`'s
+   steps-to-target ratio is left-censored at step 0, so it cannot be compared with
+   `dirs_only`'s 4.2×.
 
-Seed 1339 completes this run for about one L4-hour.
+**Exploratory readouts (secondary metrics and a post-hoc target, labelled as such):**
 
-## 22. Lineage decay: how long a student carries its teacher's signature (Run AM)
+- **Train-time fusion ends below inference-only fusion in 3 of 3 seeds.** Best loss:
+  `prior` is 0.105–0.115 nats below `baseline_inffuse`, and `dirs_prior` is 0.127–0.149
+  below `dirs_inffuse`. The inference-only curves *rise* during training (best at
+  step 0; 1.54–1.57 at the end for the baseline, 1.46–1.47 with directions): the plain student learns the n-gram statistics
+  itself, and late fusion double-counts them. This is the mechanism claim of
+  `docs/PRIOR-FUSED-PRISM.md`, now with a control, but on an exploratory run.
+- **Composition saturates at the endpoint.** `dirs_prior` ends 0.016–0.018 nats below
+  `prior` alone and 0.037–0.050 below `dirs_only`, in 3 of 3 seeds. On the post-hoc
+  target (`dirs_only`-best) it is 4–7× faster than the prior alone (60–130 vs 410–550
+  steps). "The prior sets the floor; the directions set the speed to it."
+- **COUNT's input-embedding form is weaker than logit fusion here.** It speeds the
+  baseline about as much as directions do (4.2×), but ends 0.07–0.085 nats *above*
+  `dirs_only`. Adding directions gains speed (5.8×) but leaves the endpoint 0.07–0.08
+  above `dirs_only`. Logit fusion of the same counts (`prior`) ends ~0.10 nats lower.
 
-*Alpha-moves W6.2. The two metrics of the weight-lineage method of arXiv 2608.07786,
-computed online by `src/prism_track.py` every 25 steps: subspace alignment (here the
-mean squared cosine of the principal angles between a weight group's top-16 singular
-subspaces and the teacher's, averaged over left and right sides; chance = k/d) and the
-spectral-energy "trace" (per-group Frobenius norm, with the teacher's beside it).
-enwik8, tuned-baseline schedule, 3 seeds:
-[`dirs_only_20261022T172455Z.json`](results/dirs_only_20261022T172455Z.json). Both arms
-are traced against the SAME teacher's directions: the PRISM student was initialised
-from them, the baseline student never saw them.*
+## 22. Lineage decay: how long a student carries its teacher's signature (Run AM and its controls)
 
-| group | PRISM student ↔ teacher, steps 0 / 100 / 250 / 500 / 1000 / 1500 | baseline student ↔ same teacher | chance |
+*Alpha-moves W6.2. Our re-implementation of the two metrics of the weight-lineage method
+of arXiv 2608.07786, computed online by `src/prism_track.py` every 25 steps. The first is
+subspace alignment: the mean squared cosine of the principal angles between a weight
+group's top-16 singular subspaces and a reference model's, averaged over left and right
+sides (chance = k/d). The second is the spectral-energy "trace": the per-group Frobenius
+norm, with the reference's beside it. Tuned-baseline schedule, 3 seeds. Teacher and
+students use the same batch, so the 1,500 student steps are **0.75×** the 2,000-step
+teacher's training in tokens.* Three runs:
+
+- **enwik8, traced against the students' own teacher**
+  ([`dirs_only_20261022T172455Z.json`](results/dirs_only_20261022T172455Z.json)): the
+  PRISM student was initialised from that teacher's directions; the baseline student
+  never saw them.
+- **modern web, the same design**
+  ([`dirs_only_20261022T181750Z.json`](results/dirs_only_20261022T181750Z.json)).
+- **modern web, traced against an unrelated teacher**: the seed-1337 enwik8 teacher's
+  directions as the reference for every seed
+  ([`dirs_only_20261102T222126Z.json`](results/dirs_only_20261102T222126Z.json); training
+  is identical to the previous run, curve for curve, so the tracker does not perturb
+  training).
+
+**Overlap with the students' own teacher (medians of 3), steps 0 / 100 / 250 / 500 / 1000 / 1500:**
+
+| corpus | group | PRISM student ↔ teacher | baseline student ↔ same teacher | chance |
+|---|---|---|---|---|
+| enwik8 | attention | 0.827 / 0.817 / 0.826 / 0.829 / 0.803 / 0.779 | 0.047 / 0.116 / 0.211 / 0.257 / 0.259 / 0.249 | 0.028 |
+| enwik8 | attn_proj | 0.947 / 0.754 / 0.700 / 0.701 / 0.679 / 0.648 | 0.048 / 0.119 / 0.185 / 0.213 / 0.229 / 0.222 | 0.042 |
+| enwik8 | ffn_up | 0.588 / 0.643 / 0.689 / 0.741 / 0.789 / 0.801 | 0.046 / 0.147 / 0.353 / 0.416 / 0.389 / 0.359 | 0.026 |
+| enwik8 | ffn_down | 0.930 / 0.833 / 0.835 / 0.835 / 0.807 / 0.783 | 0.029 / 0.188 / 0.288 / 0.356 / 0.374 / 0.362 | 0.026 |
+| enwik8 | embedding | 0.769 / 0.821 / 0.853 / 0.891 / 0.914 / 0.904 | 0.114 / 0.263 / 0.472 / 0.594 / 0.602 / 0.601 | 0.052 |
+| modern web | attention | 0.827 / 0.816 / 0.803 / 0.776 / 0.709 / 0.664 | 0.045 / 0.070 / 0.197 / 0.219 / 0.217 / 0.211 | 0.028 |
+| modern web | attn_proj | 0.947 / 0.649 / 0.632 / 0.636 / 0.596 / 0.563 | 0.048 / 0.081 / 0.142 / 0.167 / 0.178 / 0.168 | 0.042 |
+| modern web | ffn_up | 0.588 / 0.649 / 0.746 / 0.807 / 0.787 / 0.744 | 0.046 / 0.143 / 0.359 / 0.408 / 0.385 / 0.362 | 0.026 |
+| modern web | ffn_down | 0.931 / 0.787 / 0.809 / 0.794 / 0.751 / 0.711 | 0.028 / 0.205 / 0.311 / 0.396 / 0.403 / 0.392 | 0.026 |
+| modern web | embedding | 0.769 / 0.836 / 0.864 / 0.902 / 0.884 / 0.846 | 0.118 / 0.253 / 0.527 / 0.634 / 0.671 / 0.657 | 0.052 |
+
+**Overlap with an unrelated teacher at step 1,500 (modern-web students vs the enwik8
+teacher), per seed 1337 / 1338 / 1339:**
+
+| group | PRISM student | baseline student | chance |
 |---|---|---|---|
-| attention | 0.827 / 0.817 / 0.826 / 0.829 / 0.803 / 0.779 | 0.047 / 0.116 / 0.211 / 0.257 / 0.259 / 0.249 | 0.028 |
-| attn_proj | 0.947 / 0.754 / 0.7 / 0.701 / 0.679 / 0.648 | 0.048 / 0.119 / 0.185 / 0.213 / 0.229 / 0.222 | 0.042 |
-| ffn_up | 0.588 / 0.643 / 0.689 / 0.741 / 0.789 / 0.801 | 0.046 / 0.147 / 0.353 / 0.416 / 0.389 / 0.359 | 0.026 |
-| ffn_down | 0.93 / 0.833 / 0.835 / 0.835 / 0.807 / 0.783 | 0.029 / 0.188 / 0.288 / 0.356 / 0.374 / 0.362 | 0.026 |
-| embedding | 0.769 / 0.821 / 0.853 / 0.891 / 0.914 / 0.904 | 0.114 / 0.263 / 0.472 / 0.594 / 0.602 / 0.601 | 0.052 |
+| attention | 0.095 / 0.030 / 0.030 | 0.097 / 0.030 / 0.029 | 0.028 |
+| attn_proj | 0.074 / 0.040 / 0.041 | 0.079 / 0.042 / 0.044 | 0.042 |
+| ffn_up | 0.220 / 0.052 / 0.052 | 0.229 / 0.053 / 0.052 | 0.026 |
+| ffn_down | 0.236 / 0.026 / 0.025 | 0.254 / 0.026 / 0.027 | 0.026 |
+| embedding | 0.393 / 0.198 / 0.195 | 0.387 / 0.184 / 0.191 | 0.052 |
 
-**Three readings.**
+**Readings.**
 
-1. **The transplanted signature decays slowly and never approaches chance.** After
-   1,500 steps (the full probe horizon, 1.4× the teacher's own training in tokens) the
-   PRISM student's attention subspaces still overlap the teacher's at ~0.78 against a
-   chance level of 0.03; the FFN groups at 0.6–0.8. A student initialised this way is
-   trivially identifiable as such by the published lineage detector for the whole of
-   this horizon — the IP question the alpha scan raised is real at probe scale, and
-   the fingerprint is the *directions*, not the 40-number spectrum.
-2. **The baseline student converges toward the teacher's geometry on its own.** From
-   chance (0.03–0.05) it climbs to 0.2–0.3 by step 500 and plateaus — two models trained
-   from different inits on the same data share a quarter of their top-16 subspace. That
-   plateau is the floor any lineage claim must beat, and the PRISM student sits 0.5
-   above it at every step.
-3. **Norms grow toward the teacher's; the student does not shrink back to its init.**
-   Attention Frobenius norm 13.302 → 18.598 (teacher 22.421); the baseline
-   reaches 30.267 by the same step. The trace metric alone would NOT separate the
-   two students (both ascend the same curve); the subspace metric does.
+1. **The transplanted signature decays slowly and stays far above both controls for
+   the whole horizon.** At step 1,500 the PRISM student's subspaces overlap its own
+   teacher's at 0.56–0.91 across groups and corpora. In every seed, on both corpora,
+   the PRISM student's lowest value exceeds the same-data baseline's highest by
+   0.31–0.51 in each non-embedding group (embedding: 0.15–0.26). The decay is faster on
+   modern web (attention 0.83 → 0.66) than on enwik8 (0.83 → 0.78).
+2. **Two models trained on the same data share part of their geometry on their own.**
+   The baseline student climbs from chance to 0.17–0.42 (embedding 0.59–0.63) by step
+   500 and plateaus (0.17–0.40, embedding 0.60–0.66, at step 1,500). Any lineage claim has to beat that floor, not chance.
+3. **An unrelated teacher sits at chance unless it shares the random-init seed.** For
+   seeds 1338 and 1339, both students sit at chance against the enwik8 teacher in every
+   non-embedding group (0.025–0.053). The embedding sits at ~0.19 for both arms:
+   byte-embedding structure is partly shared across corpora. **Seed 1337 is
+   confounded:** the reference is the seed-1337 enwik8 teacher, which trained from the
+   same seed-1337 random init as the seed-1337 students. Both students show
+   0.07–0.25 (embedding 0.39) against it, with or without PRISM. That reference was
+   chosen when rebuilding the launch (the original flags were not recoverable;
+   `docs/ALPHA-MOVES-STATUS.md`). It shows that a shared random-init seed alone leaves
+   a measurable trace on this metric, which a detector would have to rule out.
+4. **The trace metric alone does not separate the students.** Norms grow toward the
+   teacher's in both arms (attention Frobenius norm 13.3 → 18.6 / 22.6 for PRISM on
+   enwik8 / modern web, 30.3 for the baseline; teacher 22.4). The subspace metric does
+   the separating.
 
-Implications are stated as open questions, not conclusions: whether a PRISM student's
-detectability survives a full training run (ours covers 1,500 steps), whether the
-"unrelated teacher" reference (a run with the enwik8 teacher's directions as the
-reference for modern-web students is in flight on the same volume) sits at the
-baseline's plateau or below it, and what counts as "initialization using a pre-trained
-model" under the EU GPAI compute-counting guidance are for the user and counsel. The
-modern-web lineage run and the unrelated-teacher control complete this section when
-they land.
+**Identifiability statement (what is and is not shown).** On this rig, at the
+1,500-step probe horizon, our re-implementation of the subspace-alignment metric
+separates a student initialised from a teacher's directions from (a) an independently
+initialised student trained on the same data and (b) an unrelated teacher with a
+different random-init seed, in every seed on both corpora. It does **not** show that
+the published detector would flag such a student (we did not run that detector), that
+the separation survives a full training run or larger scale, or what counts as
+"initialization using a pre-trained model" under the EU GPAI compute-counting guidance.
+Those questions are for the user and counsel.
 
-## 23. The anchor inside GRPO: a probe in TRL's default regime (W4, single seed)
+## 23. The anchor inside GRPO (W4, single-seed probes): at LR 1e-6 nothing drifts; at LR 1e-5 the policy drifts but nothing forgets
 
 *Alpha-moves W4. Qwen2.5-0.5B-Instruct, TRL 1.16 `GRPOTrainer` on GSM8K, 300 optimizer
-steps, seed 1337, A100-40GB; `src/prism_rl_anchor.py` is the callback (W₀ captured at
-`on_train_begin`, lerp at `on_optimizer_step`), `src/prism_rl_pilot.py` the driver.
-Pre-registered 2026-10-21 with the single-seed status stated in advance: a probe, not a
-result. The amended 10× learning-rate wave (six arms) was launched and killed by the
-workspace spend limit before any arm finished; it is not reported.*
+steps, seed 1337, A100 (40 GB requested; Modal sometimes placed arms on 80 GB cards, as
+recorded in each artifact's `config.device`). `src/prism_rl_anchor.py` is the callback
+(W₀ captured at `on_train_begin`, lerp at `on_optimizer_step`); `src/prism_rl_pilot.py`
+is the driver. Pre-registered 2026-10-21, amended twice before launch
+([`docs/NEXT-EXPERIMENTS.md`](docs/NEXT-EXPERIMENTS.md) W4). **Every run is a single-seed
+probe.** The pre-registered rule needs 3 of 3 seeds (Tier B), so nothing here is a
+verdict. The three on-policy arms were not run (user decision on spend, D14). Retention
+is the mean of hellaswag / arc_easy / winogrande `acc_norm` (300 examples each); GSM8K is
+300 held-out problems, greedy.*
 
-| arm (recycle:4 — each batch of rollouts reused four times) | GSM8K before → after | KL to the start policy | relative weight drift | step time | drift-control cost per step |
-|---|---|---|---|---|---|
-| β = 0 (TRL default; no reference model) | 23.3% → 23.3% | 0.006 | 4.4e-5 | 7.3 s | 0 |
-| KL penalty β = 0.04 (reference forward) | 23.3% → 26.0% | 0.005 | 4.3e-5 | 10.9 s | **+3.6 s (33%)** |
-| anchor s = 0.0025 (lerp, no reference) | 23.3% → 24.3% | 0.007 | 4.8e-5 | 8.4 s | **7 ms (0.1%)** |
+| LR | regime | arm | GSM8K before → after | retention before → after | KL to the start policy | GPU | artifact |
+|---|---|---|---|---|---|---|---|
+| 1e-6 | recycle:4 | β = 0 (TRL default; no reference model) | 23.3% → 23.3% | 53.8% → 54.1% | 0.006 | A100-40 | [`rl_beta0_recycle4_s1337_w4_20261022T161944Z`](results/rl_beta0_recycle4_s1337_w4_20261022T161944Z.json) |
+| 1e-6 | recycle:4 | KL β = 0.04 (reference forward) | 23.3% → 26.0% | 53.8% → 54.2% | 0.005 | A100-80 | [`rl_kl_recycle4_s1337_w4_20261022T161954Z`](results/rl_kl_recycle4_s1337_w4_20261022T161954Z.json) |
+| 1e-6 | recycle:4 | anchor s = 0.0025 (lerp, no reference) | 23.3% → 24.3% | 53.8% → 54.4% | 0.007 | A100-40 | [`rl_anchor_recycle4_s1337_w4_20261022T171645Z`](results/rl_anchor_recycle4_s1337_w4_20261022T171645Z.json) |
+| 1e-5 | recycle:4 | β = 0 | 23.3% → 38.3% | 53.8% → 54.3% | 0.337 | A100-80 | [`rl_beta0_recycle4_s1337_w4lr1e5_20261102T213136Z`](results/rl_beta0_recycle4_s1337_w4lr1e5_20261102T213136Z.json) |
+| 1e-5 | recycle:4 | KL β = 0.04 | 23.3% → 36.7% | 53.8% → 54.7% | 0.356 | A100-80 | [`rl_kl_recycle4_s1337_w4lr1e5_20261102T213156Z`](results/rl_kl_recycle4_s1337_w4lr1e5_20261102T213156Z.json) |
+| 1e-5 | recycle:4 | anchor s = 0.0025 | 23.3% → 43.0% | 53.8% → 54.4% | 0.372 | A100-80 | [`rl_anchor_recycle4_s1337_w4lr1e5_20261102T213223Z`](results/rl_anchor_recycle4_s1337_w4lr1e5_20261102T213223Z.json) |
+| 1e-5 | stale:4 | β = 0 | 23.3% → 48.3% | 53.8% → 54.0% | **0.577** | A100-80 | [`rl_beta0_stale4_s1337_w4lr1e5_20261102T213149Z`](results/rl_beta0_stale4_s1337_w4lr1e5_20261102T213149Z.json) |
+| 1e-5 | stale:4 | KL β = 0.04 | 23.3% → 45.3% | 53.8% → 54.2% | **0.322** | A100-40 | [`rl_kl_stale4_s1337_w4lr1e5_20261102T213202Z`](results/rl_kl_stale4_s1337_w4lr1e5_20261102T213202Z.json) |
+| 1e-5 | stale:4 | anchor s = 0.0025 | 23.3% → 46.7% | 53.8% → 54.1% | **0.428** | A100-40 | [`rl_anchor_stale4_s1337_w4lr1e5_20261102T213233Z`](results/rl_anchor_stale4_s1337_w4lr1e5_20261102T213233Z.json) |
 
-[`rl_beta0_recycle4_s1337_w4_20261022T161944Z.json`](results/rl_beta0_recycle4_s1337_w4_20261022T161944Z.json),
-[`rl_kl_recycle4_s1337_w4_20261022T161954Z.json`](results/rl_kl_recycle4_s1337_w4_20261022T161954Z.json),
-[`rl_anchor_recycle4_s1337_w4_20261022T171645Z.json`](results/rl_anchor_recycle4_s1337_w4_20261022T171645Z.json).
+**What the probes indicate (single seed; for scale, the binomial standard error is
+~2.9 points on 300 GSM8K problems and ~1.7 points on the 900-example retention mean):**
 
-**Reading.** At TRL's default learning rate (1e-6) the policy does not move in 300
-steps even when rollouts are recycled four times: KL to the start policy is below
-0.01 and the weights drift by a few parts in 10⁵ in every arm, so there is nothing for
-either drift control to control, and the 2.7-point GSM8K spread is within the noise of
-a 300-problem evaluation. The one number that *is* measured cleanly is cost: the
-reference-model forward that the KL penalty needs adds a third to each step; the
-anchor adds 7 ms. The pre-registered honest verdict for this regime is "low need":
-the anchor's case rests on regimes that drift (higher LR, stale or long off-policy
-runs, zero-RL fine-tuning), and those arms did not complete. No retention claim is
-made for RL from this probe.
+1. **At LR 1e-6 (TRL's default) the policy does not move.** KL to the start policy stays
+   below 0.01, and weights drift by a few parts in 10⁵. There is nothing for either drift
+   control to control.
+2. **At LR 1e-5 the policy drifts, but nothing forgets.** KL to the start policy rises to
+   0.32–0.58 and GSM8K rises 13–25 points. Retention moves by at most +0.9 points in any
+   arm, inside its noise. Large movement in function space does not cost retention on
+   this suite in 300 steps.
+3. **Against the pre-registered rule, the anchor does not earn its keep in either
+   regime, because there is nothing to earn.** The rule asks the anchor to (i) match the
+   best KL arm's retention within noise at no reward cost, and (ii) beat β = 0 on
+   retention. (i) holds in both regimes. (ii) cannot hold, because β = 0 loses no
+   retention to beat. The pre-registered "low need" clause assumed a regime with no drift.
+   Here KL drift is large but retention loss is absent, and the honest reading is the
+   same: **low need at this scale and horizon.** This holds for one anchor strength
+   (s = 0.0025, carried over from 10.65M and never re-located; at LR 1e-5 it allows
+   ~10× more displacement than at 1e-6 — Amendment 2).
+4. **On the KL axis alone, stale:4 is the one regime where both controls bite.** β = 0
+   reaches KL 0.577, the KL penalty 0.322 (−44%) and the anchor 0.428 (−26%), at GSM8K
+   within noise of each other. In recycle:4 neither control lowers KL (0.337 / 0.356 /
+   0.372). This is a single-seed hint about where a drift control could matter, not a
+   retention result.
+5. **The cost comparison in the first version of this section was confounded.** It
+   reported that the KL penalty's reference forward "adds 33% to each step" (10.9 s vs
+   7.3 s). Those two arms ran on different GPU types (A100-80 vs A100-40). On matched
+   hardware at LR 1e-5 (recycle:4, all three on A100-80), the KL arm's step is 8.54 s
+   against β = 0's 7.36 s (+1.2 s). But the anchor arm is also +1.0 s (8.39 s), although its
+   callback costs 6 ms. Mean step time follows completion length, which differs by arm,
+   so a single seed cannot separate the reference forward's cost from that variation.
+   What *is* measured directly is the anchor callback itself: 6–7 ms per step.
+
+No retention claim for RL is made from these probes. The Tier B confirmation (3 seeds)
+would go to stale:4 if anywhere, and would need a retention suite that actually
+degrades in some arm.
 
 ## What this does NOT establish
 

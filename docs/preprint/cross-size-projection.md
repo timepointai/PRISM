@@ -22,19 +22,25 @@ width through PCA of the hidden activations, and attention through the per-head
 QK and OV circuit products — the gauge-invariant objects — re-factored at the
 student's head dimension by a rank-truncated SVD. The projected matrices are
 then used only for their singular directions, which EigenTransfer blends into
-the fresh student. We evaluate on four pre-registered reductions (width + depth,
-head count, head dimension — where learned cross-architecture operators fail —
-and GPT-2 124M into a 10.65M byte-level model) against scratch, Weight
-Selection, FRONT's frequency-domain operator and mimetic initialization, with
-steps-to-target, token-equivalent multipliers and subspace-overlap traces.
-At 10.65M parameters on byte-level web text (3 seeds): projecting a 12-head
-teacher onto a 6-head student keeps the full same-size effect (3.7× to the
-scratch baseline's best loss, −0.11 nats at the end), and halving the head
-dimension gives 1.28× in every seed — the cell where the learned CrossGMN
-operator reports 0.74×. Projecting across width (768 → 384) or from GPT-2 124M
-buys an early head start that is gone by the horizon (1.0×); FRONT's truncated
-GPT-2 weights trail scratch by 0.59 nats. The pre-registered width criterion
-(≥ 1.5×) therefore fails and the head criteria pass.
+the fresh student. We evaluate four pre-registered cells against scratch and
+against our re-implementations of Weight Selection, FRONT's frequency-domain
+operator and mimetic initialization,
+with steps-to-target, token-equivalent multipliers and subspace-overlap traces.
+The cells are width + depth halving, width-only halving (which also halves the
+head dimension, where learned cross-architecture operators fail), a head
+re-partition at identical shapes, and GPT-2 124M into a 10.65M byte-level model.
+At 10.65M parameters on byte-level web text (3 seeds), halving width alone
+(6L/384 → 6L/192) gives 1.28× to the scratch baseline's best loss in every seed.
+That is the cell where the learned CrossGMN operator reports 0.74×. Halving width
+and depth together (12L/768 → 6L/384) buys an early head start that is gone by the
+horizon (1.0×). Index-space Weight Selection (our re-implementation) beats the projection in both
+size-changing cells: 4.0× on width + depth and 8.2× on width only. Projecting
+from GPT-2 124M does nothing, and FRONT's truncated GPT-2 weights (our
+re-implementation) trail scratch by
+0.59 nats. The head re-partition cell keeps the same-size effect (3.7×), but it
+changes no parameter shape, so it is not a size change. The pre-registered
+criterion (≥ 1.5× on the width + depth cell, > 1× on the width-only cell)
+therefore fails on the first and passes on the second.
 
 ## 1. Introduction
 
@@ -58,7 +64,7 @@ GPT-2 weights trail scratch by 0.59 nats. The pre-registered width criterion
   the head-dimension case where the learned operator fails; (iii) the
   same-rig comparison against index-space transfer (Weight Selection, FRONT)
   and analytic init (mimetic), none of which had been run against an SVD-space
-  method. The headline number is the head-count cell: 3.7× (2.9–3.9) against scratch, and the width cell is a reported null.
+  method. The headline number is the width-only cell: 1.28× (1.24–1.34) against scratch, 3/3, with directions only and no weights copied. Weight Selection (our re-implementation) beats it there (8.2×) and in the width + depth cell (4.0×, where the projection is a null). As pre-registered, the claim is therefore "a basis-level operator that does not match index-space transfer at this scale", not "beats".
 
 ## 2. Method
 
@@ -111,9 +117,11 @@ the committed non-μP recipe so it can be read against the same-size reference.
 
 Rig: nanoGPT, byte-level FineWeb-Edu slice (4.5M tokens), 3 seeds, dense eval,
 matched method/baseline schedules (LR 1e-3, warmup 100, 1,500 steps), the
-committed probe of RESULTS §11. Cases: (1) 12L/768/12h → 6L/384/6h;
-(2) 6L/384/12h → 6L/384/6h; (3) 6L/384/6h → 6L/192/6h (head-dimension reduction);
-(4) GPT-2 124M → 6L/384/6h, internal matrices only. Baselines: scratch (in-run),
+committed probe of RESULTS §11. Cases: (1) 12L/768/12h → 6L/384/6h (width and
+depth halve together); (2) 6L/384/12h → 6L/384/6h (identical parameter shapes; only the
+head partition changes, so this is same-size transfer); (3) 6L/384/6h → 6L/192/6h
+(width only; the head dimension halves with it); (4) GPT-2 124M → 6L/384/6h, internal
+matrices only. Baselines: scratch (in-run),
 Weight Selection, FRONT (operator only, r = 1.0), mimetic; upper reference:
 same-size dirs_only (3.3×, RESULTS §11). Metrics: steps-to-target
 (`prism_score`), end-of-training gap, token-equivalent multiplier against a
@@ -126,11 +134,13 @@ directions, donor compute (6·N·D).
 |---|---|---|---|---|---|
 | 1 | xsize (pca), 12L/768/12h → 6L/384/6h | 1.0× (1/3) | 1.4924 vs 1.4892 | 2.25 vs 2.55 | `results/dirs_only_20261022T035754Z.json` |
 | 1 | xsize (procrustes) | prepared, not run | | | |
-| 1 | weight selection | running | | | |
+| 1 | weight selection (our re-implementation) | **4.0× (3.2–4.7; 3/3)** | **1.4026 vs 1.4892** | 1.73 vs 2.55 | `results/init_state_20261022T170647Z.json` |
 | 1 | FRONT | prepared | | | |
 | 1 | mimetic | prepared | | | |
-| 2 | xsize (pca), heads 12 → 6 at width 384 | **3.7× (2.9–3.9; 3/3)** | **1.3827 vs 1.4892** | 1.78 vs 2.55 | `results/dirs_only_20261022T040349Z.json` |
-| 3 | xsize (pca), head-dim 64 → 32 (6L/384/6h → 6L/192/6h) | **1.28× (1.24–1.34; 3/3)** | 1.5855 vs 1.6384 | 2.52 vs 2.60 | `results/dirs_only_20261022T040448Z.json` |
+| 2 | xsize (pca), head partition 12 → 6 at identical shapes (same-size transfer) | 3.7× (2.9–3.9; 3/3) | 1.3827 vs 1.4892 | 1.78 vs 2.55 | `results/dirs_only_20261022T040349Z.json` |
+| 2 | weight selection (identical shapes: near-copy of the trained teacher; degenerate upper bound) | 49× (49.0–49.7; 3/3) | 1.3679 vs 1.4892 | 1.45 vs 2.55 | `results/init_state_20261102T214129Z.json` |
+| 3 | xsize (pca), width only 384 → 192 (head dim 64 → 32 with it) | **1.28× (1.24–1.34; 3/3)** | 1.5855 vs 1.6384 | 2.52 vs 2.60 | `results/dirs_only_20261022T040448Z.json` |
+| 3 | weight selection (our re-implementation) | **8.2× (7.5–8.3; 3/3)** | **1.4323 vs 1.6384** | 1.91 vs 2.60 | `results/init_state_20261102T214752Z.json` |
 | 4 | xsize (pca, GPT-2 124M → bytes, internal matrices) | 1.0× (1/3) | 1.4900 vs 1.4892 | 2.57 vs 2.55 | `results/dirs_only_20261022T043832Z.json` |
 | 4 | FRONT (GPT-2, r = 1.0) | never reaches scratch-best | 2.078 vs 1.4892 | 2.64 vs 2.55 | `results/init_state_20261022T041102Z.json` |
 | ref | same-size dirs_only | 3.3× (2.9–3.9) | 1.3794 vs 1.4892 | — | `results/dirs_only_20260727T154359Z.json` |
@@ -138,8 +148,9 @@ directions, donor compute (6·N·D).
 Subspace-overlap traces (top-16, mean cos², chance ≈ 0.03): at step 0 the
 students carry the projected directions in every case (0.58–0.93); in case 2 the
 FFN-up overlap rises during training (0.65 → 0.81), in cases 1 and 4 it decays to
-0.16 and 0.07. The transplant is faithful; the width map is not useful at this
-scale.
+0.16 and 0.07. The transplant is faithful. Whether the width + depth failure comes
+from depth, from the combination, or from the wider teacher is not separated by
+these cells (the isolating cells 6L/768 → 6L/384 and 12L/384 → 6L/384 were not run).
 
 Pre-registered success: ≥1.5× on case 1 and >1× on case 3, in 3/3 seeds.
 

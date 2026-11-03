@@ -129,3 +129,17 @@ contexts, 645 MB, standalone val 2.3235 bits/byte (context 4; the context-6 laun
 1.906 one above). `token_equivalent` correctly refused on the 3-point smoke curves ("need at
 least 4 eval points"). Golden check after the harness swap: the legacy Shakespeare prior smoke is
 still identical to `main`.
+
+## Run 2 outcome (2026-11-02)
+
+The build check above scored the full-bytes prior at 1.9062 bits/byte, within 1e-4 of
+Act 1. The harness, however, counts the prior on the **student's training slot** (71M
+symbols), and on that slot `prior_info.meta.val_bits_per_symbol` is **1.9271**: 0.0210 bpb
+from Act 1's 1.9061, outside the kill condition's 0.02 bpb by 0.0010. Run 2
+([`results/prior_20261102T214708Z.json`](../../results/prior_20261102T214708Z.json), 3
+seeds) therefore fails its own fidelity check and is reported as exploratory (RESULTS
+§21). The decision rule is also not evaluable as written: every fused arm starts at
+~1.40 nats, below the baseline's best. A pre-registered rerun would need the in-harness
+prior within 0.02 bpb of Act 1 (for example, counted on the full bytes as the build
+check was; the threshold is not relaxed), plus a target the fused arms do not already
+sit below. It is listed for the user, not run.

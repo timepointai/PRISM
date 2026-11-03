@@ -42,7 +42,7 @@ the difference stated.
 |---|---|---|---|
 | plain PyTorch | `optimizer.register_step_post_hook` | exact | `examples/anchor_pytorch.py` |
 | HF `Trainer` / TRL (`SFTTrainer`, `DPOTrainer`, `GRPOTrainer`) | `TrainerCallback.on_optimizer_step` (fires after `optimizer.step()`, before `zero_grad`; receives `model`, `optimizer`) — [transformers callbacks](https://huggingface.co/docs/transformers/main/en/main_classes/callback); TRL trainers accept `callbacks=[...]` ([TRL GRPOTrainer](https://huggingface.co/docs/trl/main/en/grpo_trainer)) | exact | `src/prism_rl_anchor.AnchorCallback`, `examples/anchor_trl_grpo.py` |
-| prime-rl | no callback or hook mechanism in the trainer (its `docs/algorithms.md` documents custom losses via `import_path`, advantage/filter plugins, and no optimizer hook); `optimizer.step()` is a single call in `src/prime_rl/trainer/rl/train.py` | exact, via a one-line patch registering the post-step hook on the optimizer `setup_optimizer` returns (works under FSDP: the hook sees each rank's shards and W₀ is captured per shard) | `examples/prime_rl_anchor.py` + `examples/prime_rl_anchor.patch` (not a fork) |
+| prime-rl | no callback or hook mechanism in the trainer (its `docs/algorithms.md` documents custom losses via `import_path`, advantage/filter plugins, and no optimizer hook); `optimizer.step()` is a single call in `src/prime_rl/trainer/rl/train.py` | exact in form, via a two-line manual edit registering the post-step hook on the optimizer `setup_optimizer` returns; **not run inside prime-rl, FSDP behaviour unverified** | `examples/prime_rl_anchor.py` + `examples/prime_rl_anchor_EDIT.md` (a manual-edit note, not a fork or a patch) |
 | Tinker (Thinking Machines) | `forward_backward` / `optim_step` / `sample` / `save_state` primitives and custom loss functions ([docs](https://tinker-docs.thinkingmachines.ai/)); LoRA is the headline training mode; **no documented read/write of adapter weights between steps** | **not expressible exactly.** Closest: LoRA decoupled weight decay on B with `wd = s/lr` *if* `AdamParams.weight_decay` can be scoped to B — the docs do not say it can; applied to A and B it is a different operator (it also shrinks A). A logit-space KL to the base is NOT equivalent (function-space, needs a reference forward). | unverified; recipe written as a question to the platform |
 | Together Post-Training | `sample_batch` / `forward_backward` / `optim_step` / `weights_sync`; custom losses "computed locally and sent to the Trainer" from logprobs; adapters on a frozen base ([docs](https://docs.together.ai/docs/post-training)); **no documented raw-parameter access** | same as Tinker: not exact; closest is B-only decay with `wd = s/lr` if scoping is possible; otherwise a logit-space proximal term, which is a different (function-space) regulariser | unverified |
 | verl / OpenRLHF | not read this session | — | not claimed |
@@ -87,10 +87,15 @@ from prime_rl_anchor import attach_anchor
 attach_anchor(optimizer, model, strength=float(os.environ.get("PRISM_ANCHOR_S", "0")))
 ```
 
-`examples/prime_rl_anchor.patch` is the two-line diff against
-`src/prime_rl/trainer/rl/train.py` (read 2026-10-21; re-check the line before
-applying). With FSDP each rank captures its own shards of W₀ at attach time
-and lerps them after each step, which is the same operation on the full tensor.
+`examples/prime_rl_anchor_EDIT.md` describes the two-line manual edit to
+`src/prime_rl/trainer/rl/train.py` (read 2026-10-21, no commit pinned; re-check
+the call before editing). It is not a patch file: the earlier
+`prime_rl_anchor.patch` had no real hunk header and could not be applied.
+**FSDP behaviour is unverified.** If each rank exposes its own shards as
+≥2-D tensors, capturing W₀ per shard and lerping per shard is the same
+operation as on the full tensor; but `attach_anchor` skips 1-D parameters, so
+under a wrapper that flattens parameters (FSDP1 with `use_orig_params=False`)
+it would anchor nothing. Check the `[prism anchor] attached to N tensors` line.
 
 ### LoRA anywhere — the exact adapter form
 

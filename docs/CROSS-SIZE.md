@@ -77,9 +77,9 @@ must be against it.
 
 | case | teacher | student | what it isolates |
 |---|---|---|---|
-| 1 | 12L / 768 / 12 heads (hd 64), trained 2,000 steps on modern web | 6L / 384 / 6 heads (hd 64) | width + depth reduction at fixed head dim |
-| 2 | 6L / 384 / 12 heads (hd 32) | 6L / 384 / 6 heads (hd 64) | head-count reduction at fixed width |
-| 3 | 6L / 384 / 6 heads (hd 64) — Run R's teacher | 6L / 192 / 6 heads (hd 32) | head-dimension reduction — CrossGMN's failing case (0.74×, [arXiv 2610.01649](https://arxiv.org/abs/2610.01649), reported) |
+| 1 | 12L / 768 / 12 heads (hd 64), trained 2,000 steps on modern web | 6L / 384 / 6 heads (hd 64) | width + depth reduction together, at fixed head dim |
+| 2 | 6L / 384 / 12 heads (hd 32) | 6L / 384 / 6 heads (hd 64) | head-count change at fixed width. *Note (2026-11-02): every parameter matrix has the same shape in teacher and student, so this is same-size transfer under a different head partition, not a size reduction.* |
+| 3 | 6L / 384 / 6 heads (hd 64) — Run R's teacher | 6L / 192 / 6 heads (hd 32) | head-dimension reduction — CrossGMN's failing case (0.74×, [arXiv 2610.01649](https://arxiv.org/abs/2610.01649), reported). *Note (2026-11-02): d_model halves too (384 → 192) at fixed depth and head count, so this is also the width-only cell.* |
 | 4 | GPT-2 124M (12L / 768 / 12, BPE) — public weights | 6L / 384 / 6 (bytes) | a real large teacher; internal matrices only (vocabularies differ) |
 
 **Baselines, every case:** scratch (the in-run baseline, same seed and schedule);
@@ -112,34 +112,45 @@ and the teacher's compute stated (6·N·D; for GPT-2, "donor = public weights").
 - Tier A: cases 1–4 at probe scale (~$11 total, table in W3-NOTES). Tier B
   (prepared, not launched): Pythia-1B/2.8B → 160M/410M on the W2b NeoX harness.
 
-## Results (2026-10-22; RESULTS §20; artifacts in `results/`)
+## Results (2026-10-22, completed 2026-11-02; RESULTS §20; artifacts in `results/`)
 
-| case | teacher → student | steps-to-target vs scratch (median, range, seeds reached) | best loss (method vs scratch) | step-100 loss | artifact |
-|---|---|---|---|---|---|
-| 1 width | 12L/768/12h → 6L/384/6h | **1.0× (1/3 reached)** | 1.4924 vs 1.4892 | 2.25 vs 2.55 | `dirs_only_20261022T035754Z` |
-| 2 heads | 6L/384/12h → 6L/384/6h | **3.7× (2.9–3.9), 3/3** | 1.3827 vs 1.4892 | 1.78 vs 2.55 | `dirs_only_20261022T040349Z` |
-| 3 head-dim | 6L/384/6h → 6L/192/6h | **1.28× (1.24–1.34), 3/3** | 1.5855 vs 1.6384 | 2.52 vs 2.60 | `dirs_only_20261022T040448Z` |
-| 4 GPT-2 | GPT-2 124M → 6L/384/6h (internal matrices) | **1.0× (1/3)** | 1.4900 vs 1.4892 | 2.57 vs 2.55 | `dirs_only_20261022T043832Z` |
-| 4 FRONT | GPT-2 → same student (3D-DCT truncation, r=1) | never | 2.078 vs 1.4892 | 2.64 vs 2.55 | `init_state_20261022T041102Z` |
-| ref | same-size dirs_only (Run R) | 3.3× (2.9–3.9) | 1.3794 vs 1.4892 | — | `dirs_only_20260727T154359Z` |
+| case | what it changes | teacher → student | steps-to-target vs scratch (median, range, seeds reached) | best loss (method vs scratch) | step-100 loss | artifact |
+|---|---|---|---|---|---|---|
+| 1 | width + depth | 12L/768/12h → 6L/384/6h | **1.0× (1/3 reached)** | 1.4924 vs 1.4892 | 2.25 vs 2.55 | `dirs_only_20261022T035754Z` |
+| 3 | width only (head dim follows) | 6L/384/6h → 6L/192/6h | **1.28× (1.24–1.34), 3/3** | 1.5855 vs 1.6384 | 2.52 vs 2.60 | `dirs_only_20261022T040448Z` |
+| 2 | head partition only, identical shapes | 6L/384/12h → 6L/384/6h | 3.7× (2.9–3.9), 3/3 (the same-size effect) | 1.3827 vs 1.4892 | 1.78 vs 2.55 | `dirs_only_20261022T040349Z` |
+| 4 | GPT-2 → bytes | GPT-2 124M → 6L/384/6h (internal matrices) | **1.0× (1/3)** | 1.4900 vs 1.4892 | 2.57 vs 2.55 | `dirs_only_20261022T043832Z` |
+| 4 FRONT | — | GPT-2 → same student (3D-DCT truncation, r=1, our re-implementation) | never | 2.078 vs 1.4892 | 2.64 vs 2.55 | `init_state_20261022T041102Z` |
+| 1 WS | — | 12L/768/12h → 6L/384/6h, Weight Selection (our re-implementation) | **4.0× (3.2–4.7), 3/3** | 1.4026 vs 1.4892 | 1.73 vs 2.55 | `init_state_20261022T170647Z` |
+| 3 WS | — | 6L/384/6h → 6L/192/6h, Weight Selection (our re-implementation) | **8.2× (7.5–8.3), 3/3** | 1.4323 vs 1.6384 | 1.91 vs 2.60 | `init_state_20261102T214752Z` |
+| 2 WS | — | identical shapes: a near-copy of the trained teacher | 49× (49.0–49.7), 3/3 — degenerate upper bound | 1.3679 vs 1.4892 | 1.45 vs 2.55 | `init_state_20261102T214129Z` |
+| ref | — | same-size dirs_only (Run R) | 3.3× (2.9–3.9) | 1.3794 vs 1.4892 | — | `dirs_only_20260727T154359Z` |
 
-**Verdict against the pre-registration: FAIL on case 1, PASS on case 3.** The
-width projection buys a real early head start (−0.31 nats at step 100, every seed)
-that the student gives back by the horizon; the GPT-2 projection does nothing;
-FRONT's truncated GPT-2 weights are far below scratch. The two cells that transfer
-are the head cells: halving the head count at fixed width recovers the full
-same-size effect (3.7× vs 3.3×; 112% of the reference), and halving the head
-dimension gives 1.28× in every seed — CrossGMN's reported failure cell (0.74×,
-reported by arXiv 2610.01649 at ~210k params, different task).
+**Verdict against the pre-registration: FAIL on case 1, PASS on case 3.** The criterion
+stands. The reading of it was corrected on 2026-11-02:
 
-The overlap traces show the operator imposed the directions in every case
-(step-0 overlap with the projected reference 0.58–0.93 against chance ≈ 0.03) and
-that the student *keeps* them only in the head cases (case 2 FFN-up overlap rises
-from 0.65 to 0.81 during training; cases 1 and 4 decay to 0.16 and 0.07). The
-transplant works; the residual-coordinate map across widths does not carry
-useful geometry at this scale. Weight-Selection baselines for cases 1–3 are
-running; Procrustes and mimetic are prepared. Honest bounds: probe scale, one
-corpus, one calibration slice, uniform depth selection only, no μP arm run yet.
+- The failing cell (case 1) halves **width and depth together**. The cell that halves
+  **width alone** (case 3, d_model 384 → 192 at fixed depth and heads) transfers at
+  1.28× in every seed. So the data does not show "cross-size fails across width". It
+  shows no endpoint gain when width and depth halve together from a 768-wide teacher,
+  and a 1.28× gain when width halves alone. Separating depth from width needs
+  6L/768 → 6L/384 (width only, from the wider teacher) and 12L/384 → 6L/384 (depth
+  only). That is new compute, listed for the user and not run.
+- Case 2 changes no parameter shape (12 × 32 vs 6 × 64 head channels in the same 384
+  columns). Its 3.7× is the same-size effect (Run R: 3.3×) passed through a head
+  re-partition, not evidence about crossing sizes. Weight Selection (our re-implementation) in case 2 copies
+  every trained matrix and starts at 2.08 nats (scratch: 5.65); its 49× is a
+  degenerate upper bound, not a competitor.
+- Our re-implementation of Weight Selection beats the projection in the width + depth cell (4.0× vs 1.0×), so,
+  per the pre-registration, any claim for case 1 narrows to "a basis-level operator
+  that does not match index-space transfer there". Weight Selection also beats it in the width-only cell, by more (8.2× vs 1.28×, ending 0.21 vs 0.05 nats below scratch, 3/3). So in both size-changing cells, index-space copying beats the projection, and the claim narrows to "a basis-level operator that does not match index-space transfer at this scale". The projection transfers directions only and still beats scratch in the width-only cell.
+- The overlap traces show the operator imposed the directions in every case (step-0
+  overlap with the projected reference 0.58–0.93 against chance ≈ 0.03). The student
+  *keeps* them in case 2 (FFN-up overlap 0.65 → 0.81) and loses them in cases 1 and 4
+  (→ 0.16 and 0.07).
+
+Honest bounds: probe scale, one corpus, one calibration slice, uniform depth selection
+only, no μP or Procrustes arm run.
 
 ## Deliverables
 

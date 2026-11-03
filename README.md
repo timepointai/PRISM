@@ -38,8 +38,13 @@ notes under each one).
 
 **The headline, against the field.** Growth-based efficient-pretraining
 methods report reaching the from-scratch baseline sooner, and every one of
-them stops there, at parity (y = 0). PRISM's points are the only ones that
-end *better* than the baseline. Each growth method needs a smaller pretrained
+them stops there, at parity (y = 0). Among the points on this chart, PRISM's are
+the only ones that end *better* than the baseline. That is a property of the
+peers' *reported* figures, not of every transfer method: in our own rig, our
+re-implementation of Weight Selection (index-space copying from a larger
+teacher) ends 0.09 nats (5.8%) below its scratch baseline, and reaches it 4.0×
+sooner, in the 12L/768 → 6L/384 cell (§20; not plotted, because the chart's
+x-axis is enwik8 wall-clock and that run is on modern web). Each growth method needs a smaller pretrained
 checkpoint from the same family; PRISM's teacher cost sits outside its
 percentages exactly as the peers' checkpoint cost sits outside theirs — and
 it amortizes across corpora (aqua: a fingerprint mined on a different corpus
@@ -481,31 +486,32 @@ W  ←  (1 − s)·W  +  s·W₀        # after each step; W₀ = pre-finetune w
 ## Where PRISM sits: the mechanism map
 
 Every one of PRISM's individual operations has published relatives. This is
-literature positioning, not a head-to-head: no external mechanism has been
-run in this rig (except the low-LR frontier), and published numbers come
-from different scales and tasks. What each family moves, what it needs, and
-where PRISM sits:
+mostly literature positioning, not a head-to-head. Published numbers come from
+different scales and tasks. Rows that cite §18–§21 were also run in this rig as
+**our re-implementations** (deviations listed in `src/prism_baselines.py` and the
+W3/W5 notes), at probe scale. What each family moves, what it needs, and where
+PRISM sits:
 
 | mechanism family | what moves / constrains | what it needs | relation to PRISM |
 |---|---|---|---|
 | Classic init (Xavier / He / orthogonal) | variance & isometry at init | nothing | the baseline arm — the gray point in every chart above |
-| [Mimetic init](https://arxiv.org/abs/2305.09828) (Trockman & Kolter '23) | analytic "pretrained-looking" attention products | nothing | drawn structure that works on ViTs; the untested open cell against the §15 refutation of smooth bases |
+| [Mimetic init](https://arxiv.org/abs/2305.09828) (Trockman & Kolter '23) | analytic "pretrained-looking" attention products | nothing | drawn structure that works on ViTs; our re-implementation (char-level values) ends *above* the tuned baseline on modern web (+0.02 nats) and enwik8 (+0.05), 3/3 seeds (§19) |
 | [μP / μTransfer](https://arxiv.org/abs/2203.03466) | hyperparameters across width | a small-model tuning run | orthogonal axis; likely composable, untested |
-| [LiGO](https://arxiv.org/abs/2303.00980) / Net2Net / stacking | weights, via growth maps | a same-family smaller checkpoint | copies content (up to ~50% savings); PRISM moves geometry only, crosses corpora, saves 42–58% at probe scale |
-| Distillation (Hinton '15) | the teacher's function, per step | teacher forward passes during training | continuous teacher cost vs. one amortized extraction |
-| [L2-SP](https://arxiv.org/abs/1802.01483) / [EWC](https://arxiv.org/abs/1612.00796) | pull toward init (uniform / Fisher-weighted) | the init snapshot | the anchor's family; PRISM adds the directional-vs-spectral attribution, the placebo, and the dial's measured bands |
-| [LoRA](https://arxiv.org/abs/2405.09673) (Biderman '24 tradeoff) | rank of the update | nothing | "learns less, forgets less" — same axis, rank constraint vs. pull strength; the weak band claims learn-at-parity at probe scale |
+| [LiGO](https://arxiv.org/abs/2303.00980) / Net2Net / stacking | weights, via growth maps | a same-family smaller checkpoint | copies content (up to ~50% savings); PRISM moves geometry only, crosses corpora, saves 42–58% at probe scale. The large → small relative, Weight Selection (index-space copying, our re-implementation), beats PRISM's cross-size projection in both size-changing cells (4.0×, 8.2×; §20) |
+| Distillation (Hinton '15) | the teacher's function, per step | teacher forward passes during training | continuous teacher cost vs. one amortized extraction. Self-distillation (KL to the frozen base, our re-implementation) beats the weak anchor on both axes on the catalog rig and halves its forgetting on facts at a small seen-recall cost (§18) |
+| [L2-SP](https://arxiv.org/abs/1802.01483) / [EWC](https://arxiv.org/abs/1612.00796) | pull toward init (uniform / Fisher-weighted) | the init snapshot | the anchor's family; PRISM adds the directional-vs-spectral attribution, the placebo, and the dial's measured bands. Our EWC re-implementation blocks injection at all three pre-registered λ on both rigs (§18) |
+| [LoRA](https://arxiv.org/abs/2405.09673) (Biderman '24 tradeoff) | rank of the update | nothing | "learns less, forgets less" — same axis, rank constraint vs. pull strength; the weak band claims learn-at-parity at probe scale. Our re-implementation: r=4 blocks injection; r=16 injects but forgets more than plain finetuning (§18) |
 | [Elastic Reset](https://arxiv.org/abs/2312.07551) / WiSE-FT / task vectors | weight-space merges toward the base | base weights | periodic or post-hoc where the anchor is continuous; the zero-forward alternative to KL-to-reference is the specced GRPO test |
 | ROME / MEMIT (+ [Hase '23](https://arxiv.org/abs/2301.04213)) | closed-form fact writes | a localization pass | editing vs. training; Hase's storage ≠ edit-site finding matches the facts-store-anywhere result (§12) |
 | [kNN-LM](https://arxiv.org/abs/1911.00172) / ∞-gram | inference-time statistics | a datastore at inference | PRISM fixes the prior at training (residual learning) and compounds it with the geometric init below the prior's floor |
 | [WARP](https://arxiv.org/abs/2406.16768) (Ramé et al. '24) | EMA policy as the KL anchor; SLERP merges; end interpolation toward init | a reference forward pass per step (KL) | the anchor's EMA target and WARP's LITI are implemented as *lerp* variants with no KL (`prism_rl_anchor.py`); head-to-head is the W4 pilot |
 | [Rotation-Preserving SFT](https://arxiv.org/html/2605.10973v1) (May '26) | soft penalty on the pretrained top-k singular block of each matrix | SVD of W₀ once | the closest published relative of the anchor; a loss, so Adam-coupled; our re-implementation is the `rpsft` arm of §18 |
-| [SST — Subspace Tuning](https://arxiv.org/abs/2610.22293) (Oct '26) | projects each applied update off W_ref's top-k singular subspace, refreshed every K steps | an SVD per matrix per refresh | hard projection to the anchor's soft pull; blocks fact/task injection like the anchor's strong band (§18: 3% recall at the paper default) |
-| [The COUNT](https://arxiv.org/abs/2610.20456) (Oct '26) | parameter-free n-gram embedding from count statistics, added at the input | an offline count table in host memory | input-side statistics vs PRISM's logit-side prior; COUNT reports logit fusion ≈ inference-only at 190M — the W5 control re-tests that on time-to-target (§21) |
+| [SST — Subspace Tuning](https://arxiv.org/abs/2610.22293) (Oct '26) | projects each applied update off W_ref's top-k singular subspace, refreshed every K steps | an SVD per matrix per refresh | hard projection to the anchor's soft pull; our re-implementation blocks fact/task injection at least as hard as the anchor's strong band on both rigs (§18: 2–3% seen recall at the paper default) |
+| [The COUNT](https://arxiv.org/abs/2610.20456) (Oct '26) | parameter-free n-gram embedding from count statistics, added at the input | an offline count table in host memory | input-side statistics vs PRISM's logit-side prior; COUNT reports logit fusion ≈ inference-only at 190M. Our re-implementation of its embedding ends 0.07–0.085 nats above `dirs_only` on enwik8, and the W5 control run that re-tests the logit-fusion claim is exploratory (it failed its prior-fidelity check; §21) |
 | [FRONT / SPA-FRONT](https://arxiv.org/abs/2603.07523) (learngene, '26) | low-frequency 3D-DCT coefficients of trained weights, truncated or padded to a new size | a trained source model; permutation alignment (SPA) | index-space transfer vs PRISM's SVD-space projection; our FRONT re-implementation from GPT-2 sits far below scratch in the byte-level cell (§20) |
 | [Residual-over-n-gram LMs](https://arxiv.org/pdf/2210.14431) (Li et al. '22) | the network learns the residual over a fixed n-gram prior fused at the logits | an n-gram model | the canonical form of Prior-Fused PRISM's logit fusion; PRISM's addition is the geometric init stacked on top, scored by time-to-target |
 | [Spectral Warmup null](https://arxiv.org/abs/2604.22778) (Apr '26) | correct spectra with random directions | a spectrum | trained 42.7% worse than standard init (reported); independently matches PRISM's spectrum-only null (§11) |
-| [CrossGMN](https://arxiv.org/abs/2610.01649) (Oct '26) | a learned cross-architecture init operator | a model zoo (≤210k-param nets) | reports 0.74× on attention-dim and 0.86× on head-count reduction; PRISM's analytic projection gets 1.28× and 3.7× on the analogous cells at 10.65M (§20) |
+| [CrossGMN](https://arxiv.org/abs/2610.01649) (Oct '26) | a learned cross-architecture init operator | a model zoo (≤210k-param nets) | reports 0.74× on attention-dim and 0.86× on head-count reduction; PRISM's analytic projection gets 1.28× on its width-only cell at 10.65M, which halves the head dimension with d_model, so the analogy is approximate (§20). Our "heads 12→6" cell changes no parameter shape, so its 3.7× is not comparable with a head-count *reduction* |
 | [108-statistic init](https://openreview.net/forum?id=DzLzZYD84Y) (ICLR'27 sub.) | layerwise scalar statistics imposed on a random init | a reference model's statistics | the W2a `statmatch` control imposes 70 teacher statistics with no directions; below the tuned baseline on both corpora, 3/3 seeds (§19) |
 
 What this repo adds is the artifact-backed decomposition — which half of the
@@ -597,7 +603,11 @@ a standalone, self-contained page served from GitHub Pages; source:
 - **The peer comparison is positioning, not a head-to-head.** The hollow
   points in the headline chart are stacking, bert2BERT, and LiGO's own
   reported figures at BERT/GPT-2 scale; none has been run in this rig, nor
-  PRISM in theirs. The same holds for every relative in the mechanism map
+  PRISM in theirs. The one weight-copying method we *did* run in-rig, our
+  re-implementation of Weight Selection, does not stop at parity: it ends 5.8%
+  below scratch and beats PRISM's cross-size projection in the width + depth
+  cell (§20). The "only points above parity" reading of the headline chart
+  holds for the plotted, reported figures only. The same holds for every relative in the mechanism map
   except the low-LR frontier. Classical-compressor lines (xz) are published
   whole-file figures — a different protocol, shown for orientation only.
 - **Energy is proxied by wall-clock on one GPU class** (no power metering),
@@ -621,31 +631,62 @@ a standalone, self-contained page served from GitHub Pages; source:
   the dial's shape between 0.0025 and 0.01 unmapped.
 - **Finetune-retention shows old-domain retention**, not new-domain overfit
   prevention, and trades a little late adaptation for it.
-- **The dial does not own the retention↔injection frontier (2026-10-22, catalog
-  rig, 3 seeds, pre-registered).** A self-distillation baseline (KL to the frozen
-  base, α = 1) beats the weak anchor on *both* axes in 3 of 3 seeds — 7.6× less
-  forgetting than plain at 98% task recall vs the anchor's 3.1× at 93%
-  ([`RESULTS.md`](RESULTS.md) §18). It pays one base forward pass per step, the cost
-  the anchor avoids; the anchor remains the cheapest *weight-space* control, and
-  hard-projection methods (SST, EWC, LoRA r=4) block injection like its strong band.
-  The facts-rig replication is in progress.
-- **Cross-size projection fails across width (pre-registered criterion, §20).**
-  Projecting a 768-wide teacher onto a 384-wide student, or GPT-2 124M onto the
-  byte-level student, gives an early head start and no endpoint gain (1.0×). Only
-  the head cells transfer: head count 12→6 (3.7×) and head dimension 64→32 (1.28×).
-- **Under Muon the init advantage shrinks from 3.3× to 1.4× (§19).**
-  Against a tuned AdamW baseline (LR 2e-3, warmup 300) `dirs_only` keeps 3.3×
-  (modern web) and 3.1× (enwik8); with Muon on both arms the ratio is 1.4× / 1.5×,
-  above the pre-registered 1.2× line but a different claim. The imprint is worth
-  3.3× vs 2.45× (directions-only).
-- **Prior fusion is half re-earned (§21, 2 of 3 seeds).** The W5 control run was
-  voided by its own kill rule (a gather off-by-one in the sparse prior); the fixed
-  repeat shows, on enwik8 with an exact context-6 prior, that fusing the prior at
-  train time ends 0.11 nats below fusing it at inference only (whose curve *rises*
-  during training), and that directions + prior reach `dirs_only`'s best in 60–80
-  steps instead of 1,480 but end only 0.016 nats below the prior alone. The prior
-  sets the floor; the directions set the speed to it. The 30× of the Shakespeare
+- **The dial does not own the retention↔injection frontier on the catalog rig;
+  on the facts rig nothing beats it (§18, 3 seeds each, pre-registered).** On
+  catalog, our re-implementation of self-distillation (KL to the frozen base, α = 1)
+  beats the weak anchor on *both* axes in 3 of 3 seeds: 7.6× less forgetting than
+  plain at 98% task recall, against the anchor's 3.1× at 93%. On facts it halves the
+  anchor's forgetting in every seed but stores less in two of three (seen recall
+  96/100/88% vs 98/95/96%), so it does not beat the anchor there. The pre-registered
+  consequence (drop "the dial traces the frontier" if a competitor wins on *both*
+  rigs) therefore does not fire, but the dial is clearly not the only good point.
+  Self-distillation pays one base forward pass per step, the cost the anchor avoids.
+  The anchor remains the cheapest *weight-space* control. Our re-implementations of
+  the hard-projection methods (SST, EWC, LoRA r=4) block injection on both rigs.
+  Held-out paraphrase recall is high-variance on the facts rig, and the weak anchor
+  does not raise it over plain (median 25% vs 26%).
+- **Cross-size projection: halving width and depth together gives no endpoint gain
+  (pre-registered criterion fails, §20).** Projecting a 12L/768 teacher onto a
+  6L/384 student, or GPT-2 124M onto the byte-level student, gives an early head
+  start and no endpoint gain (1.0×). Halving width alone (6L/384 → 6L/192, head
+  dimension halving with it) gives 1.28× in 3 of 3 seeds. **Our re-implementation
+  of Weight Selection (index-space weight copying) beats the projection in both
+  size-changing cells** (4.0× and 8.2×), so the projection is not the best way to
+  use a larger teacher at this scale. The "heads 12→6"
+  cell (3.7×) changes no parameter shape, so it is the same-size effect under a
+  different head partition, not a size change. Whether the width + depth failure is
+  about depth, the combination or the wider teacher is untested (the isolating cells
+  need new compute).
+- **Under Muon the init advantage shrinks to 1.4× (§19).** Against the strongest
+  AdamW control (our re-implementation of small-QK init on modern web, 0.007 nats
+  better than the tuned baseline; the tuned baseline itself on enwik8), `dirs_only`
+  keeps 3.2× and 3.1×. With Muon on both arms the ratio is 1.4× / 1.5×, above the
+  pre-registered 1.2× line but a different claim. The imprint is worth 3.3× vs 2.45×
+  (directions-only), and that imprint is the DCT-8 curve with a rising tail, not the
+  teacher's literal spectrum (W7).
+- **Prior fusion is not re-earned by a pre-registered test (§21).** The first W5
+  control run was voided by its own kill rule (a gather off-by-one in the sparse
+  prior). The fixed repeat (3 seeds) fails its own prior-fidelity check by 0.001 bpb
+  (1.9271 vs 1.9061 ± 0.02), so it is exploratory. Its decision rule cannot be
+  evaluated as written either: every fused arm starts below the baseline's best. As
+  exploratory readouts, on enwik8 with an exact context-6 prior, train-time fusion
+  ends 0.10–0.15 nats below inference-only fusion (whose curve *rises* during
+  training) in 3 of 3 seeds. Directions + prior reach `dirs_only`'s best in 60–130
+  steps instead of ~1,480, but end only 0.016–0.018 nats below the prior alone. The
+  prior sets the floor; the directions set the speed to it. The 30× of the Shakespeare
   probe is a speed-to-a-low-target number, not an endpoint multiplier.
+- **The RL anchor has nothing to fix in the regimes probed (§23, single seed).** At
+  TRL's default LR (1e-6) GRPO does not move Qwen2.5-0.5B in 300 steps. At 1e-5 it
+  drifts (KL to the start policy 0.32–0.58) without losing retention in any arm, so
+  neither the anchor nor the KL penalty can show a retention benefit. The anchor's
+  callback costs 6–7 ms per step. The earlier "reference forward adds 33% to each
+  step" was a GPU-type confound and is withdrawn.
+- **The Spectral Imprint is not a faithful copy of the teacher's spectrum
+  ([`docs/alpha/W7-NOTES.md`](docs/alpha/W7-NOTES.md), reconstruction only).** The
+  8-coefficient DCT is pinned near softplus(0) at the end of the curve, so after
+  renormalisation the smallest singular values are imprinted at or near the largest in
+  three of five groups. Every imprint result (Finding 5, §19's 3.3× vs 2.45×) measures
+  this curve. Whether a faithful spectrum helps more or less is untested.
 
 ## Reproduce it
 
@@ -691,19 +732,24 @@ The ranked, run-command-ready list lives in
    < 1.2×) is one command away and needs the user's Tier B authorization
    ([`docs/ALPHA-MOVES-STATUS.md`](docs/ALPHA-MOVES-STATUS.md)). The
    same-codebase tuned baseline and the Muon arm now exist at probe scale (§19).
-2. **Cross-size: the head cells** — width projection failed its pre-registered
-   bar (§20); head-count and head-dimension projection passed. The next cell is
-   a μP-native teacher/student pair and per-layer alignment for width, and
-   Pythia-1B → 160M/410M on the NeoX harness (prepared, Tier B).
+2. **Cross-size: separate depth from width** — the width + depth cell failed its
+   pre-registered bar and the width-only cell passed (§20). The isolating cells
+   (6L/768 → 6L/384 width-only from the wider teacher; 12L/384 → 6L/384 depth-only)
+   come first, then a μP-native pair and Pythia-1B → 160M/410M on the NeoX harness
+   (prepared, Tier B). All need the user's authorization.
 3. **The frontier against self-distillation** — self-distillation dominated the
-   weak anchor on the catalog rig (§18); the composition (anchor + self-distillation,
-   or the anisotropic anchor + self-distillation) and the facts-rig replication
-   decide whether the dial survives as a *cheap* point or as a point at all.
-4. **The RL anchor where RL drifts** — the W4 pilot (TRL GRPO, Qwen2.5-0.5B) is
-   running: default-LR arms do not drift at all in 300 steps; the 10× LR wave is
-   the first regime with something to control (§23 when it lands).
-5. **Prior fusion, re-earned or retired** — the voided W5 run is repeating; the
-   decision rule is train-time fusion vs inference-only fusion in 3/3 seeds (§21).
+   weak anchor on the catalog rig and halved its forgetting on facts at a small
+   seen-recall cost (§18). The composition (anchor + self-distillation, or the
+   anisotropic anchor + self-distillation) decides whether the dial survives as a
+   *cheap* point or as a point at all.
+4. **The RL anchor where RL forgets** — the W4 probes (TRL GRPO, Qwen2.5-0.5B) found
+   drift without forgetting (§23). A Tier B confirmation only makes sense with a
+   retention suite that degrades in some arm, and with the anchor strength re-located
+   for the RL learning rate; stale:4 is the one regime where both controls lowered KL.
+5. **Prior fusion, re-earned or retired** — run 2 is exploratory (prior-fidelity
+   check failed by 0.001 bpb; decision rule not evaluable because the fused arms start
+   below the target). A pre-registered rerun needs a prior within 0.02 bpb of Act 1 and
+   a target the fused arms do not already sit below (§21).
 6. **A truly far modality** and **frontier bookkeeping** (the sub-600-step low
    end, the wheel 2×2 mirror cell, power metering) — unchanged from before.
 

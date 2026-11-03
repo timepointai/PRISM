@@ -1,0 +1,91 @@
+{
+  "schema": "prism-pythia/1",
+  "partial": false,
+  "run_key": "pythia_70m_baseline_i20_e10_dry",
+  "provenance": {
+    "created_utc": "2026-11-02T22:53:25.779958+00:00",
+    "git_commit": "5419d2de7053805a51af2d86595f3ae799a9b4b1",
+    "git_dirty": false,
+    "python": "3.11.12",
+    "argv": [
+      "--data_dir=/work/pile",
+      "--size=70m",
+      "--arm=baseline",
+      "--iters=20",
+      "--eval_every=10",
+      "--eval_seqs=64",
+      "--tag=dry",
+      "--micro_bs=4",
+      "--eval_micro=4"
+    ],
+    "torch": "2.14.1+cu130",
+    "device": "NVIDIA L4"
+  },
+  "config": {
+    "size": "70m",
+    "arm": "baseline",
+    "align": 0.75,
+    "imprint": true,
+    "iters": 20,
+    "seqs_per_iter": 1024,
+    "tokens_per_iter": 2097152,
+    "micro_bs": 4,
+    "eval_every": 10,
+    "eval_seqs": 64,
+    "holdout_first_seq": 143360000,
+    "holdout_iteration": 140000,
+    "schedule": {
+      "lr": 0.001,
+      "min_lr": 0.0001,
+      "warmup_iters": 1430,
+      "decay_iters": 143000,
+      "betas": [
+        0.9,
+        0.95
+      ],
+      "eps": 1e-08,
+      "weight_decay": 0.1,
+      "grad_clip": 1.0,
+      "note": "the published Pythia schedule; a gate stops early but does not rescale it"
+    },
+    "optimizer": "AdamW (torch, fused on CUDA)",
+    "dtype": "torch.bfloat16",
+    "device": "cuda",
+    "student_repo": "EleutherAI/pythia-70m",
+    "teacher_repo": null,
+    "deviations": [
+      "bf16 autocast instead of fp16 + dynamic loss scaling",
+      "gradient accumulation 256\u00d74 on one GPU instead of data parallelism",
+      "held-out slice of the training stream (iteration 140000) instead of the Pile validation set",
+      "the teacher (step143000) has trained on the held-out slice; it is never scored as a comparator"
+    ],
+    "dry": false
+  },
+  "init": {
+    "init": "EleutherAI/pythia-70m@step0",
+    "n_params": 70426624
+  },
+  "runs": [
+    {
+      "arm": "baseline",
+      "curve": {
+        "0": 11.083410739898682,
+        "10": 10.77857118844986,
+        "20": 10.26946884393692
+      },
+      "train_curve": {
+        "0": 11.083410739898682,
+        "10": 10.807317174971104,
+        "20": 10.329138804227114
+      },
+      "best": 10.26946884393692,
+      "best_step": 20,
+      "at_end": 10.26946884393692,
+      "wall_sec": 739.7,
+      "step_ms": 36645.7447886467,
+      "overfits": false
+    }
+  ],
+  "published_curve_on_holdout": null,
+  "lm_eval": null
+}
